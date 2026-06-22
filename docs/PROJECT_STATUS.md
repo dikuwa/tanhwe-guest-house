@@ -34,11 +34,18 @@ Storage verification completed:
 - authenticated upload, public read, list, and delete verified locally and in production
 - verification object removed successfully after each test
 
-Before public launch, replace the rate-limited `r2.dev` URL with a custom Cloudflare image domain.
+Phase 4 public website completed:
+
+- image-led homepage, dynamic room listing, and room detail pages
+- availability calculations against confirmed bookings and blocked dates
+- public booking requests persisted to customers, bookings, and booking rooms
+- contact, WhatsApp, call, conference, responsive, loading, validation, and success flows
+
+Before public launch, replace the rate-limited `r2.dev` URL with a custom Cloudflare image domain and confirm final room inventory/prices.
 
 ## Next Step
 
-Confirm final room inventory/prices, then begin Phase 4.
+Begin Phase 5 admin room and booking management after confirming final room inventory/prices.
 
 ## Progress Tracker
 
@@ -48,7 +55,7 @@ Confirm final room inventory/prices, then begin Phase 4.
 - [x] Storage integration (code)
 - [x] Storage integration (environment verification)
 - [x] Initial production deployment
-- [ ] Public website
+- [x] Public website
 - [ ] Admin dashboard
 - [ ] Room management
 - [ ] Booking management

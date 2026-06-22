@@ -1,7 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
-import { accounts, customers, roles, rooms, users } from "./db/schema";
+import { accounts, customers, roles, roomAmenities, rooms, settings, users } from "./db/schema";
 
 async function seed() {
   const db = getDb();
@@ -77,6 +77,27 @@ async function seed() {
       maxGuests: 4,
       breakfastIncluded: true,
     },
+  ]).onConflictDoNothing();
+
+  await db.insert(roomAmenities).values([
+    { id: "amenity_double_wifi", roomId: "room_double", amenity: "Wi-Fi", iconKey: "wifi" },
+    { id: "amenity_double_breakfast", roomId: "room_double", amenity: "Breakfast included", iconKey: "coffee" },
+    { id: "amenity_double_ensuite", roomId: "room_double", amenity: "Ensuite bathroom", iconKey: "bath" },
+    { id: "amenity_single_wifi", roomId: "room_single", amenity: "Wi-Fi", iconKey: "wifi" },
+    { id: "amenity_single_breakfast", roomId: "room_single", amenity: "Breakfast included", iconKey: "coffee" },
+    { id: "amenity_single_ensuite", roomId: "room_single", amenity: "Ensuite bathroom", iconKey: "bath" },
+    { id: "amenity_suite_wifi", roomId: "room_suite", amenity: "Wi-Fi", iconKey: "wifi" },
+    { id: "amenity_suite_breakfast", roomId: "room_suite", amenity: "Breakfast included", iconKey: "coffee" },
+    { id: "amenity_suite_lounge", roomId: "room_suite", amenity: "Private living area", iconKey: "sofa" },
+  ]).onConflictDoNothing();
+
+  await db.insert(settings).values([
+    { id: "setting_phone", key: "phone", value: "+264 81 380 8097", description: "Public phone number" },
+    { id: "setting_whatsapp", key: "whatsapp", value: "+264 81 380 8097", description: "Public WhatsApp number" },
+    { id: "setting_location", key: "location", value: "Mukwe, Namibia", description: "Public location" },
+    { id: "setting_check_in", key: "check_in_time", value: "14:00", description: "Standard check-in time" },
+    { id: "setting_check_out", key: "check_out_time", value: "10:00", description: "Standard check-out time" },
+    { id: "setting_currency", key: "currency", value: "N$", description: "Display currency" },
   ]).onConflictDoNothing();
 
   await db.insert(customers).values({

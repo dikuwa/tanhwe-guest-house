@@ -32,7 +32,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!ROOM_IMAGE_TYPES.includes(file.type as (typeof ROOM_IMAGE_TYPES)[number])) {
-      return NextResponse.json({ error: "Only JPEG, PNG, and WebP images are allowed" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Only JPEG, PNG, and WebP images are allowed" },
+        { status: 400 }
+      );
     }
     if (file.size <= 0 || file.size > MAX_ROOM_IMAGE_SIZE) {
       return NextResponse.json({ error: "Image must be no larger than 5 MB" }, { status: 400 });
@@ -54,13 +57,15 @@ export async function POST(request: NextRequest) {
 
     const imageUrl = await uploadRoomImage(file, room.id);
     try {
-      await getDb().insert(roomImages).values({
-        id: crypto.randomUUID(),
-        roomId: room.id,
-        imageUrl,
-        sortOrder: imageCount,
-        isPrimary: imageCount === 0,
-      });
+      await getDb()
+        .insert(roomImages)
+        .values({
+          id: crypto.randomUUID(),
+          roomId: room.id,
+          imageUrl,
+          sortOrder: imageCount,
+          isPrimary: imageCount === 0,
+        });
     } catch (error) {
       await deleteRoomImage(imageUrl).catch(() => undefined);
       throw error;
@@ -78,7 +83,8 @@ export async function DELETE(request: NextRequest) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = deleteSchema.safeParse(await request.json());
-    if (!body.success) return NextResponse.json({ error: "A valid image URL is required" }, { status: 400 });
+    if (!body.success)
+      return NextResponse.json({ error: "A valid image URL is required" }, { status: 400 });
 
     await deleteRoomImage(body.data.imageUrl);
     await getDb().delete(roomImages).where(eq(roomImages.imageUrl, body.data.imageUrl));

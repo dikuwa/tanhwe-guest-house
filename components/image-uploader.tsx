@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Loader2, Upload, X } from "lucide-react";
 
 interface ImageUploaderProps {
@@ -91,12 +92,12 @@ export function ImageUploader({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {previewUrls.map((url, index) => (
           <div key={url} className="relative aspect-square rounded-lg overflow-hidden">
-            {/* Public room images are served by the configured Cloudflare R2 domain. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={url}
               alt={`Room image ${index + 1}`}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
             />
             <button
               type="button"
@@ -140,8 +141,7 @@ export function ImageUploader({
 
       {uploading && (
         <div className="text-sm text-muted-foreground text-center">
-          Uploading {uploadingIndex !== null ? uploadingIndex + 1 : 0} of{" "}
-          {uploadTotal}
+          Uploading {uploadingIndex !== null ? uploadingIndex + 1 : 0} of {uploadTotal}
         </div>
       )}
 

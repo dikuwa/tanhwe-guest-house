@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import {
   boolean,
   check,
@@ -37,7 +38,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex("users_email_unique").on(sql`lower(${table.email})`),
     check("users_role_check", sql`${table.role} in ('owner', 'admin', 'staff')`),
-  ],
+  ]
 );
 
 export const sessions = pgTable(
@@ -53,7 +54,7 @@ export const sessions = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     ...timestamps,
   },
-  (table) => [index("sessions_user_id_idx").on(table.userId)],
+  (table) => [index("sessions_user_id_idx").on(table.userId)]
 );
 
 export const accounts = pgTable(
@@ -77,7 +78,7 @@ export const accounts = pgTable(
   (table) => [
     index("accounts_user_id_idx").on(table.userId),
     uniqueIndex("accounts_provider_account_unique").on(table.providerId, table.accountId),
-  ],
+  ]
 );
 
 export const verifications = pgTable(
@@ -89,7 +90,7 @@ export const verifications = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     ...timestamps,
   },
-  (table) => [index("verifications_identifier_idx").on(table.identifier)],
+  (table) => [index("verifications_identifier_idx").on(table.identifier)]
 );
 
 export const rooms = pgTable(
@@ -113,7 +114,7 @@ export const rooms = pgTable(
     check("rooms_units_positive", sql`${table.availableUnits} >= 1`),
     check("rooms_guests_positive", sql`${table.maxGuests} >= 1`),
     check("rooms_status_check", sql`${table.status} in ('active', 'maintenance', 'blocked')`),
-  ],
+  ]
 );
 
 export const roomImages = pgTable(
@@ -129,7 +130,7 @@ export const roomImages = pgTable(
     isPrimary: boolean("is_primary").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("room_images_room_id_idx").on(table.roomId)],
+  (table) => [index("room_images_room_id_idx").on(table.roomId)]
 );
 
 export const roomAmenities = pgTable(
@@ -146,7 +147,7 @@ export const roomAmenities = pgTable(
   (table) => [
     index("room_amenities_room_id_idx").on(table.roomId),
     uniqueIndex("room_amenities_room_amenity_unique").on(table.roomId, table.amenity),
-  ],
+  ]
 );
 
 export const roomBlockedDates = pgTable(
@@ -165,7 +166,7 @@ export const roomBlockedDates = pgTable(
   (table) => [
     index("room_blocked_dates_room_id_idx").on(table.roomId),
     check("room_blocked_dates_range_check", sql`${table.endDate} > ${table.startDate}`),
-  ],
+  ]
 );
 
 export const customers = pgTable("customers", {
@@ -211,8 +212,11 @@ export const bookings = pgTable(
     check("bookings_date_range_check", sql`${table.checkOut} > ${table.checkIn}`),
     check("bookings_nights_positive", sql`${table.nights} >= 1`),
     check("bookings_guests_positive", sql`${table.guestsCount} >= 1`),
-    check("bookings_totals_nonnegative", sql`${table.subtotal} >= 0 and ${table.discount} >= 0 and ${table.extrasTotal} >= 0 and ${table.total} >= 0 and ${table.amountPaid} >= 0`),
-  ],
+    check(
+      "bookings_totals_nonnegative",
+      sql`${table.subtotal} >= 0 and ${table.discount} >= 0 and ${table.extrasTotal} >= 0 and ${table.total} >= 0 and ${table.amountPaid} >= 0`
+    ),
+  ]
 );
 
 export const bookingRooms = pgTable(
@@ -237,7 +241,7 @@ export const bookingRooms = pgTable(
     index("booking_rooms_room_id_idx").on(table.roomId),
     check("booking_rooms_count_positive", sql`${table.roomsCount} >= 1`),
     check("booking_rooms_nights_positive", sql`${table.nights} >= 1`),
-  ],
+  ]
 );
 
 export const payments = pgTable(
@@ -259,7 +263,7 @@ export const payments = pgTable(
   (table) => [
     index("payments_booking_id_idx").on(table.bookingId),
     check("payments_amount_positive", sql`${table.amount} > 0`),
-  ],
+  ]
 );
 
 export const documents = pgTable(
@@ -281,7 +285,7 @@ export const documents = pgTable(
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
-  (table) => [index("documents_booking_id_idx").on(table.bookingId)],
+  (table) => [index("documents_booking_id_idx").on(table.bookingId)]
 );
 
 export const followUps = pgTable(
@@ -302,8 +306,11 @@ export const followUps = pgTable(
   },
   (table) => [
     index("follow_ups_due_date_idx").on(table.dueDate),
-    check("follow_ups_parent_check", sql`${table.bookingId} is not null or ${table.customerId} is not null`),
-  ],
+    check(
+      "follow_ups_parent_check",
+      sql`${table.bookingId} is not null or ${table.customerId} is not null`
+    ),
+  ]
 );
 
 export const activityLogs = pgTable(
@@ -317,7 +324,7 @@ export const activityLogs = pgTable(
     details: text("details"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("activity_logs_entity_idx").on(table.entity, table.entityId)],
+  (table) => [index("activity_logs_entity_idx").on(table.entity, table.entityId)]
 );
 
 export const settings = pgTable("settings", {
@@ -328,3 +335,25 @@ export const settings = pgTable("settings", {
   updatedBy: text("updated_by").references(() => users.id, { onDelete: "set null" }),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const roomsRelations = relations(rooms, ({ many }) => ({
+  images: many(roomImages),
+  amenities: many(roomAmenities),
+}));
+export const roomImagesRelations = relations(roomImages, ({ one }) => ({
+  room: one(rooms, { fields: [roomImages.roomId], references: [rooms.id] }),
+}));
+export const roomAmenitiesRelations = relations(roomAmenities, ({ one }) => ({
+  room: one(rooms, { fields: [roomAmenities.roomId], references: [rooms.id] }),
+}));
+export const bookingsRelations = relations(bookings, ({ one, many }) => ({
+  customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
+  rooms: many(bookingRooms),
+}));
+export const bookingRoomsRelations = relations(bookingRooms, ({ one }) => ({
+  booking: one(bookings, { fields: [bookingRooms.bookingId], references: [bookings.id] }),
+  room: one(rooms, { fields: [bookingRooms.roomId], references: [rooms.id] }),
+}));
+export const customersRelations = relations(customers, ({ many }) => ({
+  bookings: many(bookings),
+}));

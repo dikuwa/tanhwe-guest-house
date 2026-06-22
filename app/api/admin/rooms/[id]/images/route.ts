@@ -5,10 +5,7 @@ import { listRoomImages } from "@/lib/storage";
 
 const roomIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/);
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await authorizeRequest(request.headers, ["owner", "admin"]);
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -19,7 +19,7 @@
 
 ## Current Build Status
 
-Phases 1–3 are implemented in code. The database migration has been applied to the configured database.
+Phases 1–5 are implemented in code. The database migration has been applied to the configured database.
 
 Operational work completed:
 
@@ -41,11 +41,18 @@ Phase 4 public website completed:
 - public booking requests persisted to customers, bookings, and booking rooms
 - contact, WhatsApp, call, conference, responsive, loading, validation, and success flows
 
+Phase 5 admin operations completed:
+
+- authenticated, role-aware operations dashboard
+- room creation and editing, rates, inventory, amenities, status, and R2 images
+- booking register, guarded status transitions, and activity logging
+- manual booking creation with server-side availability enforcement
+
 Before public launch, replace the rate-limited `r2.dev` URL with a custom Cloudflare image domain and confirm final room inventory/prices.
 
 ## Next Step
 
-Begin Phase 5 admin room and booking management after confirming final room inventory/prices.
+Begin Phase 6 customer management and complete final room inventory/pricing review.
 
 ## Progress Tracker
 
@@ -56,9 +63,9 @@ Begin Phase 5 admin room and booking management after confirming final room inve
 - [x] Storage integration (environment verification)
 - [x] Initial production deployment
 - [x] Public website
-- [ ] Admin dashboard
-- [ ] Room management
-- [ ] Booking management
+- [x] Admin dashboard
+- [x] Room management
+- [x] Booking management
 - [ ] Customer management
 - [ ] Documents
 - [ ] Follow-ups

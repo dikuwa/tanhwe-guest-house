@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "seed": "tsx --env-file=.env lib/seed.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx --env-file=.env scripts/migrate.ts"
+    "db:migrate": "tsx --env-file=.env scripts/migrate.ts",
+    "verify:phase5": "tsx --env-file=.env scripts/verify-phase5.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",

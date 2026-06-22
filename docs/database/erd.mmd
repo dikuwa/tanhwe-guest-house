@@ -1,0 +1,12 @@
+erDiagram
+    USERS ||--o{ BOOKINGS : creates
+    CUSTOMERS ||--o{ BOOKINGS : makes
+    BOOKINGS ||--o{ BOOKING_ROOMS : includes
+    ROOMS ||--o{ BOOKING_ROOMS : booked_as
+    ROOMS ||--o{ ROOM_IMAGES : has
+    ROOMS ||--o{ ROOM_AMENITIES : has
+    ROOMS ||--o{ ROOM_BLOCKED_DATES : blocked_on
+    BOOKINGS ||--o{ PAYMENTS : has
+    BOOKINGS ||--o{ DOCUMENTS : generates
+    BOOKINGS ||--o{ FOLLOW_UPS : requires
+    USERS ||--o{ ACTIVITY_LOGS : performs

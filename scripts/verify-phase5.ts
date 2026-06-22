@@ -11,8 +11,8 @@ import {
 
 async function main() {
   const base = process.env.VERIFY_BASE_URL ?? "http://localhost:3000";
-  const origin = process.env.NEXT_PUBLIC_SITE_URL;
-  if (!origin || !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)
+  const origin = new URL(base).origin;
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD)
     throw new Error("Verification environment is incomplete");
   const login = await fetch(`${base}/api/auth/sign-in/email`, {
     method: "POST",

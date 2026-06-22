@@ -28,15 +28,17 @@ Operational work completed:
 - Cloudflare R2 bucket created with public delivery enabled
 - production deployed to `https://tanhweguesthouse.vercel.app`
 
-Still required before storage sign-off:
+Storage verification completed:
 
-- create a permanent bucket-scoped R2 S3 key in Cloudflare
-- set `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` locally and on Vercel
-- upload and delete a real room image
+- permanent bucket-scoped R2 S3 credentials configured locally and on Vercel
+- authenticated upload, public read, list, and delete verified locally and in production
+- verification object removed successfully after each test
+
+Before public launch, replace the rate-limited `r2.dev` URL with a custom Cloudflare image domain.
 
 ## Next Step
 
-Complete the R2 credential step, confirm final room inventory/prices, then begin Phase 4.
+Confirm final room inventory/prices, then begin Phase 4.
 
 ## Progress Tracker
 
@@ -44,7 +46,7 @@ Complete the R2 credential step, confirm final room inventory/prices, then begin
 - [x] Auth and roles
 - [x] Database schema
 - [x] Storage integration (code)
-- [ ] Storage integration (environment verification)
+- [x] Storage integration (environment verification)
 - [x] Initial production deployment
 - [ ] Public website
 - [ ] Admin dashboard

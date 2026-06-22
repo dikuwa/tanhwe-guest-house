@@ -1,184 +1,99 @@
-import { db } from "./db";
-import { users, roles, rooms, customers } from "./db/schema";
-import { eq, and } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "better-auth/crypto";
+import { eq } from "drizzle-orm";
+import { closeDb, getDb } from "./db";
+import { accounts, customers, roles, rooms, users } from "./db/schema";
 
 async function seed() {
+  const db = getDb();
   console.log("Starting database seed...");
 
-  // Create default roles
-  const roleAdmin = await db.query.roles.findFirst({
-    where: eq(roles.name, "admin"),
-  });
-
-  const roleOwner = await db.query.roles.findFirst({
-    where: eq(roles.name, "owner"),
-  });
-
-  const roleStaff = await db.query.roles.findFirst({
-    where: eq(roles.name, "staff"),
-  });
-
-  if (!roleAdmin) {
-    await db.insert(roles).values({
-      id: "role_admin",
-      name: "admin",
-      description: "Admin role with full access to bookings and room management",
-    });
-    console.log("✓ Created admin role");
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!email || !password || password.length < 12) {
+    throw new Error("ADMIN_EMAIL and an ADMIN_PASSWORD of at least 12 characters are required");
   }
 
-  if (!roleOwner) {
-    await db.insert(roles).values({
-      id: "role_owner",
-      name: "owner",
-      description: "Owner role with full access including financial reports",
-    });
-    console.log("✓ Created owner role");
-  }
+  await db.insert(roles).values([
+    { id: "role_admin", name: "admin", description: "Manage rooms, bookings, customers and documents" },
+    { id: "role_owner", name: "owner", description: "Full access including users and financial reports" },
+    { id: "role_staff", name: "staff", description: "Operational booking and follow-up access" },
+  ]).onConflictDoNothing();
 
-  if (!roleStaff) {
-    await db.insert(roles).values({
-      id: "role_staff",
-      name: "staff",
-      description: "Staff role with limited access to bookings and check-ins",
-    });
-    console.log("✓ Created staff role");
-  }
-
-  // Create admin user
-  const email = process.env.ADMIN_EMAIL || "admin@tanhweguesthouse.com";
-  const password = process.env.ADMIN_PASSWORD || "admin123";
-  const hashedPassword = await bcrypt.hash(password, 12);
-
-  const existingUser = await db.query.users.findFirst({
-    where: eq(users.email, email),
-  });
-
+  const existingUser = await db.query.users.findFirst({ where: eq(users.email, email) });
   if (!existingUser) {
-    await db.insert(users).values({
-      id: "user_admin",
-      email,
-      password: hashedPassword,
-      name: "Admin User",
-      role: "owner",
+    const userId = crypto.randomUUID();
+    await db.transaction(async (tx) => {
+      await tx.insert(users).values({
+        id: userId,
+        email,
+        emailVerified: true,
+        name: "Tanhwe Owner",
+        role: "owner",
+      });
+      await tx.insert(accounts).values({
+        id: crypto.randomUUID(),
+        accountId: userId,
+        providerId: "credential",
+        userId,
+        password: await hashPassword(password),
+      });
     });
-    console.log(`✓ Created admin user: ${email}`);
-    console.log(`  Password: ${password}`);
+    console.log(`✓ Created owner account: ${email}`);
   } else {
-    console.log(`✓ Admin user already exists: ${email}`);
+    console.log(`✓ Owner account already exists: ${email}`);
   }
 
-  // Create sample rooms
-  const room1 = await db.query.rooms.findFirst({
-    where: eq(rooms.name, "Double Room"),
-  });
-
-  if (!room1) {
-    await db.insert(rooms).values({
+  await db.insert(rooms).values([
+    {
       id: "room_double",
       name: "Double Room",
+      slug: "double-room",
       type: "double",
       description: "Comfortable double room with ensuite bathroom",
       pricePerNight: 500,
       availableUnits: 3,
       maxGuests: 2,
       breakfastIncluded: true,
-      status: "active",
-      amenities: JSON.stringify(["wifi", "ac", "tv", "fridge"]),
-      imageUrls: JSON.stringify([
-        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800",
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800",
-      ]),
-    });
-    console.log("✓ Created Double Room");
-  }
-
-  const room2 = await db.query.rooms.findFirst({
-    where: eq(rooms.name, "Single Room"),
-  });
-
-  if (!room2) {
-    await db.insert(rooms).values({
+    },
+    {
       id: "room_single",
       name: "Single Room",
+      slug: "single-room",
       type: "single",
-      description: "Cozy single room perfect for solo travelers",
+      description: "Cozy single room for solo travellers",
       pricePerNight: 650,
       availableUnits: 2,
       maxGuests: 1,
       breakfastIncluded: true,
-      status: "active",
-      amenities: JSON.stringify(["wifi", "ac", "tv", "fridge"]),
-      imageUrls: JSON.stringify([
-        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800",
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800",
-      ]),
-    });
-    console.log("✓ Created Single Room");
-  }
-
-  const room3 = await db.query.rooms.findFirst({
-    where: eq(rooms.name, "Executive Suite"),
-  });
-
-  if (!room3) {
-    await db.insert(rooms).values({
+    },
+    {
       id: "room_suite",
       name: "Executive Suite",
+      slug: "executive-suite",
       type: "suite",
-      description: "Luxury suite with living area and premium amenities",
+      description: "Suite with a living area and premium amenities",
       pricePerNight: 1200,
       availableUnits: 1,
       maxGuests: 4,
       breakfastIncluded: true,
-      status: "active",
-      amenities: JSON.stringify([
-        "wifi",
-        "ac",
-        "tv",
-        "fridge",
-        "kitchenette",
-        "balcony",
-        "bathtub",
-      ]),
-      imageUrls: JSON.stringify([
-        "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800",
-        "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800",
-      ]),
-    });
-    console.log("✓ Created Executive Suite");
-  }
+    },
+  ]).onConflictDoNothing();
 
-  // Create sample customer
-  const customerEmail = "customer@example.com";
-  const existingCustomer = await db.query.customers.findFirst({
-    where: eq(customers.email, customerEmail),
-  });
+  await db.insert(customers).values({
+    id: "customer_1",
+    fullName: "Sample Customer",
+    phone: "+264 81 000 0000",
+    whatsapp: "+264 81 000 0000",
+    email: "customer@example.com",
+    notes: "Development seed record",
+  }).onConflictDoNothing();
 
-  if (!existingCustomer) {
-    await db.insert(customers).values({
-      id: "customer_1",
-      fullName: "John Doe",
-      phone: "+264 81 123 4567",
-      whatsapp: "+264 81 123 4567",
-      email: customerEmail,
-      notes: "Regular customer",
-    });
-    console.log("✓ Created sample customer");
-  }
-
-  console.log("\n✅ Database seed completed successfully!");
-  console.log("\nDefault credentials:");
-  console.log(`  Email: ${email}`);
-  console.log(`  Password: ${password}`);
+  console.log("✅ Database seed completed successfully");
 }
 
 seed()
   .catch((error) => {
-    console.error("Error seeding database:", error);
-    process.exit(1);
+    console.error("Database seed failed:", error);
+    process.exitCode = 1;
   })
-  .finally(() => {
-    process.exit(0);
-  });
+  .finally(closeDb);

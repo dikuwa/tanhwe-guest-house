@@ -1,38 +1,31 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { db } from "./db";
-import { users } from "./db/schema";
-import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getAuth, roles, type Role } from "./auth";
 
-export async function requireAuth(request: NextRequest) {
-  const sessionCookie = request.cookies.get("auth.session_token");
-
-  if (!sessionCookie) {
-    return null;
-  }
-
-  try {
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, sessionCookie.value),
-    });
-
-    if (!user) {
-      return null;
-    }
-
-    return user;
-  } catch (error) {
-    console.error("Auth error:", error);
-    return null;
-  }
+function isRole(value: unknown): value is Role {
+  return typeof value === "string" && roles.includes(value as Role);
 }
 
-export async function requireRole(role: string, request: NextRequest) {
-  const user = await requireAuth(request);
+export async function getCurrentSession() {
+  return getAuth().api.getSession({ headers: await headers() });
+}
 
-  if (!user || user.role !== role) {
+export async function requireAuth() {
+  const session = await getCurrentSession();
+  if (!session || !isRole(session.user.role)) redirect("/login");
+  return session;
+}
+
+export async function requireRole(allowedRoles: readonly Role[]) {
+  const session = await requireAuth();
+  if (!allowedRoles.includes(session.user.role as Role)) redirect("/admin");
+  return session;
+}
+
+export async function authorizeRequest(requestHeaders: Headers, allowedRoles: readonly Role[]) {
+  const session = await getAuth().api.getSession({ headers: requestHeaders });
+  if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
     return null;
   }
-
-  return user;
+  return session;
 }

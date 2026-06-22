@@ -19,23 +19,25 @@
 
 ## Current Build Status
 
-Not started.
+Phases 1–3 are implemented in code. The database migration has been applied to the configured database.
+
+Environment work still required before Phase 3 can be operationally signed off:
+
+- set a unique `ADMIN_PASSWORD` of at least 12 characters, then run `npm run seed`
+- configure the Cloudflare R2 environment variables from `.env.example`
+- upload and delete a real room image to verify the R2 bucket and public domain
 
 ## Next Step
 
-Coder must review all documentation and confirm:
-
-- final room prices
-- number of rooms
-- auth choice
-- ORM choice
-- deployment choice
+Complete the environment work above, confirm final room inventory/prices, then begin Phase 4.
 
 ## Progress Tracker
 
-- [ ] Project setup
-- [ ] Auth and roles
-- [ ] Database schema
+- [x] Project setup
+- [x] Auth and roles
+- [x] Database schema
+- [x] Storage integration (code)
+- [ ] Storage integration (environment verification)
 - [ ] Public website
 - [ ] Admin dashboard
 - [ ] Room management

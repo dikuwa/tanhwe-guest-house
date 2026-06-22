@@ -19,10 +19,10 @@ Recommended stack:
 - Zod
 - TanStack Table
 - TanStack Query
-- Supabase PostgreSQL
-- Supabase Storage
-- Better Auth or Supabase Auth
-- Prisma or Drizzle
+- Neon PostgreSQL
+- Cloudflare R2
+- Better Auth
+- Drizzle
 - Resend
 - React PDF
 - Vercel
@@ -55,58 +55,34 @@ Reason:
 
 ### Database
 
-Use PostgreSQL through Supabase.
+Use PostgreSQL through Neon.
 
 Reason:
 
 - Simple setup
-- Auth/storage/database in one ecosystem
+- Managed serverless PostgreSQL with pooled runtime connections
 - Suitable for a small guest house
 - Can scale later
 
 ### Auth
 
-Choose between:
-
-#### Option A: Supabase Auth
-
-Best if simplicity is the priority.
-
-#### Option B: Better Auth
-
-Best if long-term flexibility and custom role logic are priorities.
-
-Recommendation:
-
-Use **Better Auth + PostgreSQL** if the coder is comfortable with it.
-
-Use **Supabase Auth** if speed and simplicity are more important.
+Use Better Auth with database-backed sessions and server-side owner/admin/staff authorization.
 
 ### ORM
 
-Use Prisma or Drizzle.
-
-Recommendation:
-
-Use Prisma if the developer prefers mature tooling and readable schema.
-
-Use Drizzle if the developer wants lighter TypeScript-first control.
+Use Drizzle for schema definitions, migrations, and queries.
 
 ### Storage
 
-Use Supabase Storage.
+Use Cloudflare R2 with an S3-compatible server client and a public custom domain.
 
 Reason:
 
 - Room images only
 - Not heavy media
-- No need for Cloudflare R2 at MVP stage
-
-Use Cloudflare R2 only if:
-
-- Many large images
-- High traffic
-- Need cheaper object storage at scale
+- Credentials remain server-only
+- Public delivery is separated from write access
+- Room images receive immutable cache headers
 
 ### Email
 
@@ -151,7 +127,7 @@ Use Docker if:
 - Local reproducible dev setup
 - More complex background jobs
 
-For this project, include Docker Compose only if the coder chooses local PostgreSQL instead of Supabase.
+For this project, Docker Compose is not needed for the managed Neon deployment.
 
 ## Security
 

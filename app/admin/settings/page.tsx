@@ -1,4 +1,7 @@
-export default function AdminSettings() {
+import { requireRole } from "@/lib/auth-middleware";
+
+export default async function AdminSettings() {
+  await requireRole(["owner"]);
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">

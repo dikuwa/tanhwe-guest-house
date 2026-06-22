@@ -5,7 +5,8 @@
 ## MVP Deployment
 
 - Vercel for Next.js app
-- Supabase for PostgreSQL and Storage
+- Neon for PostgreSQL
+- Cloudflare R2 for room images and generated documents
 - Resend for email
 - Sentry for error tracking
 

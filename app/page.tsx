@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "next/link";
-import { Phone, MessageCircle, Calendar, ArrowRight, LogIn } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import { Phone, MessageCircle, Calendar, LogIn } from "lucide-react";
 
 export default function Home() {
   return (
@@ -48,12 +48,10 @@ export default function Home() {
             checking availability for your stay.
           </p>
           <div className="mt-12">
-            <Button asChild size="lg">
-              <Link href="/admin">
-                <LogIn className="mr-2 h-5 w-5" />
-                Admin Login
-              </Link>
-            </Button>
+            <Link href="/admin" className={buttonVariants({ size: "lg" })}>
+              <LogIn className="mr-2 h-5 w-5" />
+              Admin Login
+            </Link>
           </div>
         </div>
       </section>

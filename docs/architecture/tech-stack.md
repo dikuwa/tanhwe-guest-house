@@ -15,10 +15,10 @@
 - Zod
 - TanStack Table
 - TanStack Query
-- Supabase PostgreSQL
-- Supabase Storage
-- Better Auth or Supabase Auth
-- Prisma or Drizzle
+- Neon PostgreSQL
+- Cloudflare R2
+- Better Auth
+- Drizzle
 - Resend
 - React PDF
 - Vercel
@@ -28,7 +28,6 @@
 - Kubernetes
 - Complex queues
 - AWS S3
-- Cloudflare R2
 - Redis
 - Online payment gateway
 - Multi-tenant SaaS logic

@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - Neon PostgreSQL database
-- Node.js 18+
+- Cloudflare R2 bucket for room image storage
+- Node.js 20.9+
 
 ## Neon PostgreSQL Setup
 
@@ -30,6 +31,13 @@ Create a `.env` file in the project root:
 DATABASE_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
 DIRECT_URL=postgresql://user:password@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
 AUTH_SECRET=your-secret-key-here
+R2_ACCOUNT_ID=your-cloudflare-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=tanhwe-room-images
+R2_PUBLIC_URL=https://images.example.com
+ADMIN_EMAIL=owner@example.com
+ADMIN_PASSWORD=use-a-unique-password-with-at-least-12-characters
 ```
 
 ## Database Setup Steps
@@ -67,6 +75,10 @@ This creates:
 - Admin user
 - Sample rooms (Double Room, Single Room, Executive Suite)
 - Sample customer
+
+The seed refuses missing or short owner passwords and never logs the password.
+
+Create the R2 bucket in Cloudflare and grant an API token Object Read & Write access to that bucket only. Connect a custom public domain to the bucket for production and set it as `R2_PUBLIC_URL`. Upload credentials stay in server-only environment variables.
 
 ### 5. Verify Setup
 

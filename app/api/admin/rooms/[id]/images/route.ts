@@ -1,30 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { authorizeRequest } from "@/lib/auth-middleware";
 import { listRoomImages } from "@/lib/storage";
-import { auth } from "@/lib/auth";
+
+const roomIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/);
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await authorizeRequest(request.headers, ["owner", "admin"]);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const parsedId = roomIdSchema.safeParse((await params).id);
+    if (!parsedId.success) return NextResponse.json({ error: "Invalid room ID" }, { status: 400 });
 
-    const images = await listRoomImages(params.id);
-
-    return NextResponse.json({
-      images,
-    });
+    return NextResponse.json({ images: await listRoomImages(parsedId.data) });
   } catch (error) {
     console.error("List images error:", error);
-    return NextResponse.json(
-      { error: "Failed to list images" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to list images" }, { status: 500 });
   }
 }

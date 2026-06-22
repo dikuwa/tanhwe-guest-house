@@ -21,15 +21,22 @@
 
 Phases 1–3 are implemented in code. The database migration has been applied to the configured database.
 
-Environment work still required before Phase 3 can be operationally signed off:
+Operational work completed:
 
-- set a unique `ADMIN_PASSWORD` of at least 12 characters, then run `npm run seed`
-- configure the Cloudflare R2 environment variables from `.env.example`
-- upload and delete a real room image to verify the R2 bucket and public domain
+- Neon migration applied and owner account seeded
+- owner login and role verified locally and in production
+- Cloudflare R2 bucket created with public delivery enabled
+- production deployed to `https://tanhweguesthouse.vercel.app`
+
+Still required before storage sign-off:
+
+- create a permanent bucket-scoped R2 S3 key in Cloudflare
+- set `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` locally and on Vercel
+- upload and delete a real room image
 
 ## Next Step
 
-Complete the environment work above, confirm final room inventory/prices, then begin Phase 4.
+Complete the R2 credential step, confirm final room inventory/prices, then begin Phase 4.
 
 ## Progress Tracker
 
@@ -38,6 +45,7 @@ Complete the environment work above, confirm final room inventory/prices, then b
 - [x] Database schema
 - [x] Storage integration (code)
 - [ ] Storage integration (environment verification)
+- [x] Initial production deployment
 - [ ] Public website
 - [ ] Admin dashboard
 - [ ] Room management

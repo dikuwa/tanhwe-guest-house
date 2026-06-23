@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, BedDouble, BookOpen, CalendarDays } from "lucide-react";
+import { ArrowRight, BedDouble, BookOpen, LogIn, LogOut, WalletCards } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { requireRole } from "@/lib/auth-middleware";
 import { getDashboardData } from "@/lib/admin-data";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +14,24 @@ const money = new Intl.NumberFormat("en-NA", {
 export default async function AdminDashboard() {
   const session = await requireRole(["owner", "admin", "staff"]);
   const data = await getDashboardData();
-  const metrics = [
+  const metrics: { label: string; value: number | string; icon: LucideIcon }[] = [
     { label: "Active room types", value: data.activeRooms, icon: BedDouble },
     { label: "Pending requests", value: data.pendingBookings, icon: BookOpen },
-    { label: "Upcoming bookings", value: data.upcomingBookings, icon: CalendarDays },
+    { label: "Check-ins next 7 days", value: data.checkIns, icon: LogIn },
+    { label: "Check-outs next 7 days", value: data.checkOuts, icon: LogOut },
   ];
+  if (session.user.role === "owner")
+    metrics.push({
+      label: "Outstanding balance",
+      value: money.format(data.outstanding),
+      icon: WalletCards,
+    });
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">Operations overview</p>
-          <h1 className="mt-1 font-heading text-3xl font-semibold">
+          <h1 className="mt-1 text-3xl font-semibold">
             Good day, {session.user.name.split(" ")[0]}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -32,7 +40,7 @@ export default async function AdminDashboard() {
         </div>
         <Button render={<Link href="/admin/bookings/new" />}>New booking</Button>
       </div>
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => (
           <div key={metric.label} className="rounded-xl border bg-card p-5">
             <div className="flex items-center justify-between">

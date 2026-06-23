@@ -11,6 +11,8 @@ import {
   Settings,
   Users,
   BellRing,
+  BarChart3,
+  UserCog,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -30,7 +32,7 @@ const items = [
     href: "/admin/documents",
     label: "Documents",
     icon: FileText,
-    roles: ["owner", "admin", "staff"],
+    roles: ["owner", "admin"],
   },
   {
     href: "/admin/follow-ups",
@@ -38,7 +40,9 @@ const items = [
     icon: BellRing,
     roles: ["owner", "admin", "staff"],
   },
-  { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner", "admin"] },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
+  { href: "/admin/users", label: "Users", icon: UserCog, roles: ["owner"] },
+  { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];
 
 export function AdminNav({ role }: { role: string }) {
@@ -71,6 +75,20 @@ export function AdminNav({ role }: { role: string }) {
             );
           })}
       </nav>
+      <div className="px-3 pb-3 lg:hidden">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={async () => {
+            await authClient.signOut();
+            router.replace("/login");
+            router.refresh();
+          }}
+        >
+          <LogOut />
+          Sign out
+        </Button>
+      </div>
       <div className="hidden border-t p-3 lg:block">
         <Button
           variant="ghost"

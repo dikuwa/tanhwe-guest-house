@@ -1,0 +1,49 @@
+"use client";
+import { FormEvent, useState } from "react";
+import { Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+type Setting = { id: string; key: string; value: string; description: string | null };
+export function SettingsForm({ settings }: { settings: Setting[] }) {
+  const [message, setMessage] = useState("");
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage("");
+    const form = new FormData(event.currentTarget);
+    const response = await fetch("/api/admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(form)),
+    });
+    const data = await response.json();
+    setMessage(response.ok ? "Saved." : (data.error ?? "Could not save"));
+  }
+  return (
+    <div className="divide-y rounded-xl border bg-card">
+      {settings.map((setting) => (
+        <form
+          key={setting.id}
+          onSubmit={submit}
+          className="grid gap-3 p-5 sm:grid-cols-[1fr_1.5fr_auto] sm:items-end"
+        >
+          <input type="hidden" name="key" value={setting.key} />
+          <div>
+            <Label htmlFor={`setting-${setting.key}`}>{setting.description ?? setting.key}</Label>
+            <p className="mt-1 text-xs text-muted-foreground">{setting.key}</p>
+          </div>
+          <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required />
+          <Button type="submit" variant="outline" size="sm">
+            <Save />
+            Save
+          </Button>
+        </form>
+      ))}
+      {message && (
+        <p role="status" className="px-5 pb-5 text-sm text-muted-foreground">
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}

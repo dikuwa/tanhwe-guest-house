@@ -47,9 +47,7 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-playfair font-bold text-center">
             Tanhwe Guest House
           </CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your account
-          </CardDescription>
+          <CardDescription className="text-center">Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

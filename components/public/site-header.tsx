@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { MapPin, Menu, Phone } from "lucide-react";
+import { MapPin, Phone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { getPublicSettings } from "@/lib/public-data";
+import { SiteNavigation } from "./site-navigation";
 
 export async function SiteHeader() {
   const settings = await getPublicSettings();
@@ -13,19 +14,14 @@ export async function SiteHeader() {
         <Link href="/" className="font-playfair text-xl font-bold tracking-tight text-secondary">
           Tanhwe <span className="text-primary">Guest House</span>
         </Link>
-        <nav aria-label="Main navigation" className="hidden items-center gap-7 text-sm font-medium md:flex">
-          <Link href="/rooms" className="transition-colors hover:text-primary">Rooms</Link>
-          <Link href="/#conference" className="transition-colors hover:text-primary">Conference</Link>
-          <Link href="/contact" className="transition-colors hover:text-primary">Contact</Link>
-        </nav>
+        <SiteNavigation />
         <div className="flex items-center gap-2">
           <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
             <Phone aria-hidden="true" />
             <span className="hidden sm:inline">Call us</span>
           </a>
-          <Link href="/rooms#booking" className={buttonVariants({ size: "sm" })}>Book a stay</Link>
-          <Link href="/rooms" aria-label="Open rooms" className="inline-flex size-8 items-center justify-center rounded-lg border md:hidden">
-            <Menu aria-hidden="true" className="size-4" />
+          <Link href="/rooms#booking" className={buttonVariants({ size: "sm" })}>
+            Book a stay
           </Link>
         </div>
       </div>

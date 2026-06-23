@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { StatusSelect, roomStatusOptions } from "@/components/forms/status-select";
 import { ImageUploader } from "@/components/image-uploader";
 
 type RoomValue = {
@@ -29,11 +31,18 @@ export function RoomForm({ room }: { room?: RoomValue }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [status, setStatus] = useState(room?.status ?? "active");
+  const [breakfastIncluded, setBreakfastIncluded] = useState(room?.breakfastIncluded ?? false);
+  const [featured, setFeatured] = useState(room?.featured ?? false);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
     const form = new FormData(event.currentTarget);
+    form.set("status", status);
+    form.set("breakfastIncluded", breakfastIncluded ? "on" : "");
+    form.set("featured", featured ? "on" : "");
     const payload = {
       name: form.get("name"),
       slug: form.get("slug"),
@@ -61,6 +70,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
     router.push(`/admin/rooms/${room?.id ?? data.id}/edit`);
     router.refresh();
   }
+
   return (
     <form onSubmit={submit} className="space-y-8">
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
@@ -102,18 +112,15 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             defaultValue={room?.maxGuests ?? 2}
             required
           />
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="status">Status</Label>
-            <select
+            <StatusSelect
+              value={status}
+              onValueChange={setStatus}
+              options={roomStatusOptions}
               id="status"
-              name="status"
-              defaultValue={room?.status ?? "active"}
-              className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
-            >
-              <option value="active">Active</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="blocked">Blocked</option>
-            </select>
+            />
+            <input type="hidden" name="status" value={status} />
           </div>
           <Field
             label="Amenities (comma separated)"
@@ -130,20 +137,16 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             />
           </div>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              name="breakfastIncluded"
-              defaultChecked={room?.breakfastIncluded}
-              className="size-4 rounded border-neutral-300 text-primary accent-primary"
+            <Checkbox
+              checked={breakfastIncluded}
+              onCheckedChange={(v) => setBreakfastIncluded(Boolean(v))}
             />
             Breakfast included
           </label>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              name="featured"
-              defaultChecked={room?.featured}
-              className="size-4 rounded border-neutral-300 text-primary accent-primary"
+            <Checkbox
+              checked={featured}
+              onCheckedChange={(v) => setFeatured(Boolean(v))}
             />
             Feature on homepage
           </label>

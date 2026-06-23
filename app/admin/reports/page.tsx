@@ -52,7 +52,7 @@ export default async function ReportsPage({
               name="from"
               type="date"
               defaultValue={dateInput(from)}
-              className="mt-1 block h-9 rounded-lg border bg-background px-3 text-sm"
+              className="mt-1 block h-9 w-[140px] rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             />
           </label>
           <label className="text-xs font-medium">
@@ -61,10 +61,10 @@ export default async function ReportsPage({
               name="to"
               type="date"
               defaultValue={dateInput(to)}
-              className="mt-1 block h-9 rounded-lg border bg-background px-3 text-sm"
+              className="mt-1 block h-9 w-[140px] rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             />
           </label>
-          <button className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground">
+          <button className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90">
             Apply
           </button>
         </form>

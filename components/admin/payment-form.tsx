@@ -6,6 +6,13 @@ import { Loader2, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type BookingOption = {
   id: string;
@@ -13,16 +20,24 @@ type BookingOption = {
   customerName: string;
   balanceDue: number;
 };
+
 export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [bookingId, setBookingId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setMessage("");
     const form = event.currentTarget;
-    const payload = Object.fromEntries(new FormData(form));
+    const payload = {
+      ...Object.fromEntries(new FormData(form)),
+      bookingId,
+      paymentMethod,
+    };
     const response = await fetch("/api/admin/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -33,57 +48,51 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
     setMessage(response.ok ? "Payment recorded." : (data.error ?? "Could not record payment"));
     if (response.ok) {
       form.reset();
+      setBookingId("");
+      setPaymentMethod("cash");
       router.refresh();
     }
   }
+
+  const activeBookings = bookings.filter((b) => b.balanceDue > 0);
+
   return (
     <form
       onSubmit={submit}
       className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
     >
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="payment-booking">Booking</Label>
-        <select
-          id="payment-booking"
-          name="bookingId"
-          required
-          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
-        >
-          <option value="">Select booking</option>
-          {bookings
-            .filter((b) => b.balanceDue > 0)
-            .map((booking) => (
-              <option key={booking.id} value={booking.id}>
-                {booking.bookingNumber} &middot; {booking.customerName} &middot; N${" "}
-                {booking.balanceDue.toFixed(2)} due
-              </option>
+        <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
+          <SelectTrigger id="payment-booking" className="h-9 w-full">
+            <SelectValue placeholder="Select booking" />
+          </SelectTrigger>
+          <SelectContent>
+            {activeBookings.map((booking) => (
+              <SelectItem key={booking.id} value={booking.id}>
+                {booking.bookingNumber} &middot; {booking.customerName} &middot; N$ {booking.balanceDue.toFixed(2)} due
+              </SelectItem>
             ))}
-        </select>
+          </SelectContent>
+        </Select>
       </div>
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="payment-amount">Amount (N$)</Label>
-        <Input
-          id="payment-amount"
-          name="amount"
-          type="number"
-          min="1"
-          step="1"
-          required
-          className="mt-2 h-9"
-        />
+        <Input id="payment-amount" name="amount" type="number" min="1" step="1" required className="mt-2 h-9" />
       </div>
-      <div>
+      <div className="space-y-1.5">
         <Label htmlFor="payment-method">Method</Label>
-        <select
-          id="payment-method"
-          name="paymentMethod"
-          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
-        >
-          <option value="cash">Cash</option>
-          <option value="bank-transfer">Bank transfer</option>
-          <option value="card">Card</option>
-          <option value="other">Other</option>
-        </select>
+        <Select value={paymentMethod} onValueChange={(v) => v && setPaymentMethod(v)}>
+          <SelectTrigger id="payment-method" className="h-9 w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cash">Cash</SelectItem>
+            <SelectItem value="bank-transfer">Bank transfer</SelectItem>
+            <SelectItem value="card">Card</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <Button type="submit" disabled={saving}>
         {saving ? <Loader2 className="size-4 animate-spin" /> : <WalletCards className="size-4" />}

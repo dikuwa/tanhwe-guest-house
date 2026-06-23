@@ -7,7 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { StatusSelect, bookingStatusOptions } from "@/components/forms/status-select";
+import { FieldError } from "@/components/forms/field-error";
 import { cn } from "@/lib/utils";
 
 type Option = {
@@ -45,6 +54,8 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
   const [saving, setSaving] = useState(false);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [status, setStatus] = useState("confirmed");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
@@ -78,6 +89,10 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
     setFieldErrors({});
 
     const formData = new FormData(event.currentTarget);
+    formData.set("roomId", roomId);
+    formData.set("status", status);
+    formData.set("checkIn", checkIn);
+    formData.set("checkOut", checkOut);
     if (!validateForm(formData)) return;
 
     setSaving(true);
@@ -97,32 +112,30 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
   return (
     <form onSubmit={submit} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6" noValidate>
       <div className="grid gap-5 sm:grid-cols-2">
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="roomId">Room</Label>
-          <select
-            id="roomId"
-            name="roomId"
-            required
-            className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
-          >
-            <option value="">Select a room</option>
-            {rooms.map((room) => (
-              <option key={room.id} value={room.id}>
-                {room.name} &mdash; N${room.pricePerNight}/night ({room.availableUnits} units)
-              </option>
-            ))}
-          </select>
+          <Select value={roomId} onValueChange={(v) => v && setRoomId(v)}>
+            <SelectTrigger id="roomId" className="h-9 w-full">
+              <SelectValue placeholder="Select a room" />
+            </SelectTrigger>
+            <SelectContent>
+              {rooms.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
+                  {room.name} &mdash; N${room.pricePerNight}/night ({room.availableUnits} units)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <div>
+        <div className="space-y-1.5">
           <Label htmlFor="status">Initial status</Label>
-          <select
+          <StatusSelect
+            value={status}
+            onValueChange={setStatus}
+            options={[{ value: "confirmed", label: "Confirmed" }, { value: "pending", label: "Pending" }]}
             id="status"
-            name="status"
-            className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
-          >
-            <option value="confirmed">Confirmed</option>
-            <option value="pending">Pending</option>
-          </select>
+          />
+          <input type="hidden" name="status" value={status} />
         </div>
         <div className="sm:col-span-2">
           <DateRangePicker
@@ -136,9 +149,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
           <input type="hidden" name="checkIn" value={checkIn} />
           <input type="hidden" name="checkOut" value={checkOut} />
           {(fieldErrors.checkIn || fieldErrors.checkOut) && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertCircle className="size-3" /> {fieldErrors.checkIn || fieldErrors.checkOut}
-            </p>
+            <FieldError>{fieldErrors.checkIn || fieldErrors.checkOut}</FieldError>
           )}
         </div>
         <Field
@@ -153,38 +164,22 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
         <div>
           <Label htmlFor="fullName">Guest name</Label>
           <Input id="fullName" name="fullName" required className={cn("mt-2 h-9", fieldErrors.fullName && "border-destructive")} />
-          {fieldErrors.fullName && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertCircle className="size-3" /> {fieldErrors.fullName}
-            </p>
-          )}
+          <FieldError>{fieldErrors.fullName}</FieldError>
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
           <Input id="phone" name="phone" required className={cn("mt-2 h-9", fieldErrors.phone && "border-destructive")} />
-          {fieldErrors.phone && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertCircle className="size-3" /> {fieldErrors.phone}
-            </p>
-          )}
+          <FieldError>{fieldErrors.phone}</FieldError>
         </div>
         <div>
           <Label htmlFor="whatsapp">WhatsApp</Label>
           <Input id="whatsapp" name="whatsapp" required className={cn("mt-2 h-9", fieldErrors.whatsapp && "border-destructive")} />
-          {fieldErrors.whatsapp && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertCircle className="size-3" /> {fieldErrors.whatsapp}
-            </p>
-          )}
+          <FieldError>{fieldErrors.whatsapp}</FieldError>
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" className={cn("mt-2 h-9", fieldErrors.email && "border-destructive")} />
-          {fieldErrors.email && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-destructive">
-              <AlertCircle className="size-3" /> {fieldErrors.email}
-            </p>
-          )}
+          <FieldError>{fieldErrors.email}</FieldError>
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="notes">Notes</Label>

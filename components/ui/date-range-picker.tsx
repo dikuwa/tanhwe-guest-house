@@ -1,7 +1,12 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { CalendarDays } from "lucide-react";
+import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 type DateRangePickerProps = {
   checkIn: string;
@@ -15,6 +20,17 @@ type DateRangePickerProps = {
   checkOutLabel?: string;
 };
 
+function toDate(value: string): Date | undefined {
+  if (!value) return undefined;
+  const d = new Date(`${value}T00:00:00Z`);
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
+function toDateString(date: Date | undefined): string {
+  if (!date) return "";
+  return date.toISOString().slice(0, 10);
+}
+
 export function DateRangePicker({
   checkIn,
   checkOut,
@@ -26,7 +42,30 @@ export function DateRangePicker({
   checkInLabel = "Check-in",
   checkOutLabel = "Check-out",
 }: DateRangePickerProps) {
-  const today = minDate ?? new Date().toISOString().slice(0, 10);
+  const today = minDate ? new Date(`${minDate}T00:00:00Z`) : new Date();
+  const checkInDate = toDate(checkIn);
+  const checkOutDate = toDate(checkOut);
+
+  const handleCheckInSelect = useCallback(
+    (date: Date | undefined) => {
+      const val = toDateString(date);
+      onCheckInChange(val);
+      // Auto-advance check-out if needed
+      if (date && checkOutDate && date >= checkOutDate) {
+        const next = new Date(date);
+        next.setDate(next.getDate() + 1);
+        onCheckOutChange(toDateString(next));
+      }
+    },
+    [checkOutDate, onCheckInChange, onCheckOutChange]
+  );
+
+  const handleCheckOutSelect = useCallback(
+    (date: Date | undefined) => {
+      onCheckOutChange(toDateString(date));
+    },
+    [onCheckOutChange]
+  );
 
   return (
     <div className="space-y-1.5">
@@ -35,42 +74,63 @@ export function DateRangePicker({
         Your stay
       </Label>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor={checkInId} className="text-xs text-neutral-500">
-            {checkInLabel}
-          </Label>
-          <input
-            id={checkInId}
-            type="date"
-            min={today}
-            required
-            value={checkIn}
-            onChange={(e) => {
-              onCheckInChange(e.target.value);
-              // Auto-set check-out to day after check-in if currently empty or before
-              if (checkOut && e.target.value >= checkOut) {
-                const nextDay = new Date(e.target.value);
-                nextDay.setDate(nextDay.getDate() + 1);
-                onCheckOutChange(nextDay.toISOString().slice(0, 10));
-              }
-            }}
-            className="mt-1 block h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-800 shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-          />
-        </div>
-        <div>
-          <Label htmlFor={checkOutId} className="text-xs text-neutral-500">
-            {checkOutLabel}
-          </Label>
-          <input
-            id={checkOutId}
-            type="date"
-            min={checkIn || today}
-            required
-            value={checkOut}
-            onChange={(e) => onCheckOutChange(e.target.value)}
-            className="mt-1 block h-10 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-800 shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-          />
-        </div>
+        {/* Check-in */}
+        <Popover>
+          <PopoverTrigger>
+            <button
+              id={checkInId}
+              type="button"
+              className={cn(
+                "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+                checkIn ? "text-neutral-800" : "text-neutral-400"
+              )}
+            >
+              {checkInDate
+                ? format(checkInDate, "d MMM yyyy")
+                : checkInLabel}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={checkInDate}
+              onSelect={handleCheckInSelect}
+              fromDate={today}
+              disabled={{ before: today }}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+
+        {/* Check-out */}
+        <Popover>
+          <PopoverTrigger>
+            <button
+              id={checkOutId}
+              type="button"
+              className={cn(
+                "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+                checkOut ? "text-neutral-800" : "text-neutral-400"
+              )}
+            >
+              {checkOutDate
+                ? format(checkOutDate, "d MMM yyyy")
+                : checkOutLabel}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={checkOutDate}
+              onSelect={handleCheckOutSelect}
+              fromDate={checkInDate || today}
+              disabled={{ before: checkInDate || today }}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

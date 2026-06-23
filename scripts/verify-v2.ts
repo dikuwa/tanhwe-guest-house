@@ -12,6 +12,7 @@ import {
   roomAmenities,
   rooms,
 } from "../lib/db/schema";
+import { createDocumentShareToken } from "../lib/document-share";
 
 async function main() {
   const base = process.env.VERIFY_BASE_URL ?? "http://localhost:3000";
@@ -115,6 +116,13 @@ async function main() {
     const pdf = await fetch(`${base}/api/admin/documents/${invoice.id}/pdf`, { headers });
     if (!pdf.ok || pdf.headers.get("content-type") !== "application/pdf") {
       throw new Error(`PDF verification failed (${pdf.status})`);
+    }
+    const shareToken = createDocumentShareToken(invoice.id);
+    const sharedPdf = await fetch(
+      `${base}/api/admin/documents/${invoice.id}/pdf?token=${encodeURIComponent(shareToken)}`
+    );
+    if (!sharedPdf.ok || sharedPdf.headers.get("content-type") !== "application/pdf") {
+      throw new Error(`Signed PDF verification failed (${sharedPdf.status})`);
     }
 
     const payment = await jsonRequest("/api/admin/payments", {

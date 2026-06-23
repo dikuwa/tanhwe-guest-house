@@ -112,6 +112,20 @@ async function main() {
       );
     }
 
+    const staffEmailMutation = await fetch(
+      `${base}/api/admin/documents/00000000-0000-0000-0000-000000000000/email`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json", cookie: staffCookie, origin },
+        body: "{}",
+      }
+    );
+    if (staffEmailMutation.status !== 403) {
+      throw new Error(
+        `Staff document email should be forbidden, received ${staffEmailMutation.status}`
+      );
+    }
+
     console.log("Owner/admin/staff permission verification passed.");
   } finally {
     if (createdUserIds.length) {

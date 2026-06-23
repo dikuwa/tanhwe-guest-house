@@ -82,16 +82,14 @@ export async function POST(request: NextRequest) {
           : null,
       createdBy: session.user.id,
     });
-    await tx
-      .insert(activityLogs)
-      .values({
-        id: crypto.randomUUID(),
-        userId: session.user.id,
-        action: "issued",
-        entity: "document",
-        entityId: id,
-        details: number,
-      });
+    await tx.insert(activityLogs).values({
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      action: "issued",
+      entity: "document",
+      entityId: id,
+      details: number,
+    });
   });
   return NextResponse.json({ id, number }, { status: 201 });
 }

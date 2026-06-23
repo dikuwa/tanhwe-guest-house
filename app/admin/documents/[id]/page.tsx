@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Download, MessageCircle } from "lucide-react";
+import { DocumentEmailButton } from "@/components/admin/document-email-button";
 import { Button } from "@/components/ui/button";
 import { getDocument } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
+import { createDocumentShareToken } from "@/lib/document-share";
 
 type Snapshot = {
   bookingNumber: string;
@@ -30,8 +32,10 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
   const document = await getDocument((await params).id);
   if (!document) notFound();
   const snapshot = JSON.parse(document.snapshot) as Snapshot;
+  const shareToken = createDocumentShareToken(document.id);
+  const downloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/admin/documents/${document.id}/pdf?token=${encodeURIComponent(shareToken)}`;
   const shareText = encodeURIComponent(
-    `${document.type.toUpperCase()} ${document.number} from Tanhwe Guest House. Total: ${money.format(document.total)}. Download: ${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/admin/documents/${document.id}/pdf`
+    `${document.type.toUpperCase()} ${document.number} from Tanhwe Guest House. Total: ${money.format(document.total)}. Download: ${downloadUrl}`
   );
   return (
     <div className="space-y-6">
@@ -40,7 +44,8 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           <ArrowLeft />
           Documents
         </Button>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <DocumentEmailButton id={document.id} disabled={!document.customerEmail} />
           <Button
             variant="outline"
             render={

@@ -13,5 +13,6 @@
 - Added safe authenticated Phase 5, V2 workflow, and role-permission verification scripts.
 - Added Vercel Web Analytics and Speed Insights instrumentation.
 - Documented Neon restore, branching, application rollback, and R2 backup procedures.
+- Added seven-day signed PDF links for WhatsApp sharing and Resend document delivery with idempotency protection and activity logging.
 
 Earlier project history remains in `docs/legacy-v1/CHANGELOG.md`.

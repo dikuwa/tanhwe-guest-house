@@ -15,7 +15,8 @@
     "db:migrate": "tsx --env-file=.env scripts/migrate.ts",
     "verify:phase5": "tsx --env-file=.env scripts/verify-phase5.ts",
     "verify:v2": "tsx --env-file=.env scripts/verify-v2.ts",
-    "verify:roles": "tsx --env-file=.env scripts/verify-roles.ts"
+    "verify:roles": "tsx --env-file=.env scripts/verify-roles.ts",
+    "verify:cron": "tsx --env-file=.env scripts/verify-cron.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",
@@ -33,6 +34,7 @@
     "postgres": "^3.4.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "resend": "^6.14.0",
     "shadcn": "^4.11.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",

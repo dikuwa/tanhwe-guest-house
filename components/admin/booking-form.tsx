@@ -36,7 +36,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
     router.refresh();
   }
   return (
-    <form onSubmit={submit} className="rounded-xl border bg-card p-5 sm:p-6">
+    <form onSubmit={submit} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <Label htmlFor="roomId">Room</Label>
@@ -44,12 +44,12 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             id="roomId"
             name="roomId"
             required
-            className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+            className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
           >
             <option value="">Select a room</option>
             {rooms.map((room) => (
               <option key={room.id} value={room.id}>
-                {room.name} — N${room.pricePerNight}/night ({room.availableUnits} units)
+                {room.name} &mdash; N${room.pricePerNight}/night ({room.availableUnits} units)
               </option>
             ))}
           </select>
@@ -59,7 +59,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
           <select
             id="status"
             name="status"
-            className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+            className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
           >
             <option value="confirmed">Confirmed</option>
             <option value="pending">Pending</option>
@@ -86,14 +86,14 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
         </div>
       </div>
       {error && (
-        <p role="alert" className="mt-4 text-sm text-destructive">
+        <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           {error}
         </p>
       )}
       <div className="mt-6 flex justify-end">
         <Button type="submit" size="lg" disabled={saving || rooms.length === 0}>
-          {saving && <Loader2 className="animate-spin" />}
-          {saving ? "Creating…" : "Create booking"}
+          {saving && <Loader2 className="size-4 animate-spin" />}
+          {saving ? "Creating..." : "Create booking"}
         </Button>
       </div>
     </form>

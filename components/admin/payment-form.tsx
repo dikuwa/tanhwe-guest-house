@@ -39,7 +39,7 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border bg-card p-5 md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
+      className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
     >
       <div>
         <Label htmlFor="payment-booking">Booking</Label>
@@ -47,14 +47,14 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
           id="payment-booking"
           name="bookingId"
           required
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="">Select booking</option>
           {bookings
             .filter((b) => b.balanceDue > 0)
             .map((booking) => (
               <option key={booking.id} value={booking.id}>
-                {booking.bookingNumber} · {booking.customerName} · N${" "}
+                {booking.bookingNumber} &middot; {booking.customerName} &middot; N${" "}
                 {booking.balanceDue.toFixed(2)} due
               </option>
             ))}
@@ -69,7 +69,7 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
           min="1"
           step="1"
           required
-          className="mt-2"
+          className="mt-2 h-9"
         />
       </div>
       <div>
@@ -77,7 +77,7 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
         <select
           id="payment-method"
           name="paymentMethod"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="cash">Cash</option>
           <option value="bank-transfer">Bank transfer</option>
@@ -86,11 +86,11 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
         </select>
       </div>
       <Button type="submit" disabled={saving}>
-        {saving ? <Loader2 className="animate-spin" /> : <WalletCards />}
-        {saving ? "Saving…" : "Record"}
+        {saving ? <Loader2 className="size-4 animate-spin" /> : <WalletCards className="size-4" />}
+        {saving ? "Saving..." : "Record payment"}
       </Button>
       {message && (
-        <p role="status" className="text-sm text-muted-foreground md:col-span-4">
+        <p role="status" className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 md:col-span-4">
           {message}
         </p>
       )}

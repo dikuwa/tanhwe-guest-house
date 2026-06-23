@@ -8,7 +8,7 @@ import { ContactActions } from "@/components/public/contact-actions";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 import { getPublicRoom, getPublicSettings } from "@/lib/public-data";
-import poster from "@/docs/assets/inspiration-1.jpeg";
+import { roomFallbackImage } from "@/lib/images";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -55,11 +55,11 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
         <div className="mt-8 grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)]">
           <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted lg:aspect-auto lg:min-h-[500px]">
             <Image
-              src={room.imageUrl ?? poster}
+              src={room.imageUrl ?? roomFallbackImage.url}
               alt={
                 room.imageUrl
                   ? `${room.name} at Tanhwe Guest House`
-                  : "Tanhwe Guest House accommodation and garden"
+                  : roomFallbackImage.alt
               }
               fill
               priority

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -41,17 +40,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-blue-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-3xl font-heading font-bold">
-            Tanhwe Guest House
-          </CardTitle>
-          <CardDescription className="text-center">Sign in to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-neutral-800">
+            Tanhwe <span className="text-primary">Guest House</span>
+          </h1>
+          <p className="mt-2 text-sm text-neutral-500">Sign in to manage your property</p>
+        </div>
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -62,9 +61,10 @@ export default function LoginPage() {
                 required
                 disabled={loading}
                 autoComplete="email"
+                className="h-10"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -75,20 +75,24 @@ export default function LoginPage() {
                 required
                 disabled={loading}
                 autoComplete="current-password"
+                className="h-10"
               />
             </div>
             {error && (
-              <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+              <div className="rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+        <p className="mt-6 text-center text-xs text-neutral-400">
+          Tanhwe Guest House &mdash; Mukwe, Namibia
+        </p>
+      </div>
     </div>
   );
 }

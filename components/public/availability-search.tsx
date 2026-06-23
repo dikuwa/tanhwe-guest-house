@@ -40,13 +40,13 @@ export function AvailabilitySearch({
     <form
       id="booking"
       onSubmit={submit}
-      className={`grid gap-3 ${compact ? "md:grid-cols-[1.2fr_1fr_1fr_.7fr_auto]" : "md:grid-cols-[1.35fr_1fr_1fr_.7fr_auto]"}`}
+      className={`grid gap-3 sm:grid-cols-2 ${compact ? "lg:grid-cols-[1.3fr_1fr_1fr_.6fr_auto]" : "lg:grid-cols-[1.35fr_1fr_1fr_.6fr_auto]"}`}
     >
       <div className="space-y-1.5">
         <Label htmlFor="search-room">Room</Label>
         <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-          <SelectTrigger id="search-room" className="h-11 w-full bg-background">
-            <SelectValue />
+          <SelectTrigger id="search-room" className="h-10 w-full bg-background">
+            <SelectValue placeholder="Select a room" />
           </SelectTrigger>
           <SelectContent>
             {rooms.map((room) => (
@@ -66,7 +66,7 @@ export function AvailabilitySearch({
           required
           value={checkIn}
           onChange={(event) => setCheckIn(event.target.value)}
-          className="h-11 bg-background"
+          className="h-10 bg-background"
         />
       </div>
       <div className="space-y-1.5">
@@ -78,7 +78,7 @@ export function AvailabilitySearch({
           required
           value={checkOut}
           onChange={(event) => setCheckOut(event.target.value)}
-          className="h-11 bg-background"
+          className="h-10 bg-background"
         />
       </div>
       <div className="space-y-1.5">
@@ -91,11 +91,12 @@ export function AvailabilitySearch({
           required
           value={guests}
           onChange={(event) => setGuests(event.target.value)}
-          className="h-11 bg-background"
+          className="h-10 bg-background"
         />
       </div>
-      <Button type="submit" size="lg" className="h-11 self-end px-5" disabled={!roomSlug}>
-        {compact ? <Search /> : <CalendarDays />} <span>{compact ? "Search" : "Check dates"}</span>
+      <Button type="submit" size="lg" className="h-10 self-end" disabled={!roomSlug}>
+        {compact ? <Search className="size-4" /> : <CalendarDays className="size-4" />}
+        {compact ? "Search" : "Check dates"}
       </Button>
     </form>
   );

@@ -38,7 +38,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border bg-card p-5 md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
+      className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
     >
       <div>
         <Label htmlFor="document-booking">Booking</Label>
@@ -46,22 +46,22 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
           id="document-booking"
           name="bookingId"
           required
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="">Select booking</option>
           {bookings.map((booking) => (
             <option key={booking.id} value={booking.id}>
-              {booking.bookingNumber} · {booking.customerName}
+              {booking.bookingNumber} &middot; {booking.customerName}
             </option>
           ))}
         </select>
       </div>
       <div>
-        <Label htmlFor="document-type">Document</Label>
+        <Label htmlFor="document-type">Document type</Label>
         <select
           id="document-type"
           name="type"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="quote">Quote</option>
           <option value="invoice">Invoice</option>
@@ -69,15 +69,15 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
         </select>
       </div>
       <div>
-        <Label htmlFor="expiresAt">Quote valid until</Label>
-        <Input id="expiresAt" name="expiresAt" type="date" className="mt-2" />
+        <Label htmlFor="expiresAt">Valid until</Label>
+        <Input id="expiresAt" name="expiresAt" type="date" className="mt-2 h-9" />
       </div>
       <Button type="submit" disabled={saving || !bookings.length}>
-        {saving ? <Loader2 className="animate-spin" /> : <FilePlus2 />}
-        {saving ? "Creating…" : "Create"}
+        {saving ? <Loader2 className="size-4 animate-spin" /> : <FilePlus2 className="size-4" />}
+        {saving ? "Creating..." : "Create"}
       </Button>
       {error && (
-        <p role="alert" className="text-sm text-destructive md:col-span-4">
+        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 md:col-span-4">
           {error}
         </p>
       )}

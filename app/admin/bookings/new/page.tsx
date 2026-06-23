@@ -6,11 +6,14 @@ export default async function NewBookingPage() {
   const rooms = await getActiveRoomOptions();
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="font-heading text-3xl font-semibold">Create booking</h1>
-      <p className="mb-6 mt-2 text-sm text-muted-foreground">
+      <p className="text-xs font-semibold uppercase tracking-wider text-primary">Reservations</p>
+      <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">Create booking</h1>
+      <p className="mt-1 text-sm text-neutral-500">
         Availability is checked before the reservation is saved.
       </p>
-      <BookingForm rooms={rooms} />
+      <div className="mt-6">
+        <BookingForm rooms={rooms} />
+      </div>
     </div>
   );
 }

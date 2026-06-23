@@ -35,14 +35,14 @@ export function FollowUpForm({ options }: { options: Options }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2 lg:grid-cols-4"
+      className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:grid-cols-2 lg:grid-cols-4"
     >
       <div className="lg:col-span-2">
-        <Label htmlFor="follow-booking">Booking (preferred)</Label>
+        <Label htmlFor="follow-booking">Booking</Label>
         <select
           id="follow-booking"
           name="bookingId"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="">No booking</option>
           {options.bookingOptions.map((option) => (
@@ -57,7 +57,7 @@ export function FollowUpForm({ options }: { options: Options }) {
         <select
           id="follow-customer"
           name="customerId"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="">Select if no booking</option>
           {options.customerOptions.map((option) => (
@@ -73,8 +73,8 @@ export function FollowUpForm({ options }: { options: Options }) {
           id="follow-title"
           name="title"
           required
-          className="mt-2"
-          placeholder="Confirm deposit with guest"
+          className="mt-2 h-10"
+          placeholder="e.g. Confirm deposit with guest"
         />
       </div>
       <div>
@@ -82,7 +82,7 @@ export function FollowUpForm({ options }: { options: Options }) {
         <select
           id="follow-type"
           name="type"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="manual">Manual</option>
           <option value="deposit">Deposit</option>
@@ -93,14 +93,14 @@ export function FollowUpForm({ options }: { options: Options }) {
       </div>
       <div>
         <Label htmlFor="follow-due">Due date</Label>
-        <Input id="follow-due" name="dueDate" type="date" required className="mt-2" />
+        <Input id="follow-due" name="dueDate" type="date" required className="mt-2 h-10" />
       </div>
       <div>
         <Label htmlFor="follow-priority">Priority</Label>
         <select
           id="follow-priority"
           name="priority"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="normal">Normal</option>
           <option value="high">High</option>
@@ -113,7 +113,7 @@ export function FollowUpForm({ options }: { options: Options }) {
         <select
           id="follow-assignee"
           name="assignedTo"
-          className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+          className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
         >
           <option value="">Unassigned</option>
           {options.staffOptions.map((option) => (
@@ -125,12 +125,12 @@ export function FollowUpForm({ options }: { options: Options }) {
       </div>
       <div className="flex items-end sm:col-span-2 lg:col-span-4">
         <Button type="submit" disabled={saving}>
-          {saving ? <Loader2 className="animate-spin" /> : <BellPlus />}
-          {saving ? "Creating…" : "Create follow-up"}
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <BellPlus className="size-4" />}
+          {saving ? "Creating..." : "Create follow-up"}
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-sm text-destructive sm:col-span-2 lg:col-span-4">
+        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 sm:col-span-2 lg:col-span-4">
           {error}
         </p>
       )}

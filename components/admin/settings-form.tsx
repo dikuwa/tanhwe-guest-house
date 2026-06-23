@@ -20,7 +20,7 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
     setMessage(response.ok ? "Saved." : (data.error ?? "Could not save"));
   }
   return (
-    <div className="divide-y rounded-xl border bg-card">
+    <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-xs">
       {settings.map((setting) => (
         <form
           key={setting.id}
@@ -30,17 +30,17 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
           <input type="hidden" name="key" value={setting.key} />
           <div>
             <Label htmlFor={`setting-${setting.key}`}>{setting.description ?? setting.key}</Label>
-            <p className="mt-1 text-xs text-muted-foreground">{setting.key}</p>
+            <p className="mt-1 text-xs text-neutral-400">{setting.key}</p>
           </div>
-          <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required />
+          <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required className="h-9" />
           <Button type="submit" variant="outline" size="sm">
-            <Save />
+            <Save className="size-3.5" />
             Save
           </Button>
         </form>
       ))}
       {message && (
-        <p role="status" className="px-5 pb-5 text-sm text-muted-foreground">
+        <p role="status" className="px-5 pb-5 text-sm text-neutral-500">
           {message}
         </p>
       )}

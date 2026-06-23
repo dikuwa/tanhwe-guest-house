@@ -7,8 +7,9 @@ export default async function AdminSettings() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-semibold">Settings</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Configuration</p>
+        <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">Settings</h1>
+        <p className="mt-1 text-sm text-neutral-500">
           Public contact details and stay defaults. Credentials remain in environment variables.
         </p>
       </header>

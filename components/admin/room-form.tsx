@@ -63,9 +63,9 @@ export function RoomForm({ room }: { room?: RoomValue }) {
   }
   return (
     <form onSubmit={submit} className="space-y-8">
-      <section className="rounded-xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">Room details</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+        <h2 className="text-base font-semibold text-neutral-800">Room details</h2>
+        <p className="mt-1 text-sm text-neutral-500">
           Public information, inventory, and pricing.
         </p>
         <div className="mt-5 grid gap-5 sm:grid-cols-2">
@@ -108,7 +108,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
               id="status"
               name="status"
               defaultValue={room?.status ?? "active"}
-              className="mt-2 h-9 w-full rounded-lg border bg-background px-3 text-sm"
+              className="mt-2 h-9 w-full rounded-md border border-neutral-200 bg-white px-3 text-sm text-neutral-700 shadow-xs"
             >
               <option value="active">Active</option>
               <option value="maintenance">Maintenance</option>
@@ -129,24 +129,30 @@ export function RoomForm({ room }: { room?: RoomValue }) {
               defaultValue={room?.description}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
             <input
               type="checkbox"
               name="breakfastIncluded"
               defaultChecked={room?.breakfastIncluded}
-            />{" "}
+              className="size-4 rounded border-neutral-300 text-primary accent-primary"
+            />
             Breakfast included
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="featured" defaultChecked={room?.featured} /> Feature on
-            homepage
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700">
+            <input
+              type="checkbox"
+              name="featured"
+              defaultChecked={room?.featured}
+              className="size-4 rounded border-neutral-300 text-primary accent-primary"
+            />
+            Feature on homepage
           </label>
         </div>
       </section>
       {room?.id && (
-        <section className="rounded-xl border bg-card p-5 sm:p-6">
-          <h2 className="text-lg font-semibold">Room images</h2>
-          <p className="mb-5 mt-1 text-sm text-muted-foreground">
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+          <h2 className="text-base font-semibold text-neutral-800">Room images</h2>
+          <p className="mb-5 mt-1 text-sm text-neutral-500">
             Upload up to five JPEG, PNG, or WebP images.
           </p>
           <ImageUploader
@@ -157,14 +163,14 @@ export function RoomForm({ room }: { room?: RoomValue }) {
         </section>
       )}
       {error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           {error}
         </p>
       )}
       <div className="flex justify-end">
         <Button type="submit" size="lg" disabled={saving}>
-          {saving ? <Loader2 className="animate-spin" /> : <Save />}
-          {saving ? "Saving…" : "Save room"}
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          {saving ? "Saving..." : "Save room"}
         </Button>
       </div>
     </form>

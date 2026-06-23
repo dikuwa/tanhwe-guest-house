@@ -16,12 +16,17 @@ export type PublicRoom = {
   breakfastIncluded: boolean;
   featured: boolean;
   imageUrl: string | null;
+  images: { url: string; alt: string }[];
   amenities: string[];
 };
 
 export async function getPublicRooms(): Promise<PublicRoom[]> {
   const db = getDb();
-  const roomRows = await db.select().from(rooms).where(eq(rooms.status, "active")).orderBy(asc(rooms.pricePerNight));
+  const roomRows = await db
+    .select()
+    .from(rooms)
+    .where(eq(rooms.status, "active"))
+    .orderBy(asc(rooms.pricePerNight));
   if (!roomRows.length) return [];
 
   const [images, amenities] = await Promise.all([
@@ -31,10 +36,19 @@ export async function getPublicRooms(): Promise<PublicRoom[]> {
 
   return roomRows.map((room) => ({
     ...room,
-    imageUrl: images.find((image) => image.roomId === room.id && image.isPrimary)?.imageUrl
-      ?? images.find((image) => image.roomId === room.id)?.imageUrl
-      ?? null,
-    amenities: amenities.filter((amenity) => amenity.roomId === room.id).map((amenity) => amenity.amenity),
+    imageUrl:
+      images.find((image) => image.roomId === room.id && image.isPrimary)?.imageUrl ??
+      images.find((image) => image.roomId === room.id)?.imageUrl ??
+      null,
+    images: images
+      .filter((image) => image.roomId === room.id)
+      .map((image) => ({
+        url: image.imageUrl,
+        alt: image.altText ?? `${room.name} at Tanhwe Guest House`,
+      })),
+    amenities: amenities
+      .filter((amenity) => amenity.roomId === room.id)
+      .map((amenity) => amenity.amenity),
   }));
 }
 
@@ -46,13 +60,25 @@ export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
   if (!room) return null;
 
   const [images, amenities] = await Promise.all([
-    db.select().from(roomImages).where(eq(roomImages.roomId, room.id)).orderBy(asc(roomImages.sortOrder)),
-    db.select().from(roomAmenities).where(eq(roomAmenities.roomId, room.id)).orderBy(asc(roomAmenities.amenity)),
+    db
+      .select()
+      .from(roomImages)
+      .where(eq(roomImages.roomId, room.id))
+      .orderBy(asc(roomImages.sortOrder)),
+    db
+      .select()
+      .from(roomAmenities)
+      .where(eq(roomAmenities.roomId, room.id))
+      .orderBy(asc(roomAmenities.amenity)),
   ]);
 
   return {
     ...room,
     imageUrl: images.find((image) => image.isPrimary)?.imageUrl ?? images[0]?.imageUrl ?? null,
+    images: images.map((image) => ({
+      url: image.imageUrl,
+      alt: image.altText ?? `${room.name} at Tanhwe Guest House`,
+    })),
     amenities: amenities.map((amenity) => amenity.amenity),
   };
 }

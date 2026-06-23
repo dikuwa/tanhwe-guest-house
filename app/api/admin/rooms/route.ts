@@ -35,25 +35,21 @@ export async function POST(request: NextRequest) {
       const { amenities, ...room } = parsed.data;
       await tx.insert(rooms).values({ id, ...room, description: room.description || null });
       if (amenities.length)
-        await tx
-          .insert(roomAmenities)
-          .values(
-            [...new Set(amenities)].map((amenity) => ({
-              id: crypto.randomUUID(),
-              roomId: id,
-              amenity,
-            }))
-          );
-      await tx
-        .insert(activityLogs)
-        .values({
-          id: crypto.randomUUID(),
-          userId: session.user.id,
-          action: "created",
-          entity: "room",
-          entityId: id,
-          details: room.name,
-        });
+        await tx.insert(roomAmenities).values(
+          [...new Set(amenities)].map((amenity) => ({
+            id: crypto.randomUUID(),
+            roomId: id,
+            amenity,
+          }))
+        );
+      await tx.insert(activityLogs).values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        action: "created",
+        entity: "room",
+        entityId: id,
+        details: room.name,
+      });
     });
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {

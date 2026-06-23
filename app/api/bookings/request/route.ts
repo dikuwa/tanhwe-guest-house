@@ -4,6 +4,7 @@ import { calculateNights, checkRoomAvailability, parseStayDate } from "@/lib/ava
 import { allowPublicRequest } from "@/lib/public-rate-limit";
 import { getDb } from "@/lib/db";
 import { bookingRooms, bookings, customers } from "@/lib/db/schema";
+import { findConfidentCustomerMatch } from "@/lib/customer-data";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const schema = z.object({
@@ -22,15 +23,20 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > 32 * 1024) return NextResponse.json({ error: "Request is too large" }, { status: 413 });
+  if (contentLength > 32 * 1024)
+    return NextResponse.json({ error: "Request is too large" }, { status: 413 });
 
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (!allowPublicRequest(ip)) {
-    return NextResponse.json({ error: "Too many requests. Please call or WhatsApp us." }, { status: 429 });
+    return NextResponse.json(
+      { error: "Too many requests. Please call or WhatsApp us." },
+      { status: 429 }
+    );
   }
 
   const body = schema.safeParse(await request.json().catch(() => null));
-  if (!body.success) return NextResponse.json({ error: "Please check the booking details" }, { status: 400 });
+  if (!body.success)
+    return NextResponse.json({ error: "Please check the booking details" }, { status: 400 });
 
   const checkIn = parseStayDate(body.data.checkIn);
   const checkOut = parseStayDate(body.data.checkOut);
@@ -39,26 +45,30 @@ export async function POST(request: NextRequest) {
   }
 
   const availability = await checkRoomAvailability({ ...body.data, checkIn, checkOut });
-  if (!availability.available || (!("room" in availability))) {
-    return NextResponse.json({ error: availability.reason ?? "Room is unavailable for those dates" }, { status: 409 });
+  if (!availability.available || !("room" in availability)) {
+    return NextResponse.json(
+      { error: availability.reason ?? "Room is unavailable for those dates" },
+      { status: 409 }
+    );
   }
 
-  const customerId = crypto.randomUUID();
+  const matchedCustomer = await findConfidentCustomerMatch(body.data);
+  const customerId = matchedCustomer?.id ?? crypto.randomUUID();
   const bookingId = crypto.randomUUID();
   const bookingNumber = `TG-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
-  const notes = [
-    body.data.notes,
-    `Preferred contact: ${body.data.preferredContact}`,
-  ].filter(Boolean).join("\n");
+  const notes = [body.data.notes, `Preferred contact: ${body.data.preferredContact}`]
+    .filter(Boolean)
+    .join("\n");
 
   await getDb().transaction(async (tx) => {
-    await tx.insert(customers).values({
-      id: customerId,
-      fullName: body.data.fullName,
-      phone: body.data.phone,
-      whatsapp: body.data.whatsapp,
-      email: body.data.email || null,
-    });
+    if (!matchedCustomer)
+      await tx.insert(customers).values({
+        id: customerId,
+        fullName: body.data.fullName,
+        phone: body.data.phone,
+        whatsapp: body.data.whatsapp,
+        email: body.data.email || null,
+      });
     await tx.insert(bookings).values({
       id: bookingId,
       bookingNumber,
@@ -86,9 +96,12 @@ export async function POST(request: NextRequest) {
     });
   });
 
-  return NextResponse.json({
-    success: true,
-    bookingNumber,
-    message: "Your request has been received. We will confirm availability with you shortly.",
-  }, { status: 201 });
+  return NextResponse.json(
+    {
+      success: true,
+      bookingNumber,
+      message: "Your request has been received. We will confirm availability with you shortly.",
+    },
+    { status: 201 }
+  );
 }

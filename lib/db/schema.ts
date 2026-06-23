@@ -169,17 +169,25 @@ export const roomBlockedDates = pgTable(
   ]
 );
 
-export const customers = pgTable("customers", {
-  id: text("id").primaryKey(),
-  fullName: text("full_name").notNull(),
-  phone: text("phone").notNull(),
-  whatsapp: text("whatsapp").notNull(),
-  email: text("email"),
-  address: text("address"),
-  idOrPassport: text("id_or_passport"),
-  notes: text("notes"),
-  ...timestamps,
-});
+export const customers = pgTable(
+  "customers",
+  {
+    id: text("id").primaryKey(),
+    fullName: text("full_name").notNull(),
+    phone: text("phone").notNull(),
+    whatsapp: text("whatsapp").notNull(),
+    email: text("email"),
+    address: text("address"),
+    idOrPassport: text("id_or_passport"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    index("customers_phone_idx").on(table.phone),
+    index("customers_whatsapp_idx").on(table.whatsapp),
+    index("customers_email_idx").on(table.email),
+  ]
+);
 
 export const bookings = pgTable(
   "bookings",
@@ -280,12 +288,23 @@ export const documents = pgTable(
     number: text("number").notNull().unique(),
     pdfUrl: text("pdf_url"),
     total: integer("total").notNull(),
+    amountPaid: integer("amount_paid").notNull().default(0),
+    balanceDue: integer("balance_due").notNull().default(0),
+    snapshot: text("snapshot").notNull().default("{}"),
     status: text("status").notNull().default("draft"),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     ...timestamps,
   },
-  (table) => [index("documents_booking_id_idx").on(table.bookingId)]
+  (table) => [
+    index("documents_booking_id_idx").on(table.bookingId),
+    index("documents_customer_id_idx").on(table.customerId),
+    index("documents_type_status_idx").on(table.type, table.status),
+    check(
+      "documents_totals_nonnegative",
+      sql`${table.total} >= 0 and ${table.amountPaid} >= 0 and ${table.balanceDue} >= 0`
+    ),
+  ]
 );
 
 export const followUps = pgTable(
@@ -310,6 +329,29 @@ export const followUps = pgTable(
       "follow_ups_parent_check",
       sql`${table.bookingId} is not null or ${table.customerId} is not null`
     ),
+  ]
+);
+
+export const reminderLogs = pgTable(
+  "reminder_logs",
+  {
+    id: text("id").primaryKey(),
+    bookingId: text("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    scheduledFor: timestamp("scheduled_for", { withTimezone: true }).notNull(),
+    status: text("status").notNull().default("created"),
+    details: text("details"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("reminder_logs_booking_type_date_unique").on(
+      table.bookingId,
+      table.type,
+      table.scheduledFor
+    ),
+    index("reminder_logs_scheduled_for_idx").on(table.scheduledFor),
   ]
 );
 

@@ -13,7 +13,8 @@ const schema = z.object({
 
 export async function POST(request: Request) {
   const body = schema.safeParse(await request.json().catch(() => null));
-  if (!body.success) return NextResponse.json({ error: "Invalid availability request" }, { status: 400 });
+  if (!body.success)
+    return NextResponse.json({ error: "Invalid availability request" }, { status: 400 });
 
   const checkIn = parseStayDate(body.data.checkIn);
   const checkOut = parseStayDate(body.data.checkOut);

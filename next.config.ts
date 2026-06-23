@@ -1,16 +1,23 @@
 import type { NextConfig } from "next";
 
 const r2PublicUrl = process.env.R2_PUBLIC_URL ? new URL(process.env.R2_PUBLIC_URL) : null;
+const r2LegacyPublicUrl = process.env.R2_LEGACY_PUBLIC_URL
+  ? new URL(process.env.R2_LEGACY_PUBLIC_URL)
+  : null;
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  images: r2PublicUrl ? {
-    remotePatterns: [{
-      protocol: r2PublicUrl.protocol.replace(":", "") as "http" | "https",
-      hostname: r2PublicUrl.hostname,
-      pathname: `${r2PublicUrl.pathname}**`,
-    }],
-  } : undefined,
+  images: r2PublicUrl
+    ? {
+        remotePatterns: [r2PublicUrl, r2LegacyPublicUrl]
+          .filter((value): value is URL => Boolean(value))
+          .map((value) => ({
+            protocol: value.protocol.replace(":", "") as "http" | "https",
+            hostname: value.hostname,
+            pathname: `${value.pathname}**`,
+          })),
+      }
+    : undefined,
   async headers() {
     return [
       {

@@ -4,6 +4,7 @@ import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomAvailability, parseStayDate } from "@/lib/availability";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookingRooms, bookings, customers } from "@/lib/db/schema";
+import { findConfidentCustomerMatch } from "@/lib/customer-data";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const input = z.object({
@@ -41,59 +42,53 @@ export async function POST(request: NextRequest) {
       { error: availability.reason ?? "Room is unavailable for those dates" },
       { status: 409 }
     );
-  const customerId = crypto.randomUUID(),
+  const matchedCustomer = await findConfidentCustomerMatch(parsed.data);
+  const customerId = matchedCustomer?.id ?? crypto.randomUUID(),
     bookingId = crypto.randomUUID();
   const bookingNumber = `TG-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
   await getDb().transaction(async (tx) => {
-    await tx
-      .insert(customers)
-      .values({
+    if (!matchedCustomer)
+      await tx.insert(customers).values({
         id: customerId,
         fullName: parsed.data.fullName,
         phone: parsed.data.phone,
         whatsapp: parsed.data.whatsapp,
         email: parsed.data.email || null,
       });
-    await tx
-      .insert(bookings)
-      .values({
-        id: bookingId,
-        bookingNumber,
-        customerId,
-        checkIn,
-        checkOut,
-        nights: availability.nights,
-        guestsCount: parsed.data.guestsCount,
-        status: parsed.data.status,
-        source: "admin",
-        subtotal: availability.subtotal,
-        total: availability.subtotal,
-        balanceDue: availability.subtotal,
-        notes: parsed.data.notes || null,
-        createdBy: session.user.id,
-      });
-    await tx
-      .insert(bookingRooms)
-      .values({
-        id: crypto.randomUUID(),
-        bookingId,
-        roomId: availability.room.id,
-        roomNameSnapshot: availability.room.name,
-        pricePerNight: availability.pricePerNight,
-        roomsCount: parsed.data.roomsCount,
-        nights: availability.nights,
-        subtotal: availability.subtotal,
-      });
-    await tx
-      .insert(activityLogs)
-      .values({
-        id: crypto.randomUUID(),
-        userId: session.user.id,
-        action: "created",
-        entity: "booking",
-        entityId: bookingId,
-        details: bookingNumber,
-      });
+    await tx.insert(bookings).values({
+      id: bookingId,
+      bookingNumber,
+      customerId,
+      checkIn,
+      checkOut,
+      nights: availability.nights,
+      guestsCount: parsed.data.guestsCount,
+      status: parsed.data.status,
+      source: "admin",
+      subtotal: availability.subtotal,
+      total: availability.subtotal,
+      balanceDue: availability.subtotal,
+      notes: parsed.data.notes || null,
+      createdBy: session.user.id,
+    });
+    await tx.insert(bookingRooms).values({
+      id: crypto.randomUUID(),
+      bookingId,
+      roomId: availability.room.id,
+      roomNameSnapshot: availability.room.name,
+      pricePerNight: availability.pricePerNight,
+      roomsCount: parsed.data.roomsCount,
+      nights: availability.nights,
+      subtotal: availability.subtotal,
+    });
+    await tx.insert(activityLogs).values({
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      action: "created",
+      entity: "booking",
+      entityId: bookingId,
+      details: bookingNumber,
+    });
   });
   return NextResponse.json({ id: bookingId, bookingNumber }, { status: 201 });
 }

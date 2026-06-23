@@ -23,25 +23,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         .where(eq(rooms.id, id));
       await tx.delete(roomAmenities).where(eq(roomAmenities.roomId, id));
       if (amenities.length)
-        await tx
-          .insert(roomAmenities)
-          .values(
-            [...new Set(amenities)].map((amenity) => ({
-              id: crypto.randomUUID(),
-              roomId: id,
-              amenity,
-            }))
-          );
-      await tx
-        .insert(activityLogs)
-        .values({
-          id: crypto.randomUUID(),
-          userId: session.user.id,
-          action: "updated",
-          entity: "room",
-          entityId: id,
-          details: room.name,
-        });
+        await tx.insert(roomAmenities).values(
+          [...new Set(amenities)].map((amenity) => ({
+            id: crypto.randomUUID(),
+            roomId: id,
+            amenity,
+          }))
+        );
+      await tx.insert(activityLogs).values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        action: "updated",
+        entity: "room",
+        entityId: id,
+        details: room.name,
+      });
     });
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -64,14 +60,12 @@ export async function DELETE(
     .where(eq(rooms.id, id))
     .returning({ id: rooms.id });
   if (!updated) return NextResponse.json({ error: "Room not found" }, { status: 404 });
-  await getDb()
-    .insert(activityLogs)
-    .values({
-      id: crypto.randomUUID(),
-      userId: session.user.id,
-      action: "deactivated",
-      entity: "room",
-      entityId: id,
-    });
+  await getDb().insert(activityLogs).values({
+    id: crypto.randomUUID(),
+    userId: session.user.id,
+    action: "deactivated",
+    entity: "room",
+    entityId: id,
+  });
   return NextResponse.json({ success: true });
 }

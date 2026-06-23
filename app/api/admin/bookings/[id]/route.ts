@@ -62,16 +62,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .update(bookings)
       .set({ status: parsed.data.status, updatedAt: new Date() })
       .where(eq(bookings.id, id));
-    await tx
-      .insert(activityLogs)
-      .values({
-        id: crypto.randomUUID(),
-        userId: session.user.id,
-        action: "status_updated",
-        entity: "booking",
-        entityId: id,
-        details: `${current.status} → ${parsed.data.status}`,
-      });
+    await tx.insert(activityLogs).values({
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      action: "status_updated",
+      entity: "booking",
+      entityId: id,
+      details: `${current.status} → ${parsed.data.status}`,
+    });
   });
   return NextResponse.json({ success: true });
 }

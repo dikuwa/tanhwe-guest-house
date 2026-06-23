@@ -62,7 +62,9 @@ function hasValidSignature(bytes: Uint8Array, type: string): boolean {
   }
   if (type === "image/webp") {
     const decoder = new TextDecoder();
-    return decoder.decode(bytes.slice(0, 4)) === "RIFF" && decoder.decode(bytes.slice(8, 12)) === "WEBP";
+    return (
+      decoder.decode(bytes.slice(0, 4)) === "RIFF" && decoder.decode(bytes.slice(8, 12)) === "WEBP"
+    );
   }
   return false;
 }
@@ -81,11 +83,19 @@ function publicObjectUrl(key: string): string {
 function keyFromPublicUrl(imageUrl: string): string {
   const candidate = new URL(imageUrl);
   const { publicUrl } = getR2Config();
-  if (candidate.origin !== publicUrl.origin || !candidate.pathname.startsWith(publicUrl.pathname)) {
+  const legacyValue = process.env.R2_LEGACY_PUBLIC_URL;
+  const bases = [
+    publicUrl,
+    ...(legacyValue ? [new URL(legacyValue.endsWith("/") ? legacyValue : `${legacyValue}/`)] : []),
+  ];
+  const base = bases.find(
+    (value) => candidate.origin === value.origin && candidate.pathname.startsWith(value.pathname)
+  );
+  if (!base) {
     throw new Error("Invalid R2 image URL");
   }
 
-  const key = decodeURIComponent(candidate.pathname.slice(publicUrl.pathname.length));
+  const key = decodeURIComponent(candidate.pathname.slice(base.pathname.length));
   if (!key || key.includes("..")) throw new Error("Invalid R2 object key");
   return key;
 }
@@ -99,39 +109,46 @@ export async function uploadRoomImage(file: File, roomId: string): Promise<strin
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  if (!hasValidSignature(bytes, file.type)) throw new Error("File contents do not match its image type");
+  if (!hasValidSignature(bytes, file.type))
+    throw new Error("File contents do not match its image type");
 
   const key = `${roomPath(roomId)}/${crypto.randomUUID()}.${extensionFor(file.type)}`;
   const { bucket } = getR2Config();
-  await getR2Client().send(new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: bytes,
-    ContentType: file.type,
-    CacheControl: "public, max-age=31536000, immutable",
-  }));
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: bytes,
+      ContentType: file.type,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
 
   return publicObjectUrl(key);
 }
 
 export async function deleteRoomImage(imageUrl: string): Promise<void> {
   const { bucket } = getR2Config();
-  await getR2Client().send(new DeleteObjectCommand({
-    Bucket: bucket,
-    Key: keyFromPublicUrl(imageUrl),
-  }));
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: keyFromPublicUrl(imageUrl),
+    })
+  );
 }
 
 export async function listRoomImages(roomId: string): Promise<string[]> {
   const prefix = `${roomPath(roomId)}/`;
   const { bucket } = getR2Config();
-  const response = await getR2Client().send(new ListObjectsV2Command({
-    Bucket: bucket,
-    Prefix: prefix,
-    MaxKeys: 100,
-  }));
+  const response = await getR2Client().send(
+    new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      MaxKeys: 100,
+    })
+  );
 
   return (response.Contents ?? [])
-    .flatMap((object) => object.Key ? [object.Key] : [])
+    .flatMap((object) => (object.Key ? [object.Key] : []))
     .map(publicObjectUrl);
 }

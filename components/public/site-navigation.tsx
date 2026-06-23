@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 
 const links = [
   { href: "/rooms", label: "Rooms" },
@@ -126,9 +127,7 @@ export function SiteNavigation() {
               className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-neutral-200 bg-white shadow-lg md:hidden"
             >
               <div className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-100 px-4">
-                <span className="font-heading text-base font-bold tracking-tight">
-                  Tanhwe <span className="text-primary">Guest House</span>
-                </span>
+                <TanhweLogo size="sm" showIcon={false} />
                 <button
                   type="button"
                   aria-label="Close menu"

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MapPin, Phone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { getPublicSettings } from "@/lib/public-data";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 import { SiteNavigation } from "./site-navigation";
 
 export async function SiteHeader() {
@@ -11,9 +12,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
-        <Link href="/" className="font-heading text-lg font-bold tracking-tight text-secondary lg:text-xl">
-          Tanhwe <span className="text-primary">Guest House</span>
-        </Link>
+        <TanhweLogo href="/" size="sm" />
         <SiteNavigation />
         <div className="flex items-center gap-2">
           <a

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,11 +43,9 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-neutral-800">
-            Tanhwe <span className="text-primary">Guest House</span>
-          </h1>
-          <p className="mt-2 text-sm text-neutral-500">Sign in to manage your property</p>
+        <div className="mb-8 text-center flex flex-col items-center">
+          <TanhweLogo size="md" showIcon />
+          <p className="mt-4 text-sm text-neutral-500">Sign in to manage your property</p>
         </div>
         <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">

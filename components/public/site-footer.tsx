@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, MessageCircle, Phone } from "lucide-react";
 import { getPublicSettings } from "@/lib/public-data";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 
 export async function SiteFooter() {
   const settings = await getPublicSettings();
@@ -11,7 +12,7 @@ export async function SiteFooter() {
     <footer className="bg-secondary text-secondary-foreground">
       <div className="mx-auto grid max-w-[1180px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-[1.3fr_1fr_1fr] md:py-16">
         <div>
-          <p className="font-heading text-2xl font-bold md:text-3xl">Tanhwe Guest House</p>
+          <TanhweLogo size="lg" className="text-secondary-foreground" />
           <p className="mt-3 max-w-sm text-sm leading-6 text-secondary-foreground/70">
             Comfortable accommodation and conference facilities in Mukwe, served with warm Namibian hospitality.
           </p>

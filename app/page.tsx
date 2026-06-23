@@ -31,7 +31,7 @@ export default async function Home() {
               >
                 <MapPin /> Mukwe, Namibia
               </Badge>
-              <h1 className="mt-7 font-playfair text-[clamp(3.5rem,8vw,7rem)] font-bold leading-[.88] tracking-[-0.045em]">
+              <h1 className="mt-7 font-heading text-[clamp(3.5rem,8vw,7rem)] font-bold leading-[.88] tracking-[-0.045em]">
                 Stay easy.
                 <br />
                 <span className="text-primary">Feel at home.</span>
@@ -60,7 +60,7 @@ export default async function Home() {
                 <p className="text-xs font-semibold uppercase tracking-[.16em] text-secondary-foreground/65">
                   Our promise
                 </p>
-                <p className="mt-1 font-playfair text-xl font-bold">
+                <p className="mt-1 font-heading text-xl font-bold">
                   Comfort · Hospitality · Convenience
                 </p>
               </div>
@@ -78,7 +78,7 @@ export default async function Home() {
           <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
             <div>
               <p className="text-sm font-semibold text-secondary">Rooms for real rest</p>
-              <h2 className="mt-2 max-w-2xl font-playfair text-4xl font-bold tracking-tight sm:text-5xl">
+              <h2 className="mt-2 max-w-2xl font-heading text-4xl font-bold tracking-tight sm:text-5xl">
                 Simple comforts, thoughtfully prepared.
               </h2>
             </div>
@@ -102,7 +102,7 @@ export default async function Home() {
         <section className="bg-[color-mix(in_oklch,var(--primary)_10%,var(--background))]">
           <div className="mx-auto grid max-w-[1180px] gap-14 px-4 py-24 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:py-32">
             <div>
-              <p className="font-playfair text-4xl font-bold sm:text-5xl">
+              <p className="font-heading text-4xl font-bold sm:text-5xl">
                 Good mornings start here.
               </p>
               <p className="mt-5 max-w-lg text-lg leading-8 text-muted-foreground">
@@ -142,7 +142,7 @@ export default async function Home() {
         >
           <div className="min-h-[360px] rounded-xl bg-secondary p-8 text-secondary-foreground sm:p-12">
             <Presentation className="size-10 text-primary" />
-            <h2 className="mt-10 max-w-xl font-playfair text-4xl font-bold sm:text-5xl">
+            <h2 className="mt-10 max-w-xl font-heading text-4xl font-bold sm:text-5xl">
               Meet, plan, and gather in Mukwe.
             </h2>
             <p className="mt-5 max-w-xl leading-7 text-secondary-foreground/75">
@@ -152,7 +152,7 @@ export default async function Home() {
           </div>
           <div className="flex flex-col justify-center lg:pl-8">
             <p className="text-sm font-semibold text-primary">Conference enquiries</p>
-            <h3 className="mt-3 font-playfair text-3xl font-bold">
+            <h3 className="mt-3 font-heading text-3xl font-bold">
               A straightforward space for getting things done.
             </h3>
             <ul className="mt-6 space-y-3 text-muted-foreground">

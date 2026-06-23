@@ -41,7 +41,7 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
               </Badge>
               {room.breakfastIncluded && <Badge>Breakfast included</Badge>}
             </div>
-            <h1 className="mt-4 font-playfair text-4xl font-bold sm:text-6xl">{room.name}</h1>
+            <h1 className="mt-4 font-heading text-4xl font-bold sm:text-6xl">{room.name}</h1>
           </div>
           <p className="text-right">
             <span className="text-2xl font-bold">
@@ -106,14 +106,14 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
               )}
             </div>
             <section className="py-10">
-              <h2 className="font-playfair text-3xl font-bold">A comfortable base in Mukwe.</h2>
+              <h2 className="font-heading text-3xl font-bold">A comfortable base in Mukwe.</h2>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
                 {room.description ??
                   "A clean, comfortable room prepared for an easy stay at Tanhwe Guest House."}
               </p>
             </section>
             <section className="border-t py-10">
-              <h2 className="font-playfair text-3xl font-bold">Room amenities</h2>
+              <h2 className="font-heading text-3xl font-bold">Room amenities</h2>
               <div className="mt-7 grid gap-5 sm:grid-cols-2">
                 {(room.amenities.length
                   ? room.amenities
@@ -130,7 +130,7 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
               </div>
             </section>
             <section className="border-t py-10">
-              <h2 className="font-playfair text-3xl font-bold">Good to know</h2>
+              <h2 className="font-heading text-3xl font-bold">Good to know</h2>
               <div className="mt-6 grid gap-5 sm:grid-cols-2">
                 <div>
                   <p className="text-sm text-muted-foreground">Check-in</p>

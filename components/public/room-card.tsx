@@ -37,7 +37,7 @@ export function RoomCard({ room, currency = "N$" }: { room: PublicRoom; currency
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
               {room.type}
             </p>
-            <h3 className="mt-1 font-playfair text-2xl font-bold">
+            <h3 className="mt-1 font-heading text-2xl font-bold">
               <Link href={`/rooms/${room.slug}`}>{room.name}</Link>
             </h3>
           </div>

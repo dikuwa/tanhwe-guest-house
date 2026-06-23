@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-blue-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-playfair font-bold text-center">
+          <CardTitle className="text-center text-3xl font-heading font-bold">
             Tanhwe Guest House
           </CardTitle>
           <CardDescription className="text-center">Sign in to your account</CardDescription>

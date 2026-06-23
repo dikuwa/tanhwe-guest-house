@@ -20,7 +20,7 @@ export default async function RoomsPage() {
         <section className="bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] px-4 py-16 sm:px-6 lg:py-20">
           <div className="mx-auto max-w-[1180px]">
             <p className="text-sm font-semibold text-secondary">Stay in Mukwe</p>
-            <h1 className="mt-3 font-playfair text-5xl font-bold tracking-tight sm:text-6xl">
+            <h1 className="mt-3 font-heading text-5xl font-bold tracking-tight sm:text-6xl">
               Find your room.
             </h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
@@ -37,7 +37,7 @@ export default async function RoomsPage() {
         <section className="mx-auto max-w-[1180px] px-4 pb-24 pt-8 sm:px-6 lg:pb-32">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h2 className="font-playfair text-3xl font-bold">Available room types</h2>
+              <h2 className="font-heading text-3xl font-bold">Available room types</h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 Final availability is confirmed after your request.
               </p>

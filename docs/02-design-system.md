@@ -84,8 +84,8 @@ Recommended:
 Use one of:
 
 - Merriweather
-- Libre Baskerville
-- Playfair Display
+- Inter Tight for headings and display text
+- Inter for body and interface text
 
 Purpose:
 

@@ -2,7 +2,7 @@
 
 Status: V2 implementation and local verification complete in the update branch; migration, authenticated integration testing on a disposable database branch, visual browser QA, preview deployment, and production rollout remain pending.
 
-Implemented: preserved Phase 5 public/admin operations; updated design tokens and Libre Baskerville/Inter typography; accessible mobile navigation; room gallery; customer management and duplicate review; snapshot quotes/invoices/receipts; PDF downloads; payments and balances; follow-ups; idempotent scheduled task creation; owner reports; settings; role management; R2 legacy-domain compatibility; updated docs.
+Implemented: preserved Phase 5 public/admin operations; updated design tokens and Inter Tight/Inter typography; accessible mobile navigation; room gallery; customer management and duplicate review; snapshot quotes/invoices/receipts; PDF downloads; payments and balances; follow-ups; idempotent scheduled task creation; owner reports; settings; role management; R2 legacy-domain compatibility; updated docs.
 
 Not claimed complete: email delivery, external monitoring, backup restore drill, Cloudflare custom-domain configuration, credential rotation, Vercel preview, and production deployment.
 

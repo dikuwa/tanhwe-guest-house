@@ -20,7 +20,7 @@ export default async function ContactPage() {
         <section className="bg-secondary px-4 py-20 text-secondary-foreground sm:px-6 lg:py-28">
           <div className="mx-auto max-w-[1180px]">
             <p className="text-sm font-semibold text-primary">We are easy to reach</p>
-            <h1 className="mt-3 max-w-3xl font-playfair text-5xl font-bold tracking-tight sm:text-7xl">
+            <h1 className="mt-3 max-w-3xl font-heading text-5xl font-bold tracking-tight sm:text-7xl">
               Let’s plan your stay in Mukwe.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-secondary-foreground/70">
@@ -30,7 +30,7 @@ export default async function ContactPage() {
         </section>
         <section className="mx-auto grid max-w-[1180px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[.85fr_1.15fr] lg:py-28">
           <div>
-            <h2 className="font-playfair text-4xl font-bold">Contact details</h2>
+            <h2 className="font-heading text-4xl font-bold">Contact details</h2>
             <div className="mt-8 space-y-7">
               <div className="flex gap-4">
                 <MapPin className="mt-1 size-5 text-primary" />
@@ -67,7 +67,7 @@ export default async function ContactPage() {
           </div>
           <div className="min-h-[420px] rounded-xl bg-[color-mix(in_oklch,var(--secondary)_9%,var(--background))] p-8 sm:p-12">
             <MapPin className="size-10 text-secondary" />
-            <h2 className="mt-12 font-playfair text-4xl font-bold">Mukwe, Namibia</h2>
+            <h2 className="mt-12 font-heading text-4xl font-bold">Mukwe, Namibia</h2>
             <p className="mt-5 max-w-lg leading-7 text-muted-foreground">
               Ask us for a location pin when confirming your booking. We will share clear arrival
               directions directly by WhatsApp.

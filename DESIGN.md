@@ -13,7 +13,7 @@ colors:
   border: "#E5E7EB"
 typography:
   display:
-    fontFamily: "Libre Baskerville, Georgia, serif"
+    fontFamily: "Inter Tight, ui-sans-serif, system-ui, sans-serif"
     fontSize: "clamp(2.75rem, 8vw, 6.5rem)"
     fontWeight: 700
     lineHeight: 0.95
@@ -67,7 +67,7 @@ Sunset orange carries action and hospitality. River blue carries trust, navigati
 
 ## Typography
 
-Libre Baskerville is the selected public display face. Inter remains the body and interface face. Headings use decisive scale and tight leading; body copy stays between 65 and 75 characters per line.
+Inter Tight is the heading and display face across public and admin surfaces. Inter remains the body and interface face. Headings use decisive scale, tighter tracking, and controlled leading; body copy stays between 65 and 75 characters per line.
 
 **The Guest-Book Rule.** Display type appears in short, confident phrases, never in long paragraphs or tiny labels.
 

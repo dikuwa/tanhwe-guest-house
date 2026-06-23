@@ -11,7 +11,7 @@ export async function SiteFooter() {
     <footer className="bg-secondary text-secondary-foreground">
       <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <p className="font-playfair text-3xl font-bold">Tanhwe Guest House</p>
+          <p className="font-heading text-3xl font-bold">Tanhwe Guest House</p>
           <p className="mt-3 max-w-md text-sm leading-6 text-secondary-foreground/75">
             Comfortable accommodation and practical conference facilities in Mukwe, served with warm
             Namibian hospitality.

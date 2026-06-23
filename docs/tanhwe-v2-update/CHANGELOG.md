@@ -9,5 +9,6 @@
 - Added manual follow-ups, assignment, completion, overdue states, contact actions, and idempotent cron task creation.
 - Added owner reports, settings editing, and user role management.
 - Updated public/admin navigation, typography, warm tokens, room gallery, and R2 custom-domain compatibility.
+- Standardized all public and admin headings on Inter Tight while retaining Inter for body and interface text.
 
 Earlier project history remains in `docs/legacy-v1/CHANGELOG.md`.

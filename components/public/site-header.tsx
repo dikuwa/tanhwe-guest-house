@@ -11,7 +11,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="font-playfair text-xl font-bold tracking-tight text-secondary">
+        <Link href="/" className="font-heading text-xl font-bold tracking-tight text-secondary">
           Tanhwe <span className="text-primary">Guest House</span>
         </Link>
         <SiteNavigation />

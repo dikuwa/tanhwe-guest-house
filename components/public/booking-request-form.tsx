@@ -88,7 +88,7 @@ export function BookingRequestForm(props: Props) {
         role="status"
       >
         <CheckCircle2 className="size-8 text-primary" />
-        <h3 className="mt-4 font-playfair text-2xl font-bold">Request received</h3>
+        <h3 className="mt-4 font-heading text-2xl font-bold">Request received</h3>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">{success.message}</p>
         <p className="mt-4 text-sm font-semibold">Reference: {success.bookingNumber}</p>
       </div>

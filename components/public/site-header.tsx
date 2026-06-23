@@ -10,15 +10,19 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="font-heading text-xl font-bold tracking-tight text-secondary">
+      <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
+        <Link href="/" className="font-heading text-lg font-bold tracking-tight text-secondary lg:text-xl">
           Tanhwe <span className="text-primary">Guest House</span>
         </Link>
         <SiteNavigation />
         <div className="flex items-center gap-2">
-          <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "sm" })}>
-            <Phone aria-hidden="true" />
-            <span className="hidden sm:inline">Call us</span>
+          <a
+            href={phoneHref}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+            aria-label="Call Tanhwe Guest House"
+          >
+            <Phone aria-hidden="true" className="size-4" />
+            <span className="hidden sm:inline">Call</span>
           </a>
           <Link href="/rooms#booking" className={buttonVariants({ size: "sm" })}>
             Book a stay
@@ -26,7 +30,7 @@ export async function SiteHeader() {
         </div>
       </div>
       <div className="border-t bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] px-4 py-1.5 text-center text-xs text-muted-foreground md:hidden">
-        <MapPin aria-hidden="true" className="mr-1 inline size-3" /> {settings.location}
+        <MapPin aria-hidden="true" className="mr-1 inline size-3 align-middle" /> {settings.location}
       </div>
     </header>
   );

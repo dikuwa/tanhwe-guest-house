@@ -9,7 +9,7 @@ import { RoomCard } from "@/components/public/room-card";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 import { getPublicRooms, getPublicSettings } from "@/lib/public-data";
-import poster from "@/docs/assets/inspiration-1.jpeg";
+import { heroImage } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -22,21 +22,21 @@ export default async function Home() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <section className="relative isolate overflow-hidden bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))]">
-          <div className="mx-auto grid min-h-[620px] max-w-[1320px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[.88fr_1.12fr] lg:px-10 lg:py-20">
+        <section className="relative isolate overflow-hidden bg-neutral-50">
+          <div className="mx-auto grid min-h-[580px] max-w-[1320px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[.88fr_1.12fr] lg:px-10 lg:py-20">
             <div className="relative z-10 max-w-xl lg:pl-8">
               <Badge
                 variant="outline"
-                className="border-secondary/25 bg-background/75 text-secondary"
+                className="border-neutral-300 bg-white/80 text-neutral-600"
               >
-                <MapPin /> Mukwe, Namibia
+                <MapPin className="size-3.5" /> Mukwe, Namibia
               </Badge>
-              <h1 className="mt-7 font-heading text-[clamp(3.5rem,8vw,7rem)] font-bold leading-[.88] tracking-[-0.045em]">
+              <h1 className="mt-6 font-heading text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
                 Stay easy.
                 <br />
                 <span className="text-primary">Feel at home.</span>
               </h1>
-              <p className="mt-7 max-w-lg text-lg leading-8 text-muted-foreground">
+              <p className="mt-5 max-w-lg text-lg leading-8 text-neutral-500">
                 Comfortable rooms, breakfast included, and a welcome that keeps things simple.
               </p>
               <ContactActions
@@ -46,22 +46,22 @@ export default async function Home() {
               />
             </div>
             <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-muted shadow-[0_28px_80px_-48px_rgba(8,63,115,.55)]">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-100 shadow-lg">
                 <Image
-                  src={poster}
-                  alt="Tanhwe Guest House rooms and garden in Mukwe"
+                  src={heroImage.url}
+                  alt={heroImage.alt}
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 55vw"
                   className="object-cover"
                 />
               </div>
-              <div className="absolute -bottom-5 left-4 rounded-xl bg-secondary px-5 py-4 text-secondary-foreground shadow-lg sm:left-8">
-                <p className="text-xs font-semibold uppercase tracking-[.16em] text-secondary-foreground/65">
+              <div className="absolute -bottom-4 left-4 rounded-xl border border-neutral-200 bg-white/95 px-5 py-4 shadow-sm backdrop-blur sm:left-8">
+                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Our promise
                 </p>
-                <p className="mt-1 font-heading text-xl font-bold">
-                  Comfort · Hospitality · Convenience
+                <p className="mt-1 font-heading text-lg font-bold text-neutral-800">
+                  Comfort &middot; Hospitality &middot; Convenience
                 </p>
               </div>
             </div>

@@ -11,6 +11,15 @@ const money = new Intl.NumberFormat("en-NA", {
   currency: "NAD",
   maximumFractionDigits: 0,
 });
+
+const statusVariant: Record<string, "secondary" | "outline" | "default" | "destructive"> = {
+  pending: "default",
+  confirmed: "secondary",
+  "checked-in": "default",
+  "checked-out": "default",
+  cancelled: "outline",
+};
+
 export default async function AdminDashboard() {
   const session = await requireRole(["owner", "admin", "staff"]);
   const data = await getDashboardData();
@@ -30,66 +39,69 @@ export default async function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">Operations overview</p>
-          <h1 className="mt-1 text-3xl font-semibold">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Dashboard</p>
+          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">
             Good day, {session.user.name.split(" ")[0]}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Here is what needs attention at Tanhwe Guest House.
+          <p className="mt-1 text-sm text-neutral-500">
+            Here&rsquo;s what needs attention today.
           </p>
         </div>
         <Button render={<Link href="/admin/bookings/new" />}>New booking</Button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border bg-card p-5">
+          <div key={metric.label} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">{metric.label}</p>
-              <metric.icon className="size-4 text-primary" />
+              <p className="text-sm text-neutral-500">{metric.label}</p>
+              <metric.icon className="size-4 text-neutral-400" />
             </div>
-            <p className="mt-3 text-3xl font-semibold tabular-nums">{metric.value}</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-neutral-800">{metric.value}</p>
           </div>
         ))}
       </div>
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Recent bookings</h2>
-            <p className="text-sm text-muted-foreground">Latest guest requests and reservations.</p>
+            <h2 className="text-base font-semibold text-neutral-800">Recent bookings</h2>
+            <p className="text-sm text-neutral-500">Latest guest requests and reservations.</p>
           </div>
-          <Button variant="ghost" render={<Link href="/admin/bookings" />}>
-            View all <ArrowRight />
+          <Button variant="ghost" size="sm" render={<Link href="/admin/bookings" />}>
+            View all <ArrowRight className="size-3.5" />
           </Button>
         </div>
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
           <table className="w-full text-left text-sm">
-            <thead className="border-b bg-muted/50 text-xs uppercase text-muted-foreground">
+            <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
               <tr>
-                <th className="px-4 py-3">Booking</th>
-                <th className="px-4 py-3">Guest</th>
-                <th className="px-4 py-3">Check-in</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Total</th>
+                <th className="px-4 py-3 font-medium">Booking</th>
+                <th className="px-4 py-3 font-medium">Guest</th>
+                <th className="px-4 py-3 font-medium">Check-in</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 text-right font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
               {data.recent.map((row) => (
-                <tr key={row.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{row.bookingNumber}</td>
-                  <td className="px-4 py-3">{row.fullName}</td>
-                  <td className="px-4 py-3">{row.checkIn.toLocaleDateString("en-NA")}</td>
+                <tr key={row.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
+                  <td className="px-4 py-3 font-medium text-neutral-800">{row.bookingNumber}</td>
+                  <td className="px-4 py-3 text-neutral-700">{row.fullName}</td>
+                  <td className="px-4 py-3 text-neutral-600">{row.checkIn.toLocaleDateString("en-NA")}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="secondary" className="capitalize">
+                    <Badge
+                      variant={statusVariant[row.status] ?? "outline"}
+                      className="capitalize"
+                    >
                       {row.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{money.format(row.total)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">{money.format(row.total)}</td>
                 </tr>
               ))}
               {data.recent.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
-                    No bookings yet.
+                  <td colSpan={5} className="px-4 py-12 text-center text-neutral-500">
+                    No bookings yet. Create your first booking to get started.
                   </td>
                 </tr>
               )}

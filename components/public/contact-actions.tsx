@@ -21,12 +21,12 @@ export function ContactActions({
         href={whatsappHref}
         target="_blank"
         rel="noreferrer"
-        className={buttonVariants({ variant: "secondary", size: "lg" })}
+        className={buttonVariants({ variant: "secondary", size: "default" })}
       >
-        <MessageCircle /> WhatsApp us
+        <MessageCircle className="size-4" /> WhatsApp
       </a>
-      <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "lg" })}>
-        <Phone /> Call {phone}
+      <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "default" })}>
+        <Phone className="size-4" /> Call {phone}
       </a>
     </div>
   );

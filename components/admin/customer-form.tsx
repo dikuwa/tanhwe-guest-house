@@ -39,7 +39,7 @@ export function CustomerForm({ customer }: { customer: Customer }) {
     if (response.ok) router.refresh();
   }
   return (
-    <form onSubmit={submit} className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
+    <form onSubmit={submit} className="space-y-5 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Full name" name="fullName" defaultValue={customer.fullName} required />
         <Field label="Phone" name="phone" defaultValue={customer.phone} required />
@@ -47,7 +47,7 @@ export function CustomerForm({ customer }: { customer: Customer }) {
         <Field label="Email" name="email" type="email" defaultValue={customer.email ?? ""} />
         <Field label="Address" name="address" defaultValue={customer.address ?? ""} />
         <Field
-          label="ID or passport (only when required)"
+          label="ID or passport"
           name="idOrPassport"
           defaultValue={customer.idOrPassport ?? ""}
         />
@@ -62,14 +62,16 @@ export function CustomerForm({ customer }: { customer: Customer }) {
         </div>
       </div>
       {message && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
           {message}
         </p>
       )}
-      <Button type="submit" disabled={saving}>
-        {saving ? <Loader2 className="animate-spin" /> : <Save />}
-        {saving ? "Saving…" : "Save customer"}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" disabled={saving}>
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          {saving ? "Saving..." : "Save customer"}
+        </Button>
+      </div>
     </form>
   );
 }

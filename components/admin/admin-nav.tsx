@@ -51,7 +51,7 @@ export function AdminNav({ role }: { role: string }) {
   return (
     <>
       <nav
-        className="flex gap-1 overflow-x-auto p-3 lg:flex-col lg:overflow-visible"
+        className="flex gap-0.5 overflow-x-auto p-2 lg:flex-col lg:overflow-visible"
         aria-label="Admin navigation"
       >
         {items
@@ -64,42 +64,32 @@ export function AdminNav({ role }: { role: string }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+                  "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:pl-4",
                   active &&
-                    "bg-secondary text-secondary-foreground hover:bg-secondary hover:text-secondary-foreground"
+                    "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
                 )}
               >
-                <item.icon className="size-4" />
+                {active && (
+                  <span className="absolute left-0 top-1/2 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary lg:block" />
+                )}
+                <item.icon className="size-4 shrink-0" />
                 {item.label}
               </Link>
             );
           })}
       </nav>
-      <div className="px-3 pb-3 lg:hidden">
+      <div className="mt-auto border-t border-neutral-100 p-2">
         <Button
           variant="ghost"
           size="sm"
+          className="w-full justify-start text-neutral-500"
           onClick={async () => {
             await authClient.signOut();
             router.replace("/login");
             router.refresh();
           }}
         >
-          <LogOut />
-          Sign out
-        </Button>
-      </div>
-      <div className="hidden border-t p-3 lg:block">
-        <Button
-          variant="ghost"
-          className="w-full justify-start"
-          onClick={async () => {
-            await authClient.signOut();
-            router.replace("/login");
-            router.refresh();
-          }}
-        >
-          <LogOut />
+          <LogOut className="size-4" />
           Sign out
         </Button>
       </div>

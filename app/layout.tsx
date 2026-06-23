@@ -14,8 +14,12 @@ export const metadata: Metadata = {
   title: "Tanhwe Guest House",
   description: "Comfortable accommodation and conference facilities in Mukwe, Namibia.",
   icons: {
-    icon: "/tanhwe-icon.svg",
-    shortcut: "/tanhwe-icon.jpeg",
+    icon: [
+      { url: "/tanhwe-icon.webp", type: "image/webp" },
+      { url: "/tanhwe-icon@2x.png", type: "image/png", sizes: "32x32" },
+      { url: "/tanhwe-icon@3x.png", type: "image/png", sizes: "48x48" },
+    ],
+    shortcut: "/tanhwe-icon@2x.png",
   },
 };
 

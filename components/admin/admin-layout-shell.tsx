@@ -36,7 +36,7 @@ export function AdminLayoutShell({
       {/* Desktop sidebar */}
       <aside className="hidden border-r border-neutral-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-60 lg:flex-col">
         <div className="flex h-14 items-center justify-between border-b border-neutral-100 px-4">
-          <TanhweLogo href="/admin" size="sm" admin showIcon />
+          <TanhweLogo href="/admin" size="sm" />
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
           <AdminNav role={String(role)} />
@@ -55,7 +55,7 @@ export function AdminLayoutShell({
             >
               <Menu className="size-4" />
             </button>
-            <TanhweLogo size="sm" admin showIcon={false} />
+            <TanhweLogo size="sm" showIcon={false} />
           </div>
           <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
             {name.charAt(0).toUpperCase()}

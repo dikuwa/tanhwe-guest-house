@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Download, MessageCircle } from "lucide-react";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 import { DocumentEmailButton } from "@/components/admin/document-email-button";
 import { Button } from "@/components/ui/button";
 import { getDocument } from "@/lib/admin-data";
@@ -68,7 +69,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
       <article className="mx-auto max-w-4xl border bg-card p-7 shadow-sm sm:p-12">
         <header className="flex flex-wrap justify-between gap-8 border-b pb-8">
           <div>
-            <p className="text-2xl font-semibold text-secondary">Tanhwe Guest House</p>
+            <TanhweLogo size="md" showIcon />
             <p className="mt-2 text-sm text-muted-foreground">Mukwe, Namibia</p>
           </div>
           <div className="sm:text-right">

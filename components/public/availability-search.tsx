@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 type RoomOption = { slug: string; name: string };
 
@@ -36,11 +37,18 @@ export function AvailabilitySearch({
     router.push(`/rooms/${roomSlug}?${params}`);
   }
 
+  // Shared grid: room, date-range, guests, submit
+  const sharedCols = "[1.3fr_1fr_.6fr_auto]";
+
   return (
     <form
       id="booking"
       onSubmit={submit}
-      className={`grid gap-3 sm:grid-cols-2 ${compact ? "lg:grid-cols-[1.3fr_1fr_1fr_.6fr_auto]" : "lg:grid-cols-[1.35fr_1fr_1fr_.6fr_auto]"}`}
+      className={`grid gap-3 sm:grid-cols-2 ${
+        compact
+          ? `lg:grid-cols-[1.3fr_${sharedCols}]`
+          : `lg:grid-cols-[1.35fr_${sharedCols}]`
+      }`}
     >
       <div className="space-y-1.5">
         <Label htmlFor="search-room">Room</Label>
@@ -57,30 +65,18 @@ export function AvailabilitySearch({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="search-check-in">Check-in</Label>
-        <Input
-          id="search-check-in"
-          type="date"
-          min={today}
-          required
-          value={checkIn}
-          onChange={(event) => setCheckIn(event.target.value)}
-          className="h-10 bg-background"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="search-check-out">Check-out</Label>
-        <Input
-          id="search-check-out"
-          type="date"
-          min={checkIn || today}
-          required
-          value={checkOut}
-          onChange={(event) => setCheckOut(event.target.value)}
-          className="h-10 bg-background"
-        />
-      </div>
+
+      {/* DateRangePicker replaces the two separate date inputs */}
+      <DateRangePicker
+        checkIn={checkIn}
+        checkOut={checkOut}
+        onCheckInChange={setCheckIn}
+        onCheckOutChange={setCheckOut}
+        minDate={today}
+        checkInId="search-check-in"
+        checkOutId="search-check-out"
+      />
+
       <div className="space-y-1.5">
         <Label htmlFor="search-guests">Guests</Label>
         <Input

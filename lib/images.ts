@@ -1,24 +1,16 @@
 /**
- * Curated Unsplash images used as placeholders for Tanhwe Guest House.
+ * Tanhwe Guest House photos served from /public/images/.
  *
- * These are placeholders until real guest house photography is available.
- * All photos are released under the Unsplash License (free for commercial use).
- *
- * Replace these URLs with actual R2-hosted images when available.
+ * All images are real Tanhwe Guest House photography in WebP format.
+ * Replace these paths when migrating to a CDN.
  */
 
 export const heroImage = {
-  url: "https://images.unsplash.com/photo-1670104193309-8b4cb10e7cc9?q=80&w=1920&auto=format&fit=crop",
-  alt: "Namibian landscape — Sossusvlei sand dunes at sunrise",
-  credit: "Thomas de LUZE",
+  url: "/images/tanhwe-room-img01.webp",
+  alt: "Tanhwe Guest House — comfortable accommodation in Mukwe, Namibia",
 };
 
 export const roomFallbackImage = {
-  url: "https://images.unsplash.com/photo-1629197525381-0814f9da7311?q=80&w=1200&auto=format&fit=crop",
-  alt: "Comfortable safari-style bedroom interior",
-  credit: "Ewan Robertson",
+  url: "/images/tanhwe-room-img02.webp",
+  alt: "Comfortable room at Tanhwe Guest House",
 };
-
-
-
-

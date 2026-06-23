@@ -13,6 +13,9 @@ const onest = Onest({
 export const metadata: Metadata = {
   title: "Tanhwe Guest House",
   description: "Comfortable accommodation and conference facilities in Mukwe, Namibia.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

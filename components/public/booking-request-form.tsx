@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DateRangePicker, NightsCounter } from "@/components/ui/date-range-picker";
+import { cn } from "@/lib/utils";
 
 type Props = {
   roomId: string;
@@ -27,6 +28,26 @@ type Props = {
   initialGuests?: string;
 };
 
+type FieldErrors = {
+  fullName?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+};
+
+function validatePhone(value: string): string | undefined {
+  const digits = value.replace(/\D/g, "");
+  if (!value.startsWith("+")) return "Please include your country code (e.g. +264...)";
+  if (digits.length < 7 || digits.length > 15) return "Please enter a valid phone number";
+  return undefined;
+}
+
+function validateEmail(value: string): string | undefined {
+  if (!value) return undefined; // optional
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Please enter a valid email address";
+  return undefined;
+}
+
 export function BookingRequestForm(props: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const [checkIn, setCheckIn] = useState(props.initialCheckIn ?? "");
@@ -36,6 +57,7 @@ export function BookingRequestForm(props: Props) {
   const [preferredContact, setPreferredContact] = useState("whatsapp");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [success, setSuccess] = useState<{ bookingNumber: string; message: string } | null>(null);
 
   const nights = useMemo(() => {
@@ -50,11 +72,40 @@ export function BookingRequestForm(props: Props) {
   }, [checkIn, checkOut]);
   const total = nights * Number(roomsCount || 0) * props.pricePerNight;
 
+  function validateForm(formData: FormData): boolean {
+    const errors: FieldErrors = {};
+    const phone = String(formData.get("phone") ?? "");
+    const whatsapp = String(formData.get("whatsapp") ?? "");
+    const email = String(formData.get("email") ?? "");
+    const fullName = String(formData.get("fullName") ?? "");
+
+    if (!fullName.trim()) errors.fullName = "Full name is required";
+    if (!phone.trim()) errors.phone = "Phone number is required";
+    else {
+      const phoneErr = validatePhone(phone);
+      if (phoneErr) errors.phone = phoneErr;
+    }
+    if (!whatsapp.trim()) errors.whatsapp = "WhatsApp number is required";
+    else {
+      const waErr = validatePhone(whatsapp);
+      if (waErr) errors.whatsapp = waErr;
+    }
+    const emailErr = validateEmail(email);
+    if (emailErr) errors.email = emailErr;
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitting(true);
+    setFieldErrors({});
     setError("");
+
     const form = new FormData(event.currentTarget);
+    if (!validateForm(form)) return;
+
+    setSubmitting(true);
     const body = Object.fromEntries(form.entries());
     try {
       const response = await fetch("/api/bookings/request", {
@@ -99,7 +150,7 @@ export function BookingRequestForm(props: Props) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5">
+    <form onSubmit={submit} className="space-y-5" noValidate>
       <DateRangePicker
         checkIn={checkIn}
         checkOut={checkOut}
@@ -151,7 +202,12 @@ export function BookingRequestForm(props: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="fullName">Full name</Label>
-            <Input id="fullName" name="fullName" autoComplete="name" required className="h-10" />
+            <Input id="fullName" name="fullName" autoComplete="name" required className={cn("h-10", fieldErrors.fullName && "border-destructive")} />
+            {fieldErrors.fullName && (
+              <p className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="size-3" /> {fieldErrors.fullName}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="phone">Phone</Label>
@@ -161,17 +217,32 @@ export function BookingRequestForm(props: Props) {
               type="tel"
               autoComplete="tel"
               required
-              placeholder="+264..."
-              className="h-10"
+              placeholder="+264 81 234 5678"
+              className={cn("h-10", fieldErrors.phone && "border-destructive")}
             />
+            {fieldErrors.phone && (
+              <p className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="size-3" /> {fieldErrors.phone}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Input id="whatsapp" name="whatsapp" type="tel" required placeholder="+264..." className="h-10" />
+            <Input id="whatsapp" name="whatsapp" type="tel" required placeholder="+264 81 234 5678" className={cn("h-10", fieldErrors.whatsapp && "border-destructive")} />
+            {fieldErrors.whatsapp && (
+              <p className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="size-3" /> {fieldErrors.whatsapp}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className="h-10" />
+            <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className={cn("h-10", fieldErrors.email && "border-destructive")} />
+            {fieldErrors.email && (
+              <p className="flex items-center gap-1 text-xs text-destructive">
+                <AlertCircle className="size-3" /> {fieldErrors.email}
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="preferred-contact">Preferred contact</Label>

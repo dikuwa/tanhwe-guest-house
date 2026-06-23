@@ -19,16 +19,6 @@ export const roomFallbackImage = {
   credit: "Ewan Robertson",
 };
 
-export const conferenceImage = {
-  url: "https://images.unsplash.com/photo-1663737508006-25983794a37b?q=80&w=1200&auto=format&fit=crop",
-  alt: "Lodge exterior with warm evening lighting",
-  credit: "Joshua Kettle",
-};
 
-export const landscapeImage = {
-  url: "https://images.unsplash.com/photo-1563968252278-d4508ef48d3e?q=80&w=1920&auto=format&fit=crop",
-  alt: "Namibian desert landscape where sand meets the ocean",
-  credit: "Sergi Ferrete",
-};
 
 

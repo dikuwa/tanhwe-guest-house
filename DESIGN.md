@@ -13,7 +13,7 @@ colors:
   border: "#E5E7EB"
 typography:
   display:
-    fontFamily: "Playfair Display, Georgia, serif"
+    fontFamily: "Libre Baskerville, Georgia, serif"
     fontSize: "clamp(2.75rem, 8vw, 6.5rem)"
     fontWeight: 700
     lineHeight: 0.95
@@ -67,7 +67,7 @@ Sunset orange carries action and hospitality. River blue carries trust, navigati
 
 ## Typography
 
-Playfair Display is the established brand display face. Inter is the established body and interface face. Headings use decisive scale and tight leading; body copy stays between 65 and 75 characters per line.
+Libre Baskerville is the selected public display face. Inter remains the body and interface face. Headings use decisive scale and tight leading; body copy stays between 65 and 75 characters per line.
 
 **The Guest-Book Rule.** Display type appears in short, confident phrases, never in long paragraphs or tiny labels.
 

@@ -29,7 +29,9 @@ async function main() {
     bookingId = "",
     customerId = "";
   try {
-    const slug = `phase5-check-${Date.now()}`;
+    const stamp = Date.now();
+    const slug = `phase5-check-${stamp}`;
+    const phone = `081${String(stamp).slice(-7)}`;
     const created = await fetch(`${base}/api/admin/rooms`, {
       method: "POST",
       headers,
@@ -78,9 +80,9 @@ async function main() {
         roomsCount: 1,
         guestsCount: 2,
         fullName: "Phase Test Guest",
-        phone: "0810000000",
-        whatsapp: "0810000000",
-        email: "phase-test@example.com",
+        phone,
+        whatsapp: phone,
+        email: `phase-test-${stamp}@example.com`,
         status: "confirmed",
       }),
     });

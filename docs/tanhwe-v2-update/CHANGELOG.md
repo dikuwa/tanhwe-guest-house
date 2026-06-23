@@ -10,5 +10,8 @@
 - Added owner reports, settings editing, and user role management.
 - Updated public/admin navigation, typography, warm tokens, room gallery, and R2 custom-domain compatibility.
 - Standardized all public and admin headings on Inter Tight while retaining Inter for body and interface text.
+- Added safe authenticated Phase 5, V2 workflow, and role-permission verification scripts.
+- Added Vercel Web Analytics and Speed Insights instrumentation.
+- Documented Neon restore, branching, application rollback, and R2 backup procedures.
 
 Earlier project history remains in `docs/legacy-v1/CHANGELOG.md`.

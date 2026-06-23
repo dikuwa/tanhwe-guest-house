@@ -13,12 +13,16 @@
     "seed": "tsx --env-file=.env lib/seed.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file=.env scripts/migrate.ts",
-    "verify:phase5": "tsx --env-file=.env scripts/verify-phase5.ts"
+    "verify:phase5": "tsx --env-file=.env scripts/verify-phase5.ts",
+    "verify:v2": "tsx --env-file=.env scripts/verify-v2.ts",
+    "verify:roles": "tsx --env-file=.env scripts/verify-roles.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1073.0",
     "@base-ui/react": "^1.6.0",
     "@react-pdf/renderer": "^4.5.1",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "better-auth": "^1.6.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

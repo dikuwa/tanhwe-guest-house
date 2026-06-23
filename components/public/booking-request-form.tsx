@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { DateRangePicker, NightsCounter } from "@/components/ui/date-range-picker";
 
 type Props = {
   roomId: string;
@@ -99,80 +100,52 @@ export function BookingRequestForm(props: Props) {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <div className="flex items-baseline justify-between gap-4 border-b pb-4">
-        <div>
-          <p className="text-xs text-muted-foreground">Per room, per night</p>
-          <p className="text-2xl font-bold tabular-nums">
-            {props.currency}{props.pricePerNight}
-          </p>
+      <DateRangePicker
+        checkIn={checkIn}
+        checkOut={checkOut}
+        onCheckInChange={setCheckIn}
+        onCheckOutChange={setCheckOut}
+        minDate={today}
+        checkInId="booking-check-in"
+        checkOutId="booking-check-out"
+      />
+
+      <NightsCounter
+        checkIn={checkIn}
+        checkOut={checkOut}
+        currency={props.currency}
+        pricePerNight={props.pricePerNight}
+        roomsCount={Number(roomsCount)}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="rooms-count">Rooms</Label>
+          <Input
+            id="rooms-count"
+            type="number"
+            min="1"
+            max={props.availableUnits}
+            required
+            value={roomsCount}
+            onChange={(event) => setRoomsCount(event.target.value)}
+            className="h-10"
+          />
         </div>
-        {nights > 0 && (
-          <div className="text-right">
-            <p className="text-xs text-muted-foreground">Total estimate</p>
-            <p className="text-lg font-bold tabular-nums">
-              {props.currency}{total}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {nights} night{nights === 1 ? "" : "s"} &times; {roomsCount} room{roomsCount === "1" ? "" : "s"}
-            </p>
-          </div>
-        )}
+        <div className="space-y-1.5">
+          <Label htmlFor="guests-count">Guests</Label>
+          <Input
+            id="guests-count"
+            type="number"
+            min="1"
+            max={Math.max(props.maxGuests, props.maxGuests * Number(roomsCount))}
+            required
+            value={guestsCount}
+            onChange={(event) => setGuestsCount(event.target.value)}
+            className="h-10"
+          />
+        </div>
       </div>
-      <fieldset className="space-y-4">
-        <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stay details</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="booking-check-in">Check-in</Label>
-            <Input
-              id="booking-check-in"
-              type="date"
-              min={today}
-              required
-              value={checkIn}
-              onChange={(event) => setCheckIn(event.target.value)}
-              className="h-10"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="booking-check-out">Check-out</Label>
-            <Input
-              id="booking-check-out"
-              type="date"
-              min={checkIn || today}
-              required
-              value={checkOut}
-              onChange={(event) => setCheckOut(event.target.value)}
-              className="h-10"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="rooms-count">Rooms</Label>
-            <Input
-              id="rooms-count"
-              type="number"
-              min="1"
-              max={props.availableUnits}
-              required
-              value={roomsCount}
-              onChange={(event) => setRoomsCount(event.target.value)}
-              className="h-10"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="guests-count">Guests</Label>
-            <Input
-              id="guests-count"
-              type="number"
-              min="1"
-              max={Math.max(props.maxGuests, props.maxGuests * Number(roomsCount))}
-              required
-              value={guestsCount}
-              onChange={(event) => setGuestsCount(event.target.value)}
-              className="h-10"
-            />
-          </div>
-        </div>
-      </fieldset>
       <fieldset className="space-y-4">
         <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact details</legend>
         <div className="grid gap-4 sm:grid-cols-2">

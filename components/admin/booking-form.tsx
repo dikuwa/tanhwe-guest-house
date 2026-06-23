@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DateRangePicker, NightsCounter } from "@/components/ui/date-range-picker";
 
 type Option = {
   id: string;
@@ -18,6 +19,8 @@ type Option = {
 export function BookingForm({ rooms }: { rooms: Option[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
   const [error, setError] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,8 +68,18 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             <option value="pending">Pending</option>
           </select>
         </div>
-        <Field label="Check-in" name="checkIn" type="date" required />
-        <Field label="Check-out" name="checkOut" type="date" required />
+        <div className="sm:col-span-2">
+          <DateRangePicker
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onCheckInChange={setCheckIn}
+            onCheckOutChange={setCheckOut}
+            checkInId="admin-check-in"
+            checkOutId="admin-check-out"
+          />
+          <input type="hidden" name="checkIn" value={checkIn} />
+          <input type="hidden" name="checkOut" value={checkOut} />
+        </div>
         <Field
           label="Rooms required"
           name="roomsCount"

@@ -5,8 +5,15 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover"
 
 import { cn } from "@/lib/utils"
 
-function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />
+function Popover({
+  open,
+  onOpenChange,
+  ...props
+}: PopoverPrimitive.Root.Props & {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  return <PopoverPrimitive.Root data-slot="popover" open={open} onOpenChange={onOpenChange} {...props} />
 }
 
 function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {

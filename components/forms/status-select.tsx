@@ -55,7 +55,7 @@ export function StatusSelect({
       <SelectTrigger
         id={id}
         className={cn(
-          "h-9 w-full",
+          "h-12 w-full",
           value && (color || statusColors[value]),
           className
         )}

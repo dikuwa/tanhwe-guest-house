@@ -93,7 +93,7 @@ export function AmenitySelector({ value, onChange, id }: AmenitySelectorProps) {
           placeholder="Search amenities..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-9 pl-8"
+          className="h-12 pl-8"
         />
       </div>
 

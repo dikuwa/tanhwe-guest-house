@@ -1,12 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { FieldError } from "@/components/forms/field-error";
+import { StatusSelect } from "@/components/forms/status-select";
 import { Button } from "@/components/ui/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -14,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { StatusSelect, bookingStatusOptions } from "@/components/forms/status-select";
-import { FieldError } from "@/components/forms/field-error";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 type Option = {
   id: string;
@@ -110,12 +110,16 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6" noValidate>
+    <form
+      onSubmit={submit}
+      className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6"
+      noValidate
+    >
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="roomId">Room</Label>
           <Select value={roomId} onValueChange={(v) => v && setRoomId(v)}>
-            <SelectTrigger id="roomId" className="h-9 w-full">
+            <SelectTrigger id="roomId" className="h-12 w-full">
               <SelectValue placeholder="Select a room" />
             </SelectTrigger>
             <SelectContent>
@@ -132,7 +136,10 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
           <StatusSelect
             value={status}
             onValueChange={setStatus}
-            options={[{ value: "confirmed", label: "Confirmed" }, { value: "pending", label: "Pending" }]}
+            options={[
+              { value: "confirmed", label: "Confirmed" },
+              { value: "pending", label: "Pending" },
+            ]}
             id="status"
           />
           <input type="hidden" name="status" value={status} />
@@ -163,22 +170,42 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
         <Field label="Guests" name="guestsCount" type="number" min="1" defaultValue="1" required />
         <div>
           <Label htmlFor="fullName">Guest name</Label>
-          <Input id="fullName" name="fullName" required className={cn("mt-2 h-9", fieldErrors.fullName && "border-destructive")} />
+          <Input
+            id="fullName"
+            name="fullName"
+            required
+            className={cn("mt-2 h-12", fieldErrors.fullName && "border-destructive")}
+          />
           <FieldError>{fieldErrors.fullName}</FieldError>
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" required className={cn("mt-2 h-9", fieldErrors.phone && "border-destructive")} />
+          <Input
+            id="phone"
+            name="phone"
+            required
+            className={cn("mt-2 h-12", fieldErrors.phone && "border-destructive")}
+          />
           <FieldError>{fieldErrors.phone}</FieldError>
         </div>
         <div>
           <Label htmlFor="whatsapp">WhatsApp</Label>
-          <Input id="whatsapp" name="whatsapp" required className={cn("mt-2 h-9", fieldErrors.whatsapp && "border-destructive")} />
+          <Input
+            id="whatsapp"
+            name="whatsapp"
+            required
+            className={cn("mt-2 h-12", fieldErrors.whatsapp && "border-destructive")}
+          />
           <FieldError>{fieldErrors.whatsapp}</FieldError>
         </div>
         <div>
           <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" className={cn("mt-2 h-9", fieldErrors.email && "border-destructive")} />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            className={cn("mt-2 h-12", fieldErrors.email && "border-destructive")}
+          />
           <FieldError>{fieldErrors.email}</FieldError>
         </div>
         <div className="sm:col-span-2">
@@ -187,7 +214,10 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
         </div>
       </div>
       {error && (
-        <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+        >
           {error}
         </p>
       )}
@@ -206,7 +236,7 @@ function Field(props: React.ComponentProps<typeof Input> & { label: string }) {
   return (
     <div>
       <Label htmlFor={String(input.name)}>{label}</Label>
-      <Input id={String(input.name)} className="mt-2 h-9" {...input} />
+      <Input id={String(input.name)} className="mt-2 h-12" {...input} />
     </div>
   );
 }

@@ -75,7 +75,7 @@ export function FollowUpForm({ options }: { options: Options }) {
       <div className="lg:col-span-2 space-y-1.5">
         <Label htmlFor="follow-booking">Booking</Label>
         <Select value={bookingId} onValueChange={(v) => v !== null && setBookingId(v)}>
-          <SelectTrigger id="follow-booking" className="h-9 w-full">
+          <SelectTrigger id="follow-booking" className="h-12 w-full">
             <SelectValue placeholder="No booking" />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +91,7 @@ export function FollowUpForm({ options }: { options: Options }) {
       <div className="lg:col-span-2 space-y-1.5">
         <Label htmlFor="follow-customer">Customer</Label>
         <Select value={customerId} onValueChange={(v) => v !== null && setCustomerId(v)}>
-          <SelectTrigger id="follow-customer" className="h-9 w-full">
+          <SelectTrigger id="follow-customer" className="h-12 w-full">
             <SelectValue placeholder="Select if no booking" />
           </SelectTrigger>
           <SelectContent>
@@ -110,14 +110,14 @@ export function FollowUpForm({ options }: { options: Options }) {
           id="follow-title"
           name="title"
           required
-          className="mt-2 h-10"
+          className="mt-2 h-12"
           placeholder="e.g. Confirm deposit with guest"
         />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="follow-type">Type</Label>
         <Select value={type} onValueChange={(v) => v !== null && setType(v)}>
-          <SelectTrigger id="follow-type" className="h-9 w-full">
+          <SelectTrigger id="follow-type" className="h-12 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -137,7 +137,7 @@ export function FollowUpForm({ options }: { options: Options }) {
               id="follow-due"
               type="button"
               className={cn(
-                "mt-2 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+                "mt-2 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
                 "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
                 dueDate ? "text-neutral-800" : "text-neutral-400"
               )}
@@ -167,7 +167,7 @@ export function FollowUpForm({ options }: { options: Options }) {
       <div className="space-y-1.5">
         <Label htmlFor="follow-assignee">Assign to</Label>
         <Select value={assignedTo} onValueChange={(v) => v !== null && setAssignedTo(v)}>
-          <SelectTrigger id="follow-assignee" className="h-9 w-full">
+          <SelectTrigger id="follow-assignee" className="h-12 w-full">
             <SelectValue placeholder="Unassigned" />
           </SelectTrigger>
           <SelectContent>

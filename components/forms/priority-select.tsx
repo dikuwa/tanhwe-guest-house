@@ -39,7 +39,7 @@ export function PrioritySelect({
 
   return (
     <Select value={value} onValueChange={onValueChange} disabled={disabled}>
-      <SelectTrigger id={id} className={cn("h-9 w-full", className)}>
+      <SelectTrigger id={id} className={cn("h-12 w-full", className)}>
         <SelectValue placeholder="Select priority">
           {current && (
             <span className="flex items-center gap-2">

@@ -46,6 +46,9 @@ export function DateRangePicker({
   const checkInDate = toDate(checkIn);
   const checkOutDate = toDate(checkOut);
 
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
+
   const handleCheckInSelect = useCallback(
     (date: Date | undefined) => {
       const val = toDateString(date);
@@ -56,6 +59,7 @@ export function DateRangePicker({
         next.setDate(next.getDate() + 1);
         onCheckOutChange(toDateString(next));
       }
+      // Keep popover open for continued interaction
     },
     [checkOutDate, onCheckInChange, onCheckOutChange]
   );
@@ -63,8 +67,10 @@ export function DateRangePicker({
   const handleCheckOutSelect = useCallback(
     (date: Date | undefined) => {
       onCheckOutChange(toDateString(date));
+      // Close popover after check-out selection completes the range
+      setCheckOutOpen(false);
     },
-    [onCheckOutChange]
+    [onCheckOutChange, setCheckOutOpen]
   );
 
   return (
@@ -75,11 +81,11 @@ export function DateRangePicker({
       </Label>
       <div className="grid grid-cols-2 gap-3">
         {/* Check-in */}
-        <Popover>
+        <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
           <PopoverTrigger
             id={checkInId}
             className={cn(
-              "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "mt-1 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
               "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
               checkIn ? "text-neutral-800" : "text-neutral-400"
             )}
@@ -101,11 +107,11 @@ export function DateRangePicker({
         </Popover>
 
         {/* Check-out */}
-        <Popover>
+        <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
           <PopoverTrigger
             id={checkOutId}
             className={cn(
-              "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "mt-1 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
               "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
               checkOut ? "text-neutral-800" : "text-neutral-400"
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { DayPicker, type DateRange } from "react-day-picker";
+import { DayPicker } from "react-day-picker";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -12,14 +12,17 @@ export function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
-  const weekdayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       weekStartsOn={1}
       className={cn("p-2.5", className)}
-      weekdayFormatter={(date) => weekdayLabels[date.getDay()]}
+      formatters={{
+        formatWeekdayName: (date) => {
+          const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+          return days[date.getDay()];
+        },
+      }}
       classNames={{
         months: "flex flex-col",
         month: "flex flex-col gap-2",

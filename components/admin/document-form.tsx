@@ -62,7 +62,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
       <div className="space-y-1.5">
         <Label htmlFor="document-booking">Booking</Label>
         <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
-          <SelectTrigger id="document-booking" className="h-9 w-full">
+          <SelectTrigger id="document-booking" className="h-12 w-full">
             <SelectValue placeholder="Select booking" />
           </SelectTrigger>
           <SelectContent>
@@ -77,7 +77,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
       <div className="space-y-1.5">
         <Label htmlFor="document-type">Document type</Label>
         <Select value={type} onValueChange={(v) => v && setType(v)}>
-          <SelectTrigger id="document-type" className="h-9 w-full">
+          <SelectTrigger id="document-type" className="h-12 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +95,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
               id="expiresAt"
               type="button"
               className={cn(
-                "mt-2 flex h-9 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+                "mt-2 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
                 "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
                 expiresAt ? "text-neutral-800" : "text-neutral-400"
               )}

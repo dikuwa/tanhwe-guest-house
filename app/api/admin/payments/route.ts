@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookings, payments } from "@/lib/db/schema";
+import { notifyOps } from "@/lib/notifications";
 
 const input = z.object({
   bookingId: z.string().uuid(),
@@ -27,12 +28,12 @@ export async function POST(request: NextRequest) {
       .from(bookings)
       .where(eq(bookings.id, parsed.data.bookingId))
       .for("update");
-    if (!booking) return { error: "Booking not found", status: 404 } as const;
+    if (!booking) return { ok: false as const, error: "Booking not found", status: 404 };
     if (amount > booking.balanceDue)
-      return { error: "Payment cannot exceed the outstanding balance", status: 409 } as const;
+      return { ok: false as const, error: "Payment cannot exceed the outstanding balance", status: 409 };
     const amountPaid = booking.amountPaid + amount;
     const balanceDue = Math.max(booking.total - amountPaid, 0);
-    const paymentStatus = balanceDue === 0 ? "paid" : "partially-paid";
+    const paymentStatus: string = balanceDue === 0 ? "paid" : "partially-paid";
     await tx
       .insert(payments)
       .values({
@@ -60,9 +61,18 @@ export async function POST(request: NextRequest) {
         entityId: id,
         details: `${booking.bookingNumber}: ${amount}`,
       });
-    return { paymentStatus, balanceDue } as const;
+    return { ok: true as const, paymentStatus, balanceDue };
   });
-  if ("error" in result)
+  if (!result.ok)
     return NextResponse.json({ error: result.error }, { status: result.status });
-  return NextResponse.json({ id, ...result }, { status: 201 });
+  // Notify ops users
+  await notifyOps({
+    type: "payment_recorded",
+    title: `Payment recorded: N$${amount}`,
+    description: `${result.paymentStatus} — ${parsed.data.paymentMethod}`,
+    bookingId: parsed.data.bookingId,
+    link: `/admin/bookings/${parsed.data.bookingId}`,
+    actorId: session.user.id,
+  });
+  return NextResponse.json({ id, paymentStatus: result.paymentStatus, balanceDue: result.balanceDue }, { status: 201 });
 }

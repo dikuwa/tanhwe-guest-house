@@ -5,6 +5,7 @@ import { authorizeRequest } from "@/lib/auth-middleware";
 import { checkRoomAvailability } from "@/lib/availability";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookingRooms, bookings } from "@/lib/db/schema";
+import { notifyOps } from "@/lib/notifications";
 
 const statuses = [
   "pending",
@@ -71,5 +72,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       details: `${current.status} → ${parsed.data.status}`,
     });
   });
+  // Notify ops users of status change
+  if (parsed.data.status !== current.status) {
+    await notifyOps({
+      type: "booking_status",
+      title: `Booking ${parsed.data.status}: ${current.bookingNumber}`,
+      description: `${current.status} → ${parsed.data.status}`,
+      bookingId: id,
+      link: `/admin/bookings/${id}`,
+      actorId: session.user.id,
+    });
+  }
   return NextResponse.json({ success: true });
 }

@@ -4,6 +4,7 @@ import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomAvailability, parseStayDate } from "@/lib/availability";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookingRooms, bookings, customers } from "@/lib/db/schema";
+import { notifyOps } from "@/lib/notifications";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
@@ -89,6 +90,15 @@ export async function POST(request: NextRequest) {
       entityId: bookingId,
       details: bookingNumber,
     });
+  });
+  // Notify ops users
+  await notifyOps({
+    type: "booking_created",
+    title: `New booking: ${bookingNumber}`,
+    description: `${parsed.data.fullName} — ${availability.room.name}`,
+    bookingId,
+    link: `/admin/bookings/${bookingId}`,
+    actorId: session.user.id,
   });
   return NextResponse.json({ id: bookingId, bookingNumber }, { status: 201 });
 }

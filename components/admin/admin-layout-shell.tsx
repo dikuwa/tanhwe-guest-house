@@ -5,6 +5,7 @@ import { Menu } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { AdminNav } from "./admin-nav";
 import { MobileDrawer } from "./mobile-drawer";
+import { NotificationBell } from "./notification-bell";
 
 type Session = {
   user: {
@@ -57,14 +58,18 @@ export function AdminLayoutShell({
             </button>
             <TanhweLogo size="sm" showIcon={false} />
           </div>
-          <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
-            {name.charAt(0).toUpperCase()}
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
+              {name.charAt(0).toUpperCase()}
+            </div>
           </div>
         </header>
 
         {/* Desktop top bar */}
         <header className="hidden h-14 items-center justify-end border-b border-neutral-100 bg-white px-6 lg:flex">
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <div className="text-right">
               <p className="text-sm font-medium text-neutral-800">{name}</p>
               <p className="text-xs capitalize text-neutral-500">{String(role)}</p>

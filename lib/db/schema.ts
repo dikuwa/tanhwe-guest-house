@@ -369,6 +369,28 @@ export const activityLogs = pgTable(
   (table) => [index("activity_logs_entity_idx").on(table.entity, table.entityId)]
 );
 
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    bookingId: text("booking_id").references(() => bookings.id, { onDelete: "cascade" }),
+    link: text("link"),
+    actorId: text("actor_id").references(() => users.id, { onDelete: "set null" }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("notifications_user_id_idx").on(table.userId),
+    index("notifications_unread_idx").on(table.userId, table.readAt),
+  ]
+);
+
 export const settings = pgTable("settings", {
   id: text("id").primaryKey(),
   key: text("key").notNull().unique(),

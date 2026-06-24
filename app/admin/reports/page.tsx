@@ -1,6 +1,7 @@
 import { BarChart3, CalendarCheck, CalendarX, CircleDollarSign, Hotel } from "lucide-react";
 import { getReports } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
+import { DateFilter } from "./date-filter";
 
 const money = new Intl.NumberFormat("en-NA", { style: "currency", currency: "NAD" });
 const dateInput = (date: Date) => date.toISOString().slice(0, 10);
@@ -45,29 +46,7 @@ export default async function ReportsPage({
             Owner-only performance and financial reporting from live booking data.
           </p>
         </div>
-        <form className="flex flex-wrap items-end gap-2">
-          <label className="text-xs font-medium">
-            From
-            <input
-              name="from"
-              type="date"
-              defaultValue={dateInput(from)}
-              className="mt-1 block h-9 w-[140px] rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-            />
-          </label>
-          <label className="text-xs font-medium">
-            To
-            <input
-              name="to"
-              type="date"
-              defaultValue={dateInput(to)}
-              className="mt-1 block h-9 w-[140px] rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-            />
-          </label>
-          <button className="h-9 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90">
-            Apply
-          </button>
-        </form>
+        <DateFilter from={dateInput(from)} to={dateInput(to)} />
       </header>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (

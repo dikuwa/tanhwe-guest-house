@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { BedDouble, CalendarCheck, CalendarDays, Search, Users } from "lucide-react";
+import { BedDouble, CalendarCheck, CalendarDays, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -44,21 +44,33 @@ export function AvailabilitySearch({
     router.push(`/rooms/${roomSlug}?${params}`);
   }
 
+  const triggerClass = cn(
+    "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-sm transition-colors",
+    "hover:border-neutral-300 hover:bg-neutral-50",
+    "focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
+  );
+
   if (!compact) {
     return (
       <form id="booking" onSubmit={submit}>
-        <div className="rounded-xl border border-neutral-200 bg-white/90 p-4 shadow-xs backdrop-blur-sm sm:p-5">
-          {/* Desktop: three-column grid */}
-          <div className="hidden items-start gap-5 lg:grid lg:grid-cols-[1.2fr_1.2fr_0.7fr]">
-            {/* Column 1: Room & Guests */}
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <BedDouble className="size-3.5" />
-                Room &amp; guests
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
+          {/* 
+            Single responsive grid — controls are rendered once and rearranged at each breakpoint.
+            Mobile:   1 column (fully stacked)
+            Tablet:   2 columns (Room & Guests stacked left, Your Stay right), CTA spans full width
+            Desktop:  3 columns (Room & Guests | Your Stay | CTA)
+          */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-[minmax(240px,1.1fr)_minmax(280px,1.1fr)_minmax(180px,0.8fr)] lg:gap-6">
+            {/* ===== Column 1: Room & Guests ===== */}
+            <div className="flex flex-col">
+              <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground">
+                <BedDouble className="size-4" />
+                Room &amp; Guests
               </p>
-              <div className="grid grid-cols-[minmax(0,2fr)_minmax(110px,0.8fr)] gap-3">
+              {/* Stacked on mobile (<sm), side-by-side on sm+ */}
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(100px,0.8fr)]">
                 <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-                  <SelectTrigger id="search-room" className="h-12 w-full bg-white">
+                  <SelectTrigger id="search-room" className="h-12 bg-white">
                     <SelectValue placeholder="Select a room" />
                   </SelectTrigger>
                   <SelectContent>
@@ -79,30 +91,35 @@ export function AvailabilitySearch({
                   onChange={(event) => setGuests(event.target.value)}
                   className="h-12 bg-white"
                   placeholder="Guests"
+                  title="Number of guests"
                 />
               </div>
             </div>
 
-            {/* Column 2: Your Stay */}
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <CalendarDays className="size-3.5" />
-                Your stay
+            {/* ===== Column 2: Your Stay (single Popover instances) ===== */}
+            <div className="flex flex-col">
+              <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground">
+                <CalendarDays className="size-4" />
+                Your Stay
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+              {/* Stacked on mobile, side-by-side on sm+ */}
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Check-in — rendered once */}
+                <Popover
+                  open={checkInOpen}
+                  onOpenChange={(nextOpen) => {
+                    if (nextOpen) setCheckOutOpen(false);
+                    setCheckInOpen(nextOpen);
+                  }}
+                >
                   <PopoverTrigger
                     id="search-check-in"
-                    className={cn(
-                      "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-xs transition-colors",
-                      "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                      checkIn ? "text-neutral-800" : "text-neutral-400"
-                    )}
+                    className={cn(triggerClass, checkIn ? "text-neutral-800 font-medium" : "text-neutral-500")}
                   >
-                    <CalendarDays className="mr-2 size-4 shrink-0 text-muted-foreground" />
-                    {checkIn ? format(checkIn, "d MMM yyyy") : "Check-in"}
+                    <CalendarDays className="mr-2 size-4 shrink-0 text-neutral-400" />
+                    <span>{checkIn ? format(checkIn, "d MMM") : "Check-in"}</span>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-2" align="start">
+                  <PopoverContent className="w-auto p-3" align="start">
                     <Calendar
                       mode="single"
                       selected={checkIn}
@@ -113,6 +130,8 @@ export function AvailabilitySearch({
                           next.setDate(next.getDate() + 1);
                           setCheckOut(next);
                         }
+                        setCheckInOpen(false);
+                        if (!checkOut) setCheckOutOpen(true);
                       }}
                       fromDate={today}
                       disabled={{ before: today }}
@@ -120,19 +139,23 @@ export function AvailabilitySearch({
                     />
                   </PopoverContent>
                 </Popover>
-                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+
+                {/* Check-out — rendered once */}
+                <Popover
+                  open={checkOutOpen}
+                  onOpenChange={(nextOpen) => {
+                    if (nextOpen) setCheckInOpen(false);
+                    setCheckOutOpen(nextOpen);
+                  }}
+                >
                   <PopoverTrigger
                     id="search-check-out"
-                    className={cn(
-                      "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-xs transition-colors",
-                      "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                      checkOut ? "text-neutral-800" : "text-neutral-400"
-                    )}
+                    className={cn(triggerClass, checkOut ? "text-neutral-800 font-medium" : "text-neutral-500")}
                   >
-                    <CalendarDays className="mr-2 size-4 shrink-0 text-muted-foreground" />
-                    {checkOut ? format(checkOut, "d MMM yyyy") : "Check-out"}
+                    <CalendarDays className="mr-2 size-4 shrink-0 text-neutral-400" />
+                    <span>{checkOut ? format(checkOut, "d MMM") : "Check-out"}</span>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-2" align="start">
+                  <PopoverContent className="w-auto p-3" align="start">
                     <Calendar
                       mode="single"
                       selected={checkOut}
@@ -149,232 +172,28 @@ export function AvailabilitySearch({
               </div>
             </div>
 
-            {/* Column 3: Availability */}
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <CalendarCheck className="size-3.5" />
-                Availability
+            {/* ===== Column 3: Check Dates CTA ===== */}
+            <div className="flex flex-col sm:col-span-2 lg:col-span-1">
+              <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground">
+                <CalendarCheck className="size-4" />
+                Check Dates
               </p>
-              <Button type="submit" size="lg" className="h-12 w-full" disabled={!roomSlug}>
+              <Button
+                type="submit"
+                className="h-12 w-full bg-orange-500 text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500/30"
+                disabled={!roomSlug}
+              >
                 <Search className="mr-2 size-4" />
-                Check dates
+                Check
               </Button>
             </div>
-          </div>
-
-          {/* Tablet: two-column grid with CTA below */}
-          <div className="hidden items-start gap-5 sm:grid lg:hidden sm:grid-cols-[1fr_1fr]">
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <BedDouble className="size-3.5" />
-                Room &amp; guests
-              </p>
-              <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-                <SelectTrigger id="search-room-tablet" className="h-12 w-full bg-white">
-                  <SelectValue placeholder="Select a room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map((room) => (
-                    <SelectItem key={room.slug} value={room.slug}>
-                      {room.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                id="search-guests-tablet"
-                type="number"
-                min="1"
-                max="30"
-                required
-                value={guests}
-                onChange={(event) => setGuests(event.target.value)}
-                className="h-12 bg-white"
-                placeholder="Number of guests"
-              />
-            </div>
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <CalendarDays className="size-3.5" />
-                Your stay
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
-                  <PopoverTrigger
-                    id="search-check-in-t"
-                    className={cn(
-                      "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
-                      "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                      checkIn ? "text-neutral-800" : "text-neutral-400"
-                    )}
-                  >
-                    <CalendarDays className="mr-1.5 size-4 shrink-0 text-muted-foreground" />
-                    {checkIn ? format(checkIn, "d MMM") : "Check-in"}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-2" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={checkIn}
-                      onSelect={(date) => {
-                        setCheckIn(date);
-                        if (date && checkOut && date >= checkOut) {
-                          const next = new Date(date);
-                          next.setDate(next.getDate() + 1);
-                          setCheckOut(next);
-                        }
-                      }}
-                      fromDate={today}
-                      disabled={{ before: today }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
-                  <PopoverTrigger
-                    id="search-check-out-t"
-                    className={cn(
-                      "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
-                      "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                      checkOut ? "text-neutral-800" : "text-neutral-400"
-                    )}
-                  >
-                    <CalendarDays className="mr-1.5 size-4 shrink-0 text-muted-foreground" />
-                    {checkOut ? format(checkOut, "d MMM") : "Check-out"}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-2" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={checkOut}
-                      onSelect={(date) => {
-                        setCheckOut(date);
-                        setCheckOutOpen(false);
-                      }}
-                      fromDate={checkIn || today}
-                      disabled={{ before: checkIn || today }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <div className="sm:col-span-2">
-              <Button type="submit" size="lg" className="h-12 w-full" disabled={!roomSlug}>
-                <Search className="mr-2 size-4" />
-                Check dates
-              </Button>
-            </div>
-          </div>
-
-          {/* Mobile: single column stacked */}
-          <div className="flex flex-col gap-4 sm:hidden">
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <BedDouble className="size-3.5" />
-                Room
-              </p>
-              <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-                <SelectTrigger id="search-room-mobile" className="h-12 w-full bg-white">
-                  <SelectValue placeholder="Select a room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map((room) => (
-                    <SelectItem key={room.slug} value={room.slug}>
-                      {room.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <Users className="size-3.5" />
-                Guests
-              </p>
-              <Input
-                id="search-guests-mobile"
-                type="number"
-                min="1"
-                max="30"
-                required
-                value={guests}
-                onChange={(event) => setGuests(event.target.value)}
-                className="h-12 bg-white"
-                placeholder="Number of guests"
-              />
-            </div>
-            <div className="space-y-3">
-              <p className="flex items-center gap-1.5 text-xs font-semibold text-blue-600">
-                <CalendarDays className="size-3.5" />
-                Your stay
-              </p>
-              <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
-                <PopoverTrigger
-                  id="search-check-in-m"
-                  className={cn(
-                    "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-xs transition-colors",
-                    "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                    checkIn ? "text-neutral-800" : "text-neutral-400"
-                  )}
-                >
-                  <CalendarDays className="mr-2 size-4 shrink-0 text-muted-foreground" />
-                  {checkIn ? format(checkIn, "d MMM yyyy") : "Check-in"}
-                </PopoverTrigger>
-                  <PopoverContent className="w-[320px] p-2" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={checkIn}
-                    onSelect={(date) => {
-                      setCheckIn(date);
-                      if (date && checkOut && date >= checkOut) {
-                        const next = new Date(date);
-                        next.setDate(next.getDate() + 1);
-                        setCheckOut(next);
-                      }
-                    }}
-                    fromDate={today}
-                    disabled={{ before: today }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
-                <PopoverTrigger
-                  id="search-check-out-m"
-                  className={cn(
-                    "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-xs transition-colors",
-                    "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                    checkOut ? "text-neutral-800" : "text-neutral-400"
-                  )}
-                >
-                  <CalendarDays className="mr-2 size-4 shrink-0 text-muted-foreground" />
-                  {checkOut ? format(checkOut, "d MMM yyyy") : "Check-out"}
-                </PopoverTrigger>
-                <PopoverContent className="w-[320px] p-2" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={checkOut}
-                    onSelect={(date) => {
-                      setCheckOut(date);
-                      setCheckOutOpen(false);
-                    }}
-                    fromDate={checkIn || today}
-                    disabled={{ before: checkIn || today }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <Button type="submit" size="lg" className="h-12 w-full" disabled={!roomSlug}>
-              <Search className="mr-2 size-4" />
-              Check dates
-            </Button>
           </div>
         </div>
       </form>
     );
   }
 
-  // Compact variant (rooms listing page)
+  // ===== Compact variant (rooms listing page) =====
   return (
     <form id="booking" onSubmit={submit}>
       <div className="rounded-xl border border-neutral-200 bg-white/90 p-4 shadow-xs backdrop-blur-sm sm:p-5">
@@ -401,7 +220,7 @@ export function AvailabilitySearch({
                 id="search-check-in-c"
                 className={cn(
                   "flex h-12 w-full items-center rounded-md border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
-                  "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+                  "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none",
                   checkIn ? "text-neutral-800" : "text-neutral-400"
                 )}
               >
@@ -433,7 +252,7 @@ export function AvailabilitySearch({
                 id="search-check-out-c"
                 className={cn(
                   "flex h-12 w-full items-center rounded-md border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
-                  "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+                  "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none",
                   checkOut ? "text-neutral-800" : "text-neutral-400"
                 )}
               >
@@ -443,7 +262,9 @@ export function AvailabilitySearch({
                 <Calendar
                   mode="single"
                   selected={checkOut}
-                  onSelect={setCheckOut}
+                  onSelect={(date) => {
+                    setCheckOut(date);
+                  }}
                   fromDate={checkIn || today}
                   disabled={{ before: checkIn || today }}
                   initialFocus

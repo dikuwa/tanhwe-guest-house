@@ -1,8 +1,8 @@
 "use client";
 
-import { DayPicker } from "react-day-picker";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { DayPicker } from "react-day-picker";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -33,13 +33,12 @@ export function Calendar({
           "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         nav_button_previous: "",
         nav_button_next: "",
-        table: "w-full border-collapse",
-        head_row: "grid grid-cols-7",
-        head_cell:
-          "flex h-7 items-center justify-center text-xs font-medium text-muted-foreground",
-        row: "grid grid-cols-7 mt-0.5",
+        table: "w-full border-collapse table-fixed",
+        head_row: "",
+        head_cell: "h-7 text-xs font-medium text-muted-foreground text-center",
+        row: "",
         cell: cn(
-          "relative flex h-8 items-center justify-center p-0 text-sm",
+          "relative h-8 p-0 text-sm text-center",
           "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
           "focus-within:relative focus-within:z-20",
           "[&:has([aria-selected])]:bg-primary/10",
@@ -67,8 +66,7 @@ export function Calendar({
       }}
       components={{
         Chevron: (props) => {
-          if (props.orientation === "left")
-            return <ChevronLeft className="size-4" />;
+          if (props.orientation === "left") return <ChevronLeft className="size-4" />;
           return <ChevronRight className="size-4" />;
         },
       }}

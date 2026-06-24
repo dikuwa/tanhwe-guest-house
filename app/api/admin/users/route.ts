@@ -1,10 +1,10 @@
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { accounts, activityLogs, users } from "@/lib/db/schema";
+import { hashPassword } from "better-auth/crypto";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { hashPassword } from "better-auth/crypto";
 
 const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),

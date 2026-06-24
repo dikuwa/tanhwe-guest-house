@@ -101,9 +101,7 @@ export function UserForm() {
       router.refresh();
     } catch (err) {
       setSaving(false);
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
-      );
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     }
   }
 

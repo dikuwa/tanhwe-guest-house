@@ -1,10 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BedDouble, ImageIcon, Plus } from "lucide-react";
+import { BedDouble, ImageIcon, Plus, Trash2 } from "lucide-react";
 import { requireRole } from "@/lib/auth-middleware";
 import { getAdminRooms } from "@/lib/admin-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DeleteRoomButton } from "./delete-room-button";
 
 const money = new Intl.NumberFormat("en-NA", {
   style: "currency",
@@ -109,13 +110,19 @@ export default async function AdminRooms() {
                     </Badge>
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      render={<Link href={`/admin/rooms/${room.id}/edit`} />}
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        render={<Link href={`/admin/rooms/${room.id}/edit`} />}
+                      >
+                        Edit
+                      </Button>
+                      <DeleteRoomButton
+                        id={room.id}
+                        name={room.name}
+                      />
+                    </div>
                   </td>
                 </tr>
               );

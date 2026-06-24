@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, Users } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,17 @@ export default async function AdminCustomers({
   const showFinancials = session.user.role !== "staff";
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-semibold">Customers</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Guest contact details, stay history, and outstanding follow-up.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold">Customers</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Guest contact details, stay history, and outstanding follow-up.
+          </p>
+        </div>
+        <Button render={<Link href="/admin/customers/create" />}>
+          <Plus className="size-4" />
+          Add customer
+        </Button>
       </header>
       {duplicates.length > 0 && (
         <aside className="rounded-xl border border-primary/30 bg-primary/5 p-4">

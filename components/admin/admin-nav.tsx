@@ -3,16 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BarChart3,
   BedDouble,
+  BellRing,
   BookOpen,
   FileText,
+  HelpCircle,
   LayoutDashboard,
   LogOut,
+  MessageSquareQuote,
   Settings,
-  Users,
-  BellRing,
-  BarChart3,
   UserCog,
+  Users,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
@@ -41,6 +43,9 @@ const items = [
     roles: ["owner", "admin", "staff"],
   },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
+  { href: "/admin/faqs", label: "FAQs", icon: HelpCircle, roles: ["owner", "admin"] },
+  { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, roles: ["owner", "admin"] },
+  { href: "/admin/activity-logs", label: "Activity Logs", icon: BarChart3, roles: ["owner", "admin"] },
   { href: "/admin/users", label: "Users", icon: UserCog, roles: ["owner"] },
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];

@@ -391,6 +391,35 @@ export const notifications = pgTable(
   ]
 );
 
+export const faqs = pgTable(
+  "faqs",
+  {
+    id: text("id").primaryKey(),
+    question: text("question").notNull(),
+    answer: text("answer").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [index("faqs_sort_order_idx").on(table.sortOrder)]
+);
+
+export const testimonials = pgTable(
+  "testimonials",
+  {
+    id: text("id").primaryKey(),
+    guestName: text("guest_name").notNull(),
+    guestType: text("guest_type").notNull(),
+    guestImage: text("guest_image"),
+    text: text("text").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    featured: boolean("featured").notNull().default(false),
+    active: boolean("active").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [index("testimonials_sort_order_idx").on(table.sortOrder)]
+);
+
 export const settings = pgTable("settings", {
   id: text("id").primaryKey(),
   key: text("key").notNull().unique(),

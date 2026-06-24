@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, asc, eq } from "drizzle-orm";
 import { getDb } from "./db";
-import { roomAmenities, roomImages, rooms, settings } from "./db/schema";
+import { faqs, roomAmenities, roomImages, rooms, settings, testimonials } from "./db/schema";
 
 export type PublicRoom = {
   id: string;
@@ -83,6 +83,22 @@ export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
   };
 }
 
+export async function getPublicFaqs() {
+  return getDb()
+    .select()
+    .from(faqs)
+    .where(eq(faqs.active, true))
+    .orderBy(asc(faqs.sortOrder));
+}
+
+export async function getPublicTestimonials() {
+  return getDb()
+    .select()
+    .from(testimonials)
+    .where(eq(testimonials.active, true))
+    .orderBy(asc(testimonials.sortOrder));
+}
+
 export async function getPublicSettings() {
   const values = await getDb().select().from(settings);
   const map = new Map(values.map((item) => [item.key, item.value]));
@@ -93,5 +109,6 @@ export async function getPublicSettings() {
     checkInTime: map.get("check_in_time") ?? "14:00",
     checkOutTime: map.get("check_out_time") ?? "10:00",
     currency: map.get("currency") ?? "N$",
+    email: map.get("email") ?? "",
   };
 }

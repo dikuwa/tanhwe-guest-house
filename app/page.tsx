@@ -8,13 +8,20 @@ import { ContactActions } from "@/components/public/contact-actions";
 import { RoomCard } from "@/components/public/room-card";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
-import { getPublicRooms, getPublicSettings } from "@/lib/public-data";
+import { FaqSection } from "@/components/public/faq-section";
+import { TestimonialCarousel } from "@/components/public/testimonial-carousel";
+import { getPublicFaqs, getPublicRooms, getPublicSettings, getPublicTestimonials } from "@/lib/public-data";
 import { heroImage } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [rooms, settings] = await Promise.all([getPublicRooms(), getPublicSettings()]);
+  const [rooms, settings, faqItems, testimonialItems] = await Promise.all([
+    getPublicRooms(),
+    getPublicSettings(),
+    getPublicFaqs(),
+    getPublicTestimonials(),
+  ]);
   const featured = rooms.filter((room) => room.featured).slice(0, 3);
   const shownRooms = featured.length ? featured : rooms.slice(0, 3);
 
@@ -168,6 +175,10 @@ export default async function Home() {
             />
           </div>
         </section>
+
+        <TestimonialCarousel testimonials={testimonialItems} />
+
+        <FaqSection faqs={faqItems} />
       </main>
       <SiteFooter />
     </div>

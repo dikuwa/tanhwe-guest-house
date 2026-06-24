@@ -295,8 +295,15 @@ export async function getFollowUpOptions() {
       .from(customers)
       .orderBy(asc(customers.fullName)),
     getDb()
-      .select({ id: bookings.id, label: bookings.bookingNumber, customerId: bookings.customerId })
+      .select({
+        id: bookings.id,
+        label: bookings.bookingNumber,
+        customerId: bookings.customerId,
+        customerName: customers.fullName,
+        checkIn: bookings.checkIn,
+      })
       .from(bookings)
+      .innerJoin(customers, eq(bookings.customerId, customers.id))
       .orderBy(desc(bookings.createdAt))
       .limit(250),
     getDb().select({ id: users.id, label: users.name }).from(users).orderBy(asc(users.name)),

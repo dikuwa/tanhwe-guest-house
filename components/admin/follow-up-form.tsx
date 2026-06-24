@@ -19,10 +19,13 @@ import { PrioritySelect } from "@/components/forms/priority-select";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+type OptionBase = { id: string; label: string };
+type BookingOption = OptionBase & { customerId: string; customerName?: string; checkIn?: Date };
+
 type Options = {
-  customerOptions: { id: string; label: string }[];
-  bookingOptions: { id: string; label: string; customerId: string }[];
-  staffOptions: { id: string; label: string }[];
+  customerOptions: OptionBase[];
+  bookingOptions: BookingOption[];
+  staffOptions: OptionBase[];
 };
 
 export function FollowUpForm({ options }: { options: Options }) {
@@ -74,17 +77,38 @@ export function FollowUpForm({ options }: { options: Options }) {
     >
       <div className="lg:col-span-2 space-y-1.5">
         <Label htmlFor="follow-booking">Booking</Label>
-        <Select value={bookingId} onValueChange={(v) => v !== null && setBookingId(v)}>
+        <Select
+          value={bookingId}
+          onValueChange={(v) => {
+            if (v === null) return;
+            setBookingId(v);
+            // Auto-populate customer from selected booking, or clear if no booking
+            if (v) {
+              const booking = options.bookingOptions.find((b) => b.id === v);
+              if (booking?.customerId) setCustomerId(booking.customerId);
+            } else {
+              setCustomerId("");
+            }
+          }}
+        >
           <SelectTrigger id="follow-booking" className="h-12 w-full">
             <SelectValue placeholder="No booking" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">No booking</SelectItem>
-            {options.bookingOptions.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.label}
-              </SelectItem>
-            ))}
+            {options.bookingOptions.map((option) => {
+              const checkInStr = option.checkIn
+                ? option.checkIn.toLocaleDateString("en-NA", { day: "numeric", month: "short", year: "numeric" })
+                : "";
+              const label = option.customerName
+                ? `${option.label} — ${option.customerName} — ${checkInStr}`
+                : option.label;
+              return (
+                <SelectItem key={option.id} value={option.id}>
+                  {label}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -92,10 +116,10 @@ export function FollowUpForm({ options }: { options: Options }) {
         <Label htmlFor="follow-customer">Customer</Label>
         <Select value={customerId} onValueChange={(v) => v !== null && setCustomerId(v)}>
           <SelectTrigger id="follow-customer" className="h-12 w-full">
-            <SelectValue placeholder="Select if no booking" />
+            <SelectValue placeholder="Select a customer" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Select if no booking</SelectItem>
+            <SelectItem value="">No customer</SelectItem>
             {options.customerOptions.map((option) => (
               <SelectItem key={option.id} value={option.id}>
                 {option.label}

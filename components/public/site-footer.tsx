@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { ExternalLink, MapPin, MessageCircle, Phone } from "lucide-react";
 import { getPublicSettings } from "@/lib/public-data";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 
@@ -43,11 +43,17 @@ export async function SiteFooter() {
           <Link className="block text-secondary-foreground/70 transition-colors hover:text-white" href="/rooms">
             Rooms
           </Link>
-          <Link className="block text-secondary-foreground/70 transition-colors hover:text-white" href="/#conference">
+          <Link className="block text-secondary-foreground/70 transition-colors hover:text-white" href="/conference">
             Conference facilities
           </Link>
           <Link className="block text-secondary-foreground/70 transition-colors hover:text-white" href="/contact">
             Contact us
+          </Link>
+          <Link className="block text-secondary-foreground/50 text-xs transition-colors hover:text-white" href="/privacy-policy">
+            Privacy Policy
+          </Link>
+          <Link className="block text-secondary-foreground/50 text-xs transition-colors hover:text-white" href="/terms">
+            Terms &amp; Conditions
           </Link>
           <Link className="block text-secondary-foreground/50 text-xs transition-colors hover:text-white" href="/admin">
             Staff login
@@ -56,6 +62,16 @@ export async function SiteFooter() {
       </div>
       <div className="border-t border-white/15 px-4 py-4 text-center text-xs text-secondary-foreground/50">
         &copy; {new Date().getFullYear()} Tanhwe Guest House &mdash; Mukwe, Kavango East, Namibia
+        <span className="mx-2">&middot;</span>
+        Designed by{" "}
+        <a
+          href="https://flextechmedia.com"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-0.5 transition-colors hover:text-white"
+        >
+          Flextech Media <ExternalLink className="inline size-2.5" />
+        </a>
       </div>
     </footer>
   );

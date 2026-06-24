@@ -1,7 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
-import { eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
-import { accounts, customers, roles, roomAmenities, rooms, settings, users } from "./db/schema";
+import { accounts, customers, faqs, roles, roomAmenities, rooms, settings, testimonials, users } from "./db/schema";
 
 async function seed() {
   const db = getDb();
@@ -172,6 +172,44 @@ async function seed() {
         description: "Standard check-out time",
       },
       { id: "setting_currency", key: "currency", value: "N$", description: "Display currency" },
+      {
+        id: "setting_email",
+        key: "email",
+        value: "info@tanhweguesthouse.com",
+        description: "Public email address",
+      },
+      {
+        id: "setting_time_format",
+        key: "time_format",
+        value: "24h",
+        description: "Time display format (12h or 24h)",
+      },
+      {
+        id: "setting_flextech_url",
+        key: "flextech_url",
+        value: "https://flextechmedia.com",
+        description: "Flextech Media website URL for footer credit",
+      },
+      {
+        id: "setting_location_pin_url",
+        key: "location_pin_url",
+        value: "",
+        description: "Google Maps link or coordinates for location pin",
+      },
+      {
+        id: "setting_whatsapp_location",
+        key: "whatsapp_location_message",
+        value:
+          "Hello Tanhwe Guest House. I am planning to visit the guest house and would like to request the correct location pin and arrival directions. Thank you.",
+        description: "WhatsApp message template for location pin request",
+      },
+      {
+        id: "setting_whatsapp_conference",
+        key: "whatsapp_conference_message",
+        value:
+          "Hello Tanhwe Guest House. I would like to enquire about the conference facility. Please send me availability and pricing information.",
+        description: "WhatsApp message template for conference enquiry",
+      },
     ])
     .onConflictDoNothing();
 
@@ -186,6 +224,112 @@ async function seed() {
       notes: "Development seed record",
     })
     .onConflictDoNothing();
+
+  // ── Seed FAQs only if none exist ──
+  const existingFaqs = await db.select({ count: sql<number>`count(*)::int` }).from(faqs);
+  if (existingFaqs[0]?.count === 0) {
+    const faqData = [
+      {
+        question: "What time is check-in and check-out?",
+        answer: "Check-in and check-out times are shown during booking and may also be confirmed directly with our team. Contact us in advance when you need an earlier arrival or later departure.",
+        sortOrder: 1,
+      },
+      {
+        question: "How do I confirm my room booking?",
+        answer: "Select your preferred room and dates, submit your booking request and follow the confirmation instructions provided by Tanhwe Guest House. A booking is only confirmed once the required confirmation or deposit has been received.",
+        sortOrder: 2,
+      },
+      {
+        question: "Can I request the guest-house location pin?",
+        answer: "Yes. Use the \"Request location pin\" button on the Contact page or your booking confirmation. WhatsApp will open with a prepared message so our team can send you the correct location.",
+        sortOrder: 3,
+      },
+      {
+        question: "Does Tanhwe Guest House offer conference facilities?",
+        answer: "Yes. We have one conference facility suitable for meetings, workshops, training sessions and small events. Contact us for capacity, availability, seating setup and pricing.",
+        sortOrder: 4,
+      },
+      {
+        question: "Can I book more than one room?",
+        answer: "Yes. Where availability allows, guests can request multiple rooms. The total will be calculated using the room rate, number of rooms and number of nights.",
+        sortOrder: 5,
+      },
+      {
+        question: "How can I contact Tanhwe Guest House?",
+        answer: "You can contact us by phone or WhatsApp using the details shown throughout the website. WhatsApp is recommended for booking questions, directions and arrival arrangements.",
+        sortOrder: 6,
+      },
+      {
+        question: "Can I change or cancel a booking?",
+        answer: "Contact the guest house as early as possible. Changes and cancellations are subject to room availability and the booking terms communicated during confirmation.",
+        sortOrder: 7,
+      },
+      {
+        question: "Are children and families welcome?",
+        answer: "Yes. Families are welcome. Please include the correct number of guests when making an enquiry so the team can recommend the most suitable room arrangement.",
+        sortOrder: 8,
+      },
+    ];
+    await db.insert(faqs).values(faqData.map((f) => ({ id: crypto.randomUUID(), ...f })));
+    console.log(`✓ Seeded ${faqData.length} FAQs`);
+  }
+
+  // ── Seed Testimonials only if none exist ──
+  const existingTestimonials = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(testimonials);
+  if (existingTestimonials[0]?.count === 0) {
+    const testimonialData = [
+      {
+        guestName: "Selma N.",
+        guestType: "Business traveller",
+        text: "The room was clean, comfortable and peaceful. The team made our arrival easy and responded quickly whenever we needed assistance.",
+        sortOrder: 1,
+        featured: true,
+      },
+      {
+        guestName: "Petrus K.",
+        guestType: "Leisure guest",
+        text: "We stayed at Tanhwe Guest House while visiting Mukwe and felt welcome from the moment we arrived. The booking process was simple and the room had everything we needed.",
+        sortOrder: 2,
+        featured: true,
+      },
+      {
+        guestName: "Maria H.",
+        guestType: "Conference organiser",
+        text: "Our small team used the conference facility for a planning session. The space was practical, well prepared and convenient for everyone attending.",
+        sortOrder: 3,
+        featured: true,
+      },
+      {
+        guestName: "Johannes M.",
+        guestType: "Returning guest",
+        text: "The WhatsApp communication was very helpful. We received clear booking information and the location pin before travelling.",
+        sortOrder: 4,
+      },
+      {
+        guestName: "Anna S.",
+        guestType: "Family guest",
+        text: "A comfortable place for an overnight stay. The staff were friendly, the surroundings were quiet and we would gladly stay again.",
+        sortOrder: 5,
+      },
+      {
+        guestName: "David N.",
+        guestType: "Work traveller",
+        text: "Tanhwe Guest House gave us a simple and reliable base during our work trip. The room was neat and the service was professional.",
+        sortOrder: 6,
+      },
+    ];
+    await db
+      .insert(testimonials)
+      .values(
+        testimonialData.map((t) => ({
+          id: crypto.randomUUID(),
+          ...t,
+        }))
+      );
+    console.log(`✓ Seeded ${testimonialData.length} testimonials`);
+  }
 
   console.log("✅ Database seed completed successfully");
 }

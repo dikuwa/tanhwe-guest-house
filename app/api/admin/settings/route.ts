@@ -12,6 +12,19 @@ const allowed = [
   "check_in_time",
   "check_out_time",
   "currency",
+  "email",
+  "time_format",
+  "flextech_url",
+  "location_pin_url",
+  "conference_title",
+  "conference_description",
+  "conference_capacity",
+  "conference_amenities",
+  "conference_suitable_for",
+  "conference_operating_hours",
+  "conference_pricing_note",
+  "whatsapp_conference_message",
+  "whatsapp_location_message",
 ] as const;
 const input = z.object({ key: z.enum(allowed), value: z.string().trim().min(1).max(200) });
 export async function PATCH(request: NextRequest) {

@@ -76,20 +76,17 @@ export function DateRangePicker({
       <div className="grid grid-cols-2 gap-3">
         {/* Check-in */}
         <Popover>
-          <PopoverTrigger>
-            <button
-              id={checkInId}
-              type="button"
-              className={cn(
-                "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                checkIn ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              {checkInDate
-                ? format(checkInDate, "d MMM yyyy")
-                : checkInLabel}
-            </button>
+          <PopoverTrigger
+            id={checkInId}
+            className={cn(
+              "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+              checkIn ? "text-neutral-800" : "text-neutral-400"
+            )}
+          >
+            {checkInDate
+              ? format(checkInDate, "d MMM yyyy")
+              : checkInLabel}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
@@ -105,20 +102,17 @@ export function DateRangePicker({
 
         {/* Check-out */}
         <Popover>
-          <PopoverTrigger>
-            <button
-              id={checkOutId}
-              type="button"
-              className={cn(
-                "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                checkOut ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              {checkOutDate
-                ? format(checkOutDate, "d MMM yyyy")
-                : checkOutLabel}
-            </button>
+          <PopoverTrigger
+            id={checkOutId}
+            className={cn(
+              "mt-1 flex h-10 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+              checkOut ? "text-neutral-800" : "text-neutral-400"
+            )}
+          >
+            {checkOutDate
+              ? format(checkOutDate, "d MMM yyyy")
+              : checkOutLabel}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar

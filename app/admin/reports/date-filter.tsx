@@ -42,18 +42,16 @@ export function DateFilter({
       <div className="space-y-1">
         <p className="text-xs font-medium text-muted-foreground">From</p>
         <Popover open={fromOpen} onOpenChange={setFromOpen}>
-          <PopoverTrigger>
-            <button
-              type="button"
-              className={cn(
-                "flex h-9 w-[150px] items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                fromDate ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              <CalendarDays className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
-              {fromDate ? format(fromDate, "d MMM yyyy") : "Select start"}
-            </button>
+          <PopoverTrigger
+            type="button"
+            className={cn(
+              "flex h-9 w-[150px] items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
+              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+              fromDate ? "text-neutral-800" : "text-neutral-400"
+            )}
+          >
+            <CalendarDays className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
+            {fromDate ? format(fromDate, "d MMM yyyy") : "Select start"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
@@ -71,18 +69,16 @@ export function DateFilter({
       <div className="space-y-1">
         <p className="text-xs font-medium text-muted-foreground">To</p>
         <Popover open={toOpen} onOpenChange={setToOpen}>
-          <PopoverTrigger>
-            <button
-              type="button"
-              className={cn(
-                "flex h-9 w-[150px] items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                toDate ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              <CalendarDays className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
-              {toDate ? format(toDate, "d MMM yyyy") : "Select end"}
-            </button>
+          <PopoverTrigger
+            type="button"
+            className={cn(
+              "flex h-9 w-[150px] items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm shadow-xs transition-colors",
+              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
+              toDate ? "text-neutral-800" : "text-neutral-400"
+            )}
+          >
+            <CalendarDays className="mr-2 size-3.5 shrink-0 text-muted-foreground" />
+            {toDate ? format(toDate, "d MMM yyyy") : "Select end"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar

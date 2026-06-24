@@ -1,6 +1,6 @@
-import { MessageCircle, Phone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MessageCircle, Phone } from "lucide-react";
 
 export function ContactActions({
   phone,
@@ -26,7 +26,7 @@ export function ContactActions({
         <MessageCircle className="size-4" /> WhatsApp
       </a>
       <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "default" })}>
-        <Phone className="size-4" /> Call {phone}
+        <Phone className="size-4" /> {phone}
       </a>
     </div>
   );

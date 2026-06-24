@@ -145,3 +145,32 @@ export function getAmenityIcon(iconKey: string | null | undefined): LucideIcon {
 export function getAmenityLabel(key: string): string {
   return PREDEFINED_AMENITIES.find((a) => a.key === key)?.label ?? key;
 }
+
+/** Suggest an icon key for a free-text amenity label using a safe mapping. */
+export function suggestAmenityIcon(label: string): string | null {
+  if (!label) return null;
+  const s = label.toLowerCase();
+  const mapping: [string[], string][] = [
+    [["wifi", "wi-fi", "internet"], "wifi"],
+    [["breakfast", "coffee", "tea"], "coffee"],
+    [["bath", "bathroom", "ensuite", "toilet"], "bath"],
+    [["shower"], "shower-head"],
+    [["parking", "car", "park"], "car"],
+    [["secure", "security", "safe", "cctv"], "shield-check"],
+    [["ac", "air", "air conditioning", "cool"], "snowflake"],
+    [["tv", "television", "telly"], "tv"],
+    [["conference", "meeting", "presentation"], "presentation"],
+    [["laundry", "washing", "washer"], "washing-machine"],
+    [["accessible", "accessibility", "wheelchair"], "accessibility"],
+    [["non-smoking", "nonsmoking", "non smoking", "no smoking"], "cigarette-off"],
+    [["fridge", "refrigerator"], "refrigerator"],
+  ];
+
+  for (const [keys, icon] of mapping) {
+    for (const k of keys) {
+      if (s.includes(k)) return icon;
+    }
+  }
+
+  return null;
+}

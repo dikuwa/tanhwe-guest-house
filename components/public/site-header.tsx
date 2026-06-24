@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { MapPin, Phone } from "lucide-react";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { getPublicSettings } from "@/lib/public-data";
-import { TanhweLogo } from "@/components/tanhwe-logo";
+import { MapPin, Phone } from "lucide-react";
+import Link from "next/link";
 import { SiteNavigation } from "./site-navigation";
 
 export async function SiteHeader() {
@@ -18,10 +18,10 @@ export async function SiteHeader() {
           <a
             href={phoneHref}
             className={buttonVariants({ variant: "ghost", size: "sm" })}
-            aria-label="Call Tanhwe Guest House"
+            aria-label={`Call ${settings.phone}`}
           >
             <Phone aria-hidden="true" className="size-4" />
-            <span className="hidden sm:inline">Call</span>
+            <span className="ml-2 hidden sm:inline">{settings.phone}</span>
           </a>
           <Link href="/rooms#booking" className={buttonVariants({ size: "sm" })}>
             Book a stay
@@ -29,7 +29,8 @@ export async function SiteHeader() {
         </div>
       </div>
       <div className="border-t bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] px-4 py-1.5 text-center text-xs text-muted-foreground md:hidden">
-        <MapPin aria-hidden="true" className="mr-1 inline size-3 align-middle" /> {settings.location}
+        <MapPin aria-hidden="true" className="mr-1 inline size-3 align-middle" />{" "}
+        {settings.location}
       </div>
     </header>
   );

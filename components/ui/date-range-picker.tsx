@@ -88,7 +88,7 @@ export function DateRangePicker({
               ? format(checkInDate, "d MMM yyyy")
               : checkInLabel}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-[320px] p-2" align="start">
             <Calendar
               mode="single"
               selected={checkInDate}
@@ -114,7 +114,7 @@ export function DateRangePicker({
               ? format(checkOutDate, "d MMM yyyy")
               : checkOutLabel}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-[320px] p-2" align="start">
             <Calendar
               mode="single"
               selected={checkOutDate}

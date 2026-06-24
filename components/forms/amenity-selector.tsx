@@ -9,6 +9,7 @@ import {
   AMENITY_CATEGORIES,
   getAmenityIcon,
   getAmenityLabel,
+  suggestAmenityIcon,
 } from "@/lib/amenity-icons";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,12 @@ export function AmenitySelector({ value, onChange, id }: AmenitySelectorProps) {
     }
     return groups;
   }, [filtered]);
+
+  const suggestedIconKey = useMemo(() => {
+    const q = search.trim();
+    if (!q) return null;
+    return suggestAmenityIcon(q);
+  }, [search]);
 
   function toggle(key: string) {
     if (value.includes(key)) {
@@ -134,9 +141,34 @@ export function AmenitySelector({ value, onChange, id }: AmenitySelectorProps) {
         })}
 
         {filtered.length === 0 && (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No amenities match &ldquo;{search}&rdquo;
-          </p>
+          <div className="py-3 text-center text-sm text-muted-foreground">
+            <p className="mb-3">No amenities match &ldquo;{search}&rdquo;</p>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const label = search.trim();
+                  if (!label) return;
+                  // Prevent obvious duplicates
+                  const exists = value.some((v) => v.toLowerCase() === label.toLowerCase());
+                  if (exists) return;
+                  onChange([...value, label]);
+                  setSearch("");
+                }}
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+              >
+                {suggestedIconKey && (
+                  <span className="inline-flex items-center justify-center text-muted-foreground">
+                    {(() => {
+                      const Icon = getAmenityIcon(suggestedIconKey);
+                      return <Icon className="size-4 text-primary" />;
+                    })()}
+                  </span>
+                )}
+                <span>Add “{search}”</span>
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

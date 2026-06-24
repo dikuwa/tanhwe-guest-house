@@ -28,7 +28,8 @@ type Snapshot = {
 const styles = StyleSheet.create({
   page: { padding: 42, fontFamily: "Helvetica", color: "#172033", fontSize: 10 },
   row: { flexDirection: "row", justifyContent: "space-between" },
-  brand: { color: "#0D5CA8", fontSize: 19, fontWeight: 700 },
+  brandName: { color: "#E68011", fontSize: 19, fontWeight: 700, letterSpacing: -0.5 },
+  brandSub: { color: "#054386", fontSize: 10, fontWeight: 600, letterSpacing: 1.5 },
   title: { fontSize: 18, fontWeight: 700, textTransform: "uppercase" },
   muted: { color: "#667085", marginTop: 5 },
   section: { marginTop: 24, paddingTop: 16, borderTop: "1px solid #E5E7EB" },
@@ -42,6 +43,15 @@ const styles = StyleSheet.create({
 });
 const nad = (value: number) => `N$ ${value.toFixed(2)}`;
 
+function BrandLogo() {
+  return (
+    <View>
+      <Text style={styles.brandName}>TANHWE</Text>
+      <Text style={styles.brandSub}>GUEST HOUSE</Text>
+    </View>
+  );
+}
+
 export async function createDocumentPdf(data: PdfData) {
   const snapshot = JSON.parse(data.snapshot) as Snapshot;
   return renderToBuffer(
@@ -49,7 +59,7 @@ export async function createDocumentPdf(data: PdfData) {
       <Page size="A4" style={styles.page}>
         <View style={styles.row}>
           <View>
-            <Text style={styles.brand}>Tanhwe Guest House</Text>
+            <BrandLogo />
             <Text style={styles.muted}>Mukwe, Namibia</Text>
           </View>
           <View>

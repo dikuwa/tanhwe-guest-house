@@ -15,10 +15,28 @@ type LogoProps = {
   white?: boolean;
 };
 
-const iconSizes = {
-  sm: { icon: 28, font: "text-base", gap: "gap-2" },
-  md: { icon: 36, font: "text-lg", gap: "gap-2.5" },
-  lg: { icon: 44, font: "text-2xl", gap: "gap-3" },
+const sizes = {
+  sm: {
+    icon: 28,
+    main: "text-sm",
+    sub: "text-[9px]",
+    tracking: "tracking-[.12em]",
+    gap: "gap-2",
+  },
+  md: {
+    icon: 36,
+    main: "text-lg",
+    sub: "text-[11px]",
+    tracking: "tracking-[.14em]",
+    gap: "gap-2.5",
+  },
+  lg: {
+    icon: 44,
+    main: "text-2xl",
+    sub: "text-[13px]",
+    tracking: "tracking-[.16em]",
+    gap: "gap-3",
+  },
 } as const;
 
 export function TanhweLogo({
@@ -28,7 +46,7 @@ export function TanhweLogo({
   className,
   white = false,
 }: LogoProps) {
-  const s = iconSizes[size];
+  const s = sizes[size];
 
   const content = (
     <div className={cn("flex items-center", s.gap, className)}>
@@ -42,25 +60,26 @@ export function TanhweLogo({
           aria-hidden="true"
         />
       )}
-      <div className="flex items-baseline gap-1.5 leading-none">
-        <span
+      <div className="leading-none">
+        <p
           className={cn(
             "font-extrabold tracking-tight",
             white ? "text-white" : "text-primary",
-            s.font
+            s.main
           )}
         >
           TANHWE
-        </span>
-        <span
+        </p>
+        <p
           className={cn(
-            "font-semibold tracking-wide",
-            white ? "text-white/70" : "text-muted-foreground",
-            size === "sm" ? "text-[10px]" : size === "md" ? "text-xs" : "text-sm"
+            "mt-px font-semibold",
+            white ? "text-white/80" : "text-secondary",
+            s.sub,
+            s.tracking
           )}
         >
           GUEST HOUSE
-        </span>
+        </p>
       </div>
     </div>
   );

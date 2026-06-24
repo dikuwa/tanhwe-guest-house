@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { BedDouble, Coffee, Users, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
 import type { PublicRoom } from "@/lib/public-data";
 import { roomFallbackImage } from "@/lib/images";
 
@@ -45,7 +44,7 @@ export function RoomCard({ room, currency = "N$" }: { room: PublicRoom; currency
             </h3>
           </div>
           <p className="shrink-0 text-right">
-            <span className="text-lg font-bold tabular-nums">
+            <span className="text-lg font-bold tabular-nums text-primary">
               {currency}{room.pricePerNight}
             </span>
             <br />
@@ -62,12 +61,16 @@ export function RoomCard({ room, currency = "N$" }: { room: PublicRoom; currency
             {room.availableUnits} unit{room.availableUnits === 1 ? "" : "s"}
           </span>
         </div>
-        <Link
-          href={`/rooms/${room.slug}`}
-          className={`${buttonVariants({ variant: "outline" })} mt-auto w-full`}
-        >
-          View room <ArrowRight className="size-3.5" />
-        </Link>
+        <div className="mt-auto pt-4">
+          <div className="mb-4 border-t border-border" />
+          <Link
+            href={`/rooms/${room.slug}`}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            View room details
+            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
       </div>
     </article>
   );

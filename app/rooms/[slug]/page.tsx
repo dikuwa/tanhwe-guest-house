@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Bath, Check, Coffee, MapPin, Users, Wifi } from "lucide-react";
+import { Check, Coffee, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BookingRequestForm } from "@/components/public/booking-request-form";
 import { ContactActions } from "@/components/public/contact-actions";
@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 import { getPublicRoom, getPublicSettings } from "@/lib/public-data";
 import { roomFallbackImage } from "@/lib/images";
+import { getAmenityIcon, getAmenityLabel } from "@/lib/amenity-icons";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -27,7 +28,6 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
     searchParams,
   ]);
   if (!room) notFound();
-  const amenityIcons = [Wifi, Coffee, Bath];
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -118,8 +118,30 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
                 {(room.amenities.length
                   ? room.amenities
                   : ["Wi-Fi", "Breakfast included", "Ensuite bathroom"]
-                ).map((amenity, index) => {
-                  const Icon = amenityIcons[index % amenityIcons.length];
+                ).map((amenity) => {
+                  const lower = amenity.toLowerCase();
+                  const predefined = [
+                    { match: "wifi", iconKey: "wifi" },
+                    { match: "breakfast", iconKey: "coffee" },
+                    { match: "bathroom", iconKey: "bath" },
+                    { match: "shower", iconKey: "shower-head" },
+                    { match: "ac", iconKey: "snowflake" },
+                    { match: "air conditioning", iconKey: "snowflake" },
+                    { match: "fan", iconKey: "fan" },
+                    { match: "parking", iconKey: "car" },
+                    { match: "tv", iconKey: "tv" },
+                    { match: "desk", iconKey: "lamp-desk" },
+                    { match: "towels", iconKey: "bath" },
+                    { match: "toiletries", iconKey: "package-check" },
+                    { match: "housekeeping", iconKey: "sparkles" },
+                    { match: "room service", iconKey: "concierge-bell" },
+                    { match: "tea", iconKey: "coffee" },
+                    { match: "fridge", iconKey: "refrigerator" },
+                    { match: "balcony", iconKey: "sun" },
+                    { match: "garden", iconKey: "trees" },
+                    { match: "conference", iconKey: "presentation" },
+                  ].find((p) => lower.includes(p.match));
+                  const Icon = getAmenityIcon(predefined?.iconKey ?? null);
                   return (
                     <div key={amenity} className="flex items-center gap-3">
                       <Icon className="size-5 text-primary" />

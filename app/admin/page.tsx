@@ -83,10 +83,34 @@ export default async function AdminDashboard() {
             </thead>
             <tbody>
               {data.recent.map((row) => (
-                <tr key={row.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                  <td className="px-4 py-3 font-medium text-neutral-800">{row.bookingNumber}</td>
-                  <td className="px-4 py-3 text-neutral-700">{row.fullName}</td>
-                  <td className="px-4 py-3 text-neutral-600">{row.checkIn.toLocaleDateString("en-NA")}</td>
+                <tr
+                  key={row.id}
+                  className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50 cursor-pointer transition-colors"
+                >
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/admin/bookings/${row.id}`}
+                      className="block font-medium text-neutral-800 hover:text-primary"
+                    >
+                      {row.bookingNumber}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-neutral-700">
+                    <Link
+                      href={`/admin/bookings/${row.id}`}
+                      className="block hover:text-primary"
+                    >
+                      {row.fullName}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-neutral-600">
+                    <Link
+                      href={`/admin/bookings/${row.id}`}
+                      className="block hover:text-primary"
+                    >
+                      {row.checkIn.toLocaleDateString("en-NA")}
+                    </Link>
+                  </td>
                   <td className="px-4 py-3">
                     <Badge
                       variant={statusVariant[row.status] ?? "outline"}
@@ -95,7 +119,14 @@ export default async function AdminDashboard() {
                       {row.status}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">{money.format(row.total)}</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-neutral-700">
+                    <Link
+                      href={`/admin/bookings/${row.id}`}
+                      className="block hover:text-primary"
+                    >
+                      {money.format(row.total)}
+                    </Link>
+                  </td>
                 </tr>
               ))}
               {data.recent.length === 0 && (

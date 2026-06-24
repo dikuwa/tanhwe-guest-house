@@ -17,25 +17,25 @@ type LogoProps = {
 
 const sizes = {
   sm: {
-    icon: 28,
+    icon: 34,
     main: "text-sm",
     sub: "text-[9px]",
     tracking: "tracking-[.12em]",
-    gap: "gap-2",
+    gap: "gap-2.5",
   },
   md: {
-    icon: 36,
+    icon: 44,
     main: "text-lg",
     sub: "text-[11px]",
     tracking: "tracking-[.14em]",
-    gap: "gap-2.5",
+    gap: "gap-3",
   },
   lg: {
-    icon: 44,
+    icon: 56,
     main: "text-2xl",
     sub: "text-[13px]",
     tracking: "tracking-[.16em]",
-    gap: "gap-3",
+    gap: "gap-3.5",
   },
 } as const;
 

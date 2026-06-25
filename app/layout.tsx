@@ -23,11 +23,8 @@ export const metadata: Metadata = {
   description: "Comfortable accommodation and conference facilities in Mukwe, Namibia.",
   icons: {
     icon: [
-      { url: "/tanhwe-icon.webp", type: "image/webp" },
-      { url: "/tanhwe-icon@2x.png", type: "image/png", sizes: "32x32" },
-      { url: "/tanhwe-icon@3x.png", type: "image/png", sizes: "48x48" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
-    shortcut: "/tanhwe-icon@2x.png",
   },
 };
 

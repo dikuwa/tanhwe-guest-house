@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Save, Trash2, EyeOff, Eye, Star } from "lucide-react";
+import { Loader2, Plus, Save, Trash2, EyeOff, Star, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +29,7 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  async function save(t: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean }) {
+  async function save(t: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean; }) {
     setSaving(t.id ?? "new");
     setError("");
     const method = t.id ? "PATCH" : "POST";
@@ -146,7 +147,7 @@ function TestimonialRow({
   isEditing: boolean;
   saving: boolean;
   onEdit: () => void;
-  onSave: (data: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean }) => void;
+  onSave: (data: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean; }) => void;
   onDelete: () => void;
   onCancel: () => void;
   deleteConfirmOpen: boolean;
@@ -155,10 +156,44 @@ function TestimonialRow({
 }) {
   const [guestName, setGuestName] = useState(t.guestName);
   const [guestType, setGuestType] = useState(t.guestType);
+  const [guestImage, setGuestImage] = useState(t.guestImage ?? "");
   const [text, setText] = useState(t.text);
   const [sortOrder, setSortOrder] = useState(t.sortOrder);
   const [featured, setFeatured] = useState(t.featured);
   const [active, setActive] = useState(t.active);
+  const [imageUploading, setImageUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("path", "testimonials");
+      const res = await fetch("/api/admin/upload-image", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setGuestImage(data.imageUrl);
+    } catch {
+      // silent
+    } finally {
+      setImageUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function removeImage() {
+    if (guestImage) {
+      await fetch("/api/admin/upload-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: guestImage }),
+      }).catch(() => {});
+    }
+    setGuestImage("");
+  }
 
   if (isEditing) {
     return (
@@ -184,6 +219,54 @@ function TestimonialRow({
                 className="mt-1.5 h-12"
                 placeholder="e.g. Solo traveller, Family, Couple"
               />
+            </div>
+          </div>
+          <div>
+            <Label>Profile photo</Label>
+            <div className="mt-1.5 flex items-center gap-3">
+              {guestImage ? (
+                <div className="relative size-12 shrink-0">
+                  <Image
+                    src={guestImage}
+                    alt=""
+                    fill
+                    className="rounded-full object-cover"
+                    sizes="48px"
+                  />
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
+                    aria-label="Remove photo"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-sm font-semibold text-neutral-400">
+                  {guestName ? guestName.charAt(0).toUpperCase() : "?"}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={imageUploading}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-600 transition-colors hover:bg-neutral-50 disabled:opacity-50"
+              >
+                {imageUploading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Upload className="size-4" />
+                )}
+                {imageUploading ? "Uploading…" : guestImage ? "Change photo" : "Upload photo"}
+              </button>
             </div>
           </div>
           <div>
@@ -232,7 +315,7 @@ function TestimonialRow({
             <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
               Cancel
             </Button>
-            <Button size="sm" disabled={saving || !guestName.trim() || !text.trim()} onClick={() => onSave({ id: t.id.startsWith("new-") ? undefined : t.id, guestName, guestType, text, sortOrder, featured, active })}>
+            <Button size="sm" disabled={saving || !guestName.trim() || !text.trim()} onClick={() => onSave({ id: t.id.startsWith("new-") ? undefined : t.id, guestName, guestType, guestImage: guestImage || undefined, text, sortOrder, featured, active })}>
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               {t.id.startsWith("new-") ? "Create" : "Save"}
             </Button>

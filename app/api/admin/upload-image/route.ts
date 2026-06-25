@@ -7,7 +7,7 @@ import {
   IMAGE_TYPES,
 } from "@/lib/storage";
 
-const allowedPaths = ["profiles", "conference"] as const;
+const allowedPaths = ["profiles", "conference", "testimonials"] as const;
 type AllowedPath = (typeof allowedPaths)[number];
 
 export async function POST(request: NextRequest) {

@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDocument, getDocumentSettings, getOwnerProfile } from "@/lib/admin-data";
-import { verifyDocumentShareToken } from "@/lib/document-share";
+import { verifyDocumentShareUrl } from "@/lib/document-share";
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const hasShareAccess = verifyDocumentShareToken(id, request.nextUrl.searchParams.get("token"));
-  if (!hasShareAccess) {
-    const session = await authorizeRequest(request.headers, ["owner", "admin"]);
-    if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+  const documentId = verifyDocumentShareUrl(token);
+  if (!documentId) {
+    return NextResponse.json(
+      { error: "This link has expired or is invalid" },
+      { status: 410 }
+    );
   }
   const [document, settings, owner] = await Promise.all([
-    getDocument(id),
+    getDocument(documentId),
     getDocumentSettings(),
     getOwnerProfile(),
   ]);
-  if (!document) return NextResponse.json({ error: "Document not found" }, { status: 404 });
+  if (!document) {
+    return NextResponse.json(
+      { error: "Document not found" },
+      { status: 404 }
+    );
+  }
   const { createDocumentPdf } = await import("@/lib/document-pdf");
   const buffer = await createDocumentPdf(document, {
     ...settings,

@@ -25,8 +25,34 @@ const allowed = [
   "conference_pricing_note",
   "whatsapp_conference_message",
   "whatsapp_location_message",
+  "business_name",
+  "trading_name",
+  "physical_address",
+  "town",
+  "region",
+  "country",
+  "business_email",
+  "primary_phone",
+  "whatsapp_number",
+  "website_url",
+  "logo_url",
+  "banking_account_name",
+  "banking_account_number",
+  "banking_bank_name",
+  "banking_branch_name",
+  "banking_branch_code",
+  "banking_account_type",
+  "banking_swift_bic",
+  "payment_bank_transfer_enabled",
+  "payment_mobile_wallets_enabled",
+  "payment_mobile_wallet_description",
+  "payment_supported_wallets",
+  "document_manager_role_label",
+  "document_signature_image",
+  "document_footer_text",
+  "document_payment_visible",
 ] as const;
-const input = z.object({ key: z.enum(allowed), value: z.string().trim().min(1).max(200) });
+const input = z.object({ key: z.enum(allowed), value: z.string().trim().min(1).max(1000) });
 export async function PATCH(request: NextRequest) {
   const session = await authorizeRequest(request.headers, ["owner"]);
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });

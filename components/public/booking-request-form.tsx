@@ -27,6 +27,7 @@ type Props = {
   initialCheckIn?: string;
   initialCheckOut?: string;
   initialGuests?: string;
+  showPayment?: boolean;
 };
 
 type FieldErrors = {
@@ -288,6 +289,12 @@ export function BookingRequestForm(props: Props) {
       </Button>
       <p className="text-center text-xs leading-5 text-muted-foreground">
         No payment is taken now. We&rsquo;ll contact you to confirm the booking.
+        {props.showPayment ? (
+          <>
+            <br />
+            Payment options: bank transfer and mobile wallets.
+          </>
+        ) : null}
       </p>
     </form>
   );

@@ -118,7 +118,7 @@ export function UserForm() {
             id="name"
             name="name"
             required
-            className={cn("mt-2 h-12", fieldErrors.name && "border-destructive")}
+            className={cn("mt-2", fieldErrors.name && "border-destructive")}
             placeholder="e.g. John Doe"
           />
           {fieldErrors.name && <p className="mt-1 text-xs text-destructive">{fieldErrors.name}</p>}
@@ -131,7 +131,7 @@ export function UserForm() {
             name="email"
             type="email"
             required
-            className={cn("mt-2 h-12", fieldErrors.email && "border-destructive")}
+            className={cn("mt-2", fieldErrors.email && "border-destructive")}
             placeholder="john@example.com"
           />
           {fieldErrors.email && (
@@ -146,7 +146,7 @@ export function UserForm() {
             name="password"
             type="password"
             required
-            className={cn("mt-2 h-12", fieldErrors.password && "border-destructive")}
+            className={cn("mt-2", fieldErrors.password && "border-destructive")}
             placeholder="Min. 8 characters"
           />
           {fieldErrors.password && (
@@ -157,7 +157,7 @@ export function UserForm() {
         <div>
           <Label htmlFor="role">Role</Label>
           <Select value={role} onValueChange={(v) => v && setRole(v)}>
-            <SelectTrigger id="role" className="mt-2 h-12 w-full">
+            <SelectTrigger id="role" className="mt-2 w-full">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>

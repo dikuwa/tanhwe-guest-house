@@ -110,5 +110,10 @@ export async function getPublicSettings() {
     checkOutTime: map.get("check_out_time") ?? "10:00",
     currency: map.get("currency") ?? "N$",
     email: map.get("email") ?? "",
+    bankTransferEnabled: map.get("payment_bank_transfer_enabled") === "true",
+    mobileWalletsEnabled: map.get("payment_mobile_wallets_enabled") === "true",
+    paymentEnabled:
+      map.get("payment_bank_transfer_enabled") === "true" ||
+      map.get("payment_mobile_wallets_enabled") === "true",
   };
 }

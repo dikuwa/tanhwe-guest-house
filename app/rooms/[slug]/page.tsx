@@ -151,6 +151,7 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
                 initialCheckIn={query.checkIn}
                 initialCheckOut={query.checkOut}
                 initialGuests={query.guests}
+                showPayment={settings.paymentEnabled}
               />
             </div>
           </aside>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Onest } from "next/font/google";
+import { Allura, Onest } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
@@ -7,6 +7,13 @@ import "./globals.css";
 
 const onest = Onest({
   variable: "--font-onest",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const allura = Allura({
+  variable: "--font-allura",
+  weight: "400",
   subsets: ["latin"],
   display: "swap",
 });
@@ -30,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${onest.variable} h-full antialiased`}>
+    <html lang="en" className={`${onest.variable} ${allura.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster

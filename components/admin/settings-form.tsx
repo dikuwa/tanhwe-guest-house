@@ -32,7 +32,7 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
             <Label htmlFor={`setting-${setting.key}`}>{setting.description ?? setting.key}</Label>
             <p className="mt-1 text-xs text-neutral-400">{setting.key}</p>
           </div>
-          <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required className="h-12" />
+          <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required />
           <Button type="submit" variant="outline" size="sm">
             <Save className="size-3.5" />
             Save

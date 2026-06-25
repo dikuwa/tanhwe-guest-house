@@ -37,6 +37,11 @@ export async function SiteFooter() {
             <MessageCircle className="size-4" />
             WhatsApp
           </a>
+          {settings.paymentEnabled ? (
+            <p className="text-xs text-secondary-foreground/50">
+              Payment: bank transfer &amp; mobile wallets
+            </p>
+          ) : null}
         </div>
         <div className="space-y-2.5 text-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-secondary-foreground/50">Explore</p>

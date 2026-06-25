@@ -125,7 +125,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             <Input
               id="name"
               name="name"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.name}
               required
               onChange={handleNameChange}
@@ -143,7 +143,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             <Input
               id="slug"
               name="slug"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.slug ?? slug}
               value={isEditing ? undefined : slug}
               onChange={handleSlugChange}
@@ -156,7 +156,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             <Input
               id="type"
               name="type"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.type}
               placeholder="e.g. double, single, suite"
               required
@@ -200,7 +200,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
               name="pricePerNight"
               type="number"
               min="0"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.pricePerNight ?? 0}
               required
             />
@@ -212,7 +212,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
               name="availableUnits"
               type="number"
               min="1"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.availableUnits ?? 1}
               required
             />
@@ -224,7 +224,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
               name="maxGuests"
               type="number"
               min="1"
-              className="mt-2 h-12"
+              className="mt-2"
               defaultValue={room?.maxGuests ?? 2}
               required
             />

@@ -442,6 +442,24 @@ export const settings = pgTable("settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const shareLinks = pgTable(
+  "share_links",
+  {
+    id: text("id").primaryKey(),
+    documentId: text("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    publicCode: text("public_code").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("share_links_document_id_idx").on(table.documentId),
+    index("share_links_public_code_idx").on(table.publicCode),
+  ]
+);
+
 export const roomsRelations = relations(rooms, ({ many }) => ({
   images: many(roomImages),
   amenities: many(roomAmenities),

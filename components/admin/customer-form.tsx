@@ -81,7 +81,7 @@ function Field(props: React.ComponentProps<typeof Input> & { label: string }) {
   return (
     <div>
       <Label htmlFor={String(input.name)}>{label}</Label>
-      <Input id={String(input.name)} className="mt-2 h-12" {...input} />
+      <Input id={String(input.name)} className="mt-2" {...input} />
     </div>
   );
 }

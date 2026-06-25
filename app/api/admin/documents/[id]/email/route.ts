@@ -4,7 +4,8 @@ import { getDocument } from "@/lib/admin-data";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs } from "@/lib/db/schema";
-import { createDocumentShareToken } from "@/lib/document-share";
+import { createDocumentShareUrl } from "@/lib/document-share";
+import { getDocumentSettings, getOwnerProfile } from "@/lib/admin-data";
 import { getResend } from "@/lib/resend";
 
 const input = z.object({
@@ -45,14 +46,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Email delivery is not configured" }, { status: 503 });
   }
 
-  const token = createDocumentShareToken(document.id);
-  const downloadUrl = `${siteUrl}/api/admin/documents/${document.id}/pdf?token=${encodeURIComponent(token)}`;
+  const [docSettings, owner] = await Promise.all([
+    getDocumentSettings(),
+    getOwnerProfile(),
+  ]);
+  const businessName = docSettings.businessName;
+  const typeLabel = document.type.charAt(0).toUpperCase() + document.type.slice(1);
+  const token = createDocumentShareUrl(document.id);
+  const downloadUrl = `${siteUrl}/api/documents/${token}`;
   const result = await getResend().emails.send(
     {
       from,
       to: recipient,
-      subject: `${document.type[0].toUpperCase()}${document.type.slice(1)} ${document.number} from Tanhwe Guest House`,
-      html: `<div style="font-family:Arial,sans-serif;color:#172033;line-height:1.6"><h1 style="font-size:22px">Tanhwe Guest House</h1><p>Hello ${escapeHtml(document.customerName)},</p><p>Your ${escapeHtml(document.type)} <strong>${escapeHtml(document.number)}</strong> is ready.</p><p><a href="${escapeHtml(downloadUrl)}" style="color:#0D5CA8">Download the PDF</a></p><p>This private link expires in seven days.</p><p>Kind regards,<br>Tanhwe Guest House</p></div>`,
+      subject: `${typeLabel} ${document.number} from ${businessName}`,
+      html: `<div style="font-family:Arial,sans-serif;color:#172033;line-height:1.6"><h1 style="font-size:22px">${escapeHtml(businessName)}</h1><p>Hello ${escapeHtml(document.customerName)},</p><p>Your ${escapeHtml(document.type)} <strong>${escapeHtml(document.number)}</strong> is ready.</p><p style="font-size:15px">Total: ${docSettings.currency}${document.total.toFixed(2)}</p><p><a href="${escapeHtml(downloadUrl)}" style="display:inline-block;background:#0D5CA8;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:600">Download PDF</a></p><p style="color:#667085;font-size:13px">This private link expires in seven days.</p><p>Kind regards,</p><p><strong>${owner?.name ?? businessName}</strong></p></div>`,
     },
     { headers: { "Idempotency-Key": `document-${document.id}-${recipient.toLowerCase()}` } }
   );

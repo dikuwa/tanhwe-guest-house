@@ -64,7 +64,7 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
       <div className="space-y-1.5">
         <Label htmlFor="payment-booking">Booking</Label>
         <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
-          <SelectTrigger id="payment-booking" className="h-12 w-full">
+          <SelectTrigger id="payment-booking" className="w-full">
             <SelectValue placeholder="Select booking" />
           </SelectTrigger>
           <SelectContent>
@@ -78,12 +78,12 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="payment-amount">Amount (N$)</Label>
-        <Input id="payment-amount" name="amount" type="number" min="1" step="1" required className="mt-2 h-12" />
+        <Input id="payment-amount" name="amount" type="number" min="1" step="1" required className="mt-2" />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="payment-method">Method</Label>
         <Select value={paymentMethod} onValueChange={(v) => v && setPaymentMethod(v)}>
-          <SelectTrigger id="payment-method" className="h-12 w-full">
+          <SelectTrigger id="payment-method" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -11,6 +11,7 @@ import {
   rooms,
   users,
   settings,
+  shareLinks,
 } from "./db/schema";
 
 export async function getAdminRooms() {
@@ -406,4 +407,82 @@ export async function getUsers() {
     })
     .from(users)
     .orderBy(asc(users.name));
+}
+
+export async function getOwnerProfile() {
+  const [owner] = await getDb()
+    .select({ id: users.id, name: users.name, image: users.image })
+    .from(users)
+    .where(eq(users.role, "owner"))
+    .limit(1);
+  return owner ?? null;
+}
+
+export async function getDocumentSettings() {
+  const values = await getDb().select().from(settings);
+  const map = new Map(values.map((item) => [item.key, item.value]));
+  return {
+    businessName: map.get("business_name") ?? "Tanhwe Guest House",
+    physicalAddress: map.get("physical_address") ?? "",
+    town: map.get("town") ?? "",
+    region: map.get("region") ?? "",
+    country: map.get("country") ?? "",
+    businessEmail: map.get("business_email") ?? "",
+    primaryPhone: map.get("primary_phone") ?? "",
+    websiteUrl: map.get("website_url") ?? "",
+    logoUrl: map.get("logo_url") ?? "",
+    bankingAccountName: map.get("banking_account_name") ?? "",
+    bankingAccountNumber: map.get("banking_account_number") ?? "",
+    bankingBankName: map.get("banking_bank_name") ?? "",
+    bankingBranchName: map.get("banking_branch_name") ?? "",
+    bankingBranchCode: map.get("banking_branch_code") ?? "",
+    bankingAccountType: map.get("banking_account_type") ?? "",
+    bankingSwiftBic: map.get("banking_swift_bic") ?? "",
+    bankTransferEnabled: map.get("payment_bank_transfer_enabled") === "true",
+    mobileWalletsEnabled: map.get("payment_mobile_wallets_enabled") === "true",
+    mobileWalletDescription: map.get("payment_mobile_wallet_description") ?? "",
+    supportedWallets: map.get("payment_supported_wallets") ?? "",
+    managerRoleLabel: map.get("document_manager_role_label") ?? "Managing Director",
+    signatureImage: map.get("document_signature_image") ?? "",
+    footerText: map.get("document_footer_text") ?? "",
+    paymentVisible: map.get("document_payment_visible") !== "false",
+    currency: map.get("currency") ?? "N$",
+    location: map.get("location") ?? "Mukwe, Namibia",
+    phone: map.get("phone") ?? "",
+    whatsapp: map.get("whatsapp") ?? "",
+  };
+}
+
+export type DocumentSettings = Awaited<ReturnType<typeof getDocumentSettings>>;
+
+export async function getPublicShareCode(documentId: string) {
+  const [link] = await getDb()
+    .select()
+    .from(shareLinks)
+    .where(and(eq(shareLinks.documentId, documentId), sql`${shareLinks.revokedAt} is null`))
+    .orderBy(desc(shareLinks.createdAt))
+    .limit(1);
+  return link ?? null;
+}
+
+export async function generateShareCode(documentId: string, documentNumber: string) {
+  const random = crypto.randomUUID().slice(0, 4).toUpperCase();
+  const publicCode = `${documentNumber}-${random}`;
+  const id = crypto.randomUUID();
+  await getDb().insert(shareLinks).values({ id, documentId, publicCode });
+  const [link] = await getDb()
+    .select()
+    .from(shareLinks)
+    .where(eq(shareLinks.id, id))
+    .limit(1);
+  return link!;
+}
+
+export async function resolveShareCode(code: string) {
+  const [link] = await getDb()
+    .select()
+    .from(shareLinks)
+    .where(and(eq(shareLinks.publicCode, code), sql`${shareLinks.revokedAt} is null`))
+    .limit(1);
+  return link ?? null;
 }

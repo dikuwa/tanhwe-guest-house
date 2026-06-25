@@ -70,16 +70,6 @@ export default async function Home() {
               />
             </div>
           </div>
-
-          {/* Promise card */}
-          <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-neutral-200/60 bg-white/80 px-3.5 py-2.5 shadow-xs backdrop-blur sm:left-8 lg:bottom-8">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
-              Our promise
-            </p>
-            <p className="mt-0.5 text-sm text-neutral-600">
-              Comfort &middot; Hospitality &middot; Convenience
-            </p>
-          </div>
         </section>
 
         <section className="relative z-20 mx-auto -mt-1 max-w-[1180px] px-4 sm:px-6 lg:-mt-8">

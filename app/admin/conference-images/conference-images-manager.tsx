@@ -5,6 +5,7 @@ import Image from "next/image";
 import { GripVertical, Loader2, Star, Trash2, Upload, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type ConferenceImage = {
   id: string;
@@ -24,6 +25,7 @@ export function ConferenceImagesManager({ initialImages }: Props) {
   const [uploadIndex, setUploadIndex] = useState<number | null>(null);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef(images);
   imagesRef.current = images;
@@ -97,8 +99,6 @@ export function ConferenceImagesManager({ initialImages }: Props) {
   // Delete
   const handleDelete = async (index: number) => {
     const image = images[index];
-    if (!confirm("Remove this image?")) return;
-
     const res = await fetch("/api/admin/conference/images", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -215,7 +215,7 @@ export function ConferenceImagesManager({ initialImages }: Props) {
               )}
               <button
                 type="button"
-                onClick={() => handleDelete(index)}
+                onClick={() => setDeleteIndex(index)}
                 aria-label="Remove image"
                 title="Remove image"
                 className="flex size-6 items-center justify-center rounded-md bg-red-600/80 text-white hover:bg-red-600"
@@ -251,6 +251,19 @@ export function ConferenceImagesManager({ initialImages }: Props) {
           Uploading {uploadIndex !== null ? uploadIndex + 1 : 0} of {uploadTotal}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteIndex !== null}
+        onOpenChange={(v) => { if (!v) setDeleteIndex(null); }}
+        title="Remove image?"
+        description="This will permanently delete this image. This action cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={async () => {
+          if (deleteIndex !== null) await handleDelete(deleteIndex);
+          setDeleteIndex(null);
+        }}
+      />
 
       <input
         ref={fileInputRef}

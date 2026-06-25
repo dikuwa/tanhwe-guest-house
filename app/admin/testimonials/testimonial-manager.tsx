@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Testimonial = {
   id: string;
@@ -25,6 +26,7 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function save(t: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean }) {
     setSaving(t.id ?? "new");
@@ -46,7 +48,6 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this testimonial?")) return;
     setSaving(id);
     await fetch("/api/admin/testimonials", {
       method: "DELETE",
@@ -69,35 +70,53 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
       featured: false,
       active: true,
     };
-    setItems([...items, newItem]);
+    setItems((prev) => [...prev, newItem]);
     setEditing(newItem.id);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+    <div>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Social Proof</p>
+          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">Testimonials</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            Guest reviews displayed on the public website.
+          </p>
+        </div>
         <Button onClick={addNew}>
-          <Plus className="size-4" /> Add testimonial
+          <Plus className="size-4" />
+          Add testimonial
         </Button>
       </div>
 
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
 
       <div className="space-y-3">
-        {items.map((item) => (
+        {items.map((t) => (
           <TestimonialRow
-            key={item.id}
-            testimonial={item}
-            isEditing={editing === item.id}
-            saving={saving === item.id || (saving === "new" && editing === item.id)}
-            onEdit={() => setEditing(item.id)}
+            key={t.id}
+            testimonial={t}
+            isEditing={editing === t.id}
+            saving={saving === t.id || saving === "new"}
+            onEdit={() => setEditing(t.id)}
             onSave={(data) => save(data)}
-            onDelete={() => remove(item.id)}
+            onDelete={() => setDeleteId(t.id)}
             onCancel={() => {
-              if (!item.guestName) setItems((prev) => prev.filter((i) => i.id !== item.id));
+              if (t.id.startsWith("new-")) {
+                setItems((prev) => prev.filter((item) => item.id !== t.id));
+              }
               setEditing(null);
+            }}
+            deleteConfirmOpen={deleteId === t.id}
+            onDeleteConfirmClose={() => setDeleteId(null)}
+            onDeleteConfirmed={async () => {
+              await remove(t.id);
+              setDeleteId(null);
             }}
           />
         ))}
@@ -119,6 +138,9 @@ function TestimonialRow({
   onSave,
   onDelete,
   onCancel,
+  deleteConfirmOpen,
+  onDeleteConfirmClose,
+  onDeleteConfirmed,
 }: {
   testimonial: Testimonial;
   isEditing: boolean;
@@ -127,10 +149,12 @@ function TestimonialRow({
   onSave: (data: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean }) => void;
   onDelete: () => void;
   onCancel: () => void;
+  deleteConfirmOpen: boolean;
+  onDeleteConfirmClose: (v: boolean) => void;
+  onDeleteConfirmed: () => Promise<void>;
 }) {
   const [guestName, setGuestName] = useState(t.guestName);
   const [guestType, setGuestType] = useState(t.guestType);
-  const [guestImage, setGuestImage] = useState(t.guestImage ?? "");
   const [text, setText] = useState(t.text);
   const [sortOrder, setSortOrder] = useState(t.sortOrder);
   const [featured, setFeatured] = useState(t.featured);
@@ -142,42 +166,73 @@ function TestimonialRow({
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor={`t-name-${t.id}`}>Guest name</Label>
-              <Input id={`t-name-${t.id}`} value={guestName} onChange={(e) => setGuestName(e.target.value)} className="mt-1.5 h-12" required />
+              <Label htmlFor={`name-${t.id}`}>Guest name</Label>
+              <Input
+                id={`name-${t.id}`}
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                className="mt-1.5 h-12"
+                required
+              />
             </div>
             <div>
-              <Label htmlFor={`t-type-${t.id}`}>Guest type / role</Label>
-              <Input id={`t-type-${t.id}`} value={guestType} onChange={(e) => setGuestType(e.target.value)} className="mt-1.5 h-12" placeholder="e.g. Business traveller" required />
+              <Label htmlFor={`type-${t.id}`}>Guest type</Label>
+              <Input
+                id={`type-${t.id}`}
+                value={guestType}
+                onChange={(e) => setGuestType(e.target.value)}
+                className="mt-1.5 h-12"
+                placeholder="e.g. Solo traveller, Family, Couple"
+              />
             </div>
           </div>
           <div>
-            <Label htmlFor={`t-img-${t.id}`}>Guest image URL (optional)</Label>
-            <Input id={`t-img-${t.id}`} value={guestImage} onChange={(e) => setGuestImage(e.target.value)} className="mt-1.5 h-12" placeholder="Leave blank to show initials" />
+            <Label htmlFor={`text-${t.id}`}>Review text</Label>
+            <Textarea
+              id={`text-${t.id}`}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="mt-1.5 min-h-24"
+              required
+            />
           </div>
-          <div>
-            <Label htmlFor={`t-text-${t.id}`}>Testimonial text</Label>
-            <Textarea id={`t-text-${t.id}`} value={text} onChange={(e) => setText(e.target.value)} className="mt-1.5 min-h-24" required />
-          </div>
-          <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-6">
             <div>
-              <Label htmlFor={`t-order-${t.id}`}>Display order</Label>
-              <Input id={`t-order-${t.id}`} type="number" min="0" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))} className="mt-1.5 h-10 w-24" />
+              <Label htmlFor={`order-${t.id}`}>Display order</Label>
+              <Input
+                id={`order-${t.id}`}
+                type="number"
+                min="0"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                className="mt-1.5 h-10 w-24"
+              />
             </div>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-5">
-              <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} className="size-4 rounded border-neutral-300" />
-              <Star className="size-3.5 text-amber-500" /> Featured
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-6">
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(e) => setFeatured(e.target.checked)}
+                className="size-4 rounded border-neutral-300"
+              />
+              <Star className="size-3.5 text-amber-500" />
+              Featured
             </label>
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-5">
-              <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} className="size-4 rounded border-neutral-300" />
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-6">
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={(e) => setActive(e.target.checked)}
+                className="size-4 rounded border-neutral-300"
+              />
               Active
             </label>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>Cancel</Button>
-            <Button size="sm" disabled={saving || !guestName.trim() || !text.trim()} onClick={() => onSave({
-              id: t.id.startsWith("new-") ? undefined : t.id,
-              guestName, guestType, guestImage: guestImage || undefined, text, sortOrder, featured, active,
-            })}>
+            <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
+              Cancel
+            </Button>
+            <Button size="sm" disabled={saving || !guestName.trim() || !text.trim()} onClick={() => onSave({ id: t.id.startsWith("new-") ? undefined : t.id, guestName, guestType, text, sortOrder, featured, active })}>
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               {t.id.startsWith("new-") ? "Create" : "Save"}
             </Button>
@@ -192,17 +247,16 @@ function TestimonialRow({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-              {t.guestName.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h3 className="font-medium text-neutral-800">{t.guestName}</h3>
-              <p className="text-xs text-neutral-400">{t.guestType}</p>
-            </div>
-            {t.featured && <Star className="size-3.5 text-amber-500 fill-amber-500" />}
-            {!t.active && <EyeOff className="size-3.5 text-neutral-400" />}
+            <h3 className="font-medium text-neutral-800">{t.guestName}</h3>
+            {t.featured && <Star className="size-3.5 text-amber-500" />}
+            {!t.active && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-neutral-100 px-2 py-0.5 text-xs text-neutral-500">
+                <EyeOff className="size-3" /> Hidden
+              </span>
+            )}
           </div>
-          <p className="mt-2 line-clamp-2 text-sm text-neutral-500 italic">&ldquo;{t.text}&rdquo;</p>
+          <p className="mt-0.5 text-xs text-neutral-400">{t.guestType}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-neutral-500">&ldquo;{t.text}&rdquo;</p>
           <p className="mt-1 text-xs text-neutral-400">Order: {t.sortOrder}</p>
         </div>
         <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
@@ -212,6 +266,15 @@ function TestimonialRow({
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={onDeleteConfirmClose}
+        title="Delete testimonial?"
+        description={`Are you sure you want to delete "${t.guestName}"'s testimonial? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={onDeleteConfirmed}
+      />
     </div>
   );
 }

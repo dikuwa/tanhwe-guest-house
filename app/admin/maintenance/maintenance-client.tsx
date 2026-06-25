@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, Skull, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface Props {
   stats: {
@@ -24,6 +25,9 @@ interface Props {
 export function MaintenanceClient({ stats }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<string | null>(null);
+  const [showResetPrompt, setShowResetPrompt] = useState(false);
+  const [resetCode, setResetCode] = useState("");
 
   const actions = [
     {
@@ -53,7 +57,7 @@ export function MaintenanceClient({ stats }: Props) {
     {
       id: "reset-all",
       label: "Reset everything — start from zero",
-      description: `Delete ALL ${stats.totalCustomers} customers, ${stats.totalBookings} bookings, ${stats.totalPayments} payments, ${stats.totalDocuments} documents, ${stats.totalFollowups} follow-ups, ${stats.totalReminders} reminders, and ${stats.totalActivityLogs} activity logs. Irreversible.`, 
+      description: `Delete ALL ${stats.totalCustomers} customers, ${stats.totalBookings} bookings, ${stats.totalPayments} payments, ${stats.totalDocuments} documents, ${stats.totalFollowups} follow-ups, ${stats.totalReminders} reminders, and ${stats.totalActivityLogs} activity logs. Irreversible.`,
       icon: Skull,
       dangerous: true,
       disabled: stats.totalCustomers === 0 && stats.totalBookings === 0,
@@ -61,26 +65,16 @@ export function MaintenanceClient({ stats }: Props) {
   ];
 
   const handleAction = async (actionId: string) => {
-    // Confirmation steps for dangerous actions
     if (actionId === "reset-all") {
-      const step1 = confirm(
-        "⚠️ RESET EVERYTHING — This will delete ALL customer, booking, payment, document, follow-up, reminder, and activity log data.\n\nThis CANNOT be undone.\n\nAre you sure?"
-      );
-      if (!step1) return;
-      const step2 = prompt(
-        'Type "RESET" to confirm you want to delete ALL data and start from zero.'
-      );
-      if (step2 !== "RESET") {
-        toast.error("Reset cancelled");
-        return;
-      }
-    } else if (actionId === "clean-customers" || actionId === "clean-bookings") {
-      if (!confirm(`⚠️ This will permanently delete matching records. This cannot be undone. Continue?`)) return;
-    } else {
-      if (!confirm(`Proceed with this cleanup?`)) return;
+      setShowResetPrompt(true);
+      return;
     }
+    setConfirmAction(actionId);
+  };
 
+  const executeAction = async (actionId: string) => {
     setLoading(actionId);
+    setConfirmAction(null);
 
     try {
       const res = await fetch("/api/admin/maintenance", {
@@ -103,9 +97,45 @@ export function MaintenanceClient({ stats }: Props) {
     }
   };
 
+  const executeReset = async () => {
+    if (resetCode !== "RESET") {
+      toast.error("Reset cancelled");
+      setShowResetPrompt(false);
+      setResetCode("");
+      return;
+    }
+
+    setLoading("reset-all");
+    setShowResetPrompt(false);
+    setResetCode("");
+
+    try {
+      const res = await fetch("/api/admin/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reset-all" }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message ?? "Done");
+        router.refresh();
+      } else {
+        toast.error(data.error ?? "Operation failed");
+      }
+    } catch {
+      toast.error("An error occurred");
+    } finally {
+      setLoading(null);
+    }
+  };
+
   // Separate critical and non-critical actions
   const critical = actions.filter((a) => a.dangerous);
   const routine = actions.filter((a) => !a.dangerous);
+
+  // Figure out which action is being confirmed
+  const pendingAction = actions.find((a) => a.id === confirmAction);
 
   return (
     <div className="space-y-6">
@@ -137,6 +167,62 @@ export function MaintenanceClient({ stats }: Props) {
           ))}
         </div>
       </section>
+
+      {/* Confirmation dialog for delete/cleanup actions */}
+      <ConfirmDialog
+        open={confirmAction !== null}
+        onOpenChange={(v) => { if (!v) setConfirmAction(null); }}
+        title={pendingAction?.dangerous ? "Permanently delete records?" : "Proceed with cleanup?"}
+        description={
+          pendingAction?.dangerous
+            ? `This will permanently delete matching records. This cannot be undone. Continue?`
+            : `Proceed with this cleanup?`
+        }
+        confirmLabel="Continue"
+        variant={pendingAction?.dangerous ? "destructive" : "default"}
+        onConfirm={async () => {
+          if (confirmAction) await executeAction(confirmAction);
+        }}
+      />
+
+      {/* Reset confirmation dialog */}
+      {showResetPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-6 shadow-xl">
+            <div className="flex items-start gap-4">
+              <Skull className="mt-0.5 size-5 shrink-0 text-red-600" />
+              <div>
+                <h3 className="text-lg font-semibold text-neutral-900">Reset everything?</h3>
+                <p className="mt-1 text-sm text-neutral-500">
+                  This will delete ALL customers, bookings, payments, documents, follow-ups, reminders, and activity logs. This CANNOT be undone.
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="text-sm font-medium text-neutral-700">
+                Type <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-sm text-red-600">RESET</code> to confirm:
+              </label>
+              <input
+                type="text"
+                value={resetCode}
+                onChange={(e) => setResetCode(e.target.value)}
+                className="mt-1.5 block w-full rounded-lg border border-neutral-300 px-3 py-2.5 text-sm shadow-xs focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="Type RESET to confirm"
+                autoFocus
+              />
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => { setShowResetPrompt(false); setResetCode(""); }}>
+                Cancel
+              </Button>
+              <Button variant="destructive" disabled={resetCode !== "RESET"} onClick={executeReset}>
+                {loading === "reset-all" ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <Trash2 className="mr-1.5 size-4" />}
+                Delete everything
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

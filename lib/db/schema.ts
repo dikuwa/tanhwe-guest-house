@@ -137,7 +137,7 @@ export const rooms = pgTable(
     check("rooms_price_positive", sql`${table.pricePerNight} >= 0`),
     check("rooms_units_positive", sql`${table.availableUnits} >= 1`),
     check("rooms_guests_positive", sql`${table.maxGuests} >= 1`),
-    check("rooms_status_check", sql`${table.status} in ('active', 'maintenance', 'blocked')`),
+    check("rooms_status_check", sql`${table.status} in ('active', 'maintenance', 'blocked', 'archived')`),
     index("rooms_room_type_id_idx").on(table.roomTypeId),
   ]
 );

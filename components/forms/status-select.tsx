@@ -96,6 +96,7 @@ export const roomStatusOptions = [
   { value: "active", label: "Active" },
   { value: "maintenance", label: "Maintenance" },
   { value: "blocked", label: "Blocked" },
+  { value: "archived", label: "Archived" },
 ];
 
 export const followUpStatusOptions = [

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { Camera, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface ProfilePictureProps {
   currentImage: string | null;
@@ -19,6 +20,7 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
   const router = useRouter();
   const [image, setImage] = useState<string | null>(currentImage);
   const [uploading, setUploading] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,8 +65,6 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
   };
 
   const handleRemove = async () => {
-    if (!confirm("Remove your profile picture?")) return;
-
     try {
       const saveRes = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
@@ -109,7 +109,7 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleRemove}
+              onClick={() => setRemoveOpen(true)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="size-3.5" />
@@ -119,6 +119,17 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
         </div>
         <p className="text-xs text-neutral-400">JPEG, PNG, or WebP. Max 5 MB.</p>
       </div>
+
+      <ConfirmDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        title="Remove profile picture?"
+        description="This will permanently delete your profile picture. This action cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={handleRemove}
+      />
+
       <input
         ref={fileInputRef}
         type="file"

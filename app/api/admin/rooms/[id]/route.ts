@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, roomAmenities, rooms } from "@/lib/db/schema";
+import { activityLogs, bookingRooms, roomAmenities, roomBlockedDates, roomImages, rooms } from "@/lib/db/schema";
 import { roomInput } from "../route";
+import { deleteRoomImage } from "@/lib/storage";
+import { revalidatePath } from "next/cache";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await authorizeRequest(request.headers, ["owner", "admin"]);
@@ -39,12 +41,27 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         details: room.name,
       });
     });
+    revalidatePath("/admin/rooms");
     return NextResponse.json({ success: true });
   } catch (error) {
     if (String(error).includes("rooms_slug_unique"))
       return NextResponse.json({ error: "That room URL slug is already in use" }, { status: 409 });
     throw error;
   }
+}
+
+type DeleteAction =
+  | { action: "permanent-delete" }
+  | { action: "archive"; bookingCount: number };
+
+async function getDeleteAction(id: string): Promise<DeleteAction> {
+  const db = getDb();
+  const [{ bookingCount }] = await db
+    .select({ bookingCount: sql<number>`count(*)::int` })
+    .from(bookingRooms)
+    .where(eq(bookingRooms.roomId, id));
+  if (bookingCount > 0) return { action: "archive", bookingCount };
+  return { action: "permanent-delete" };
 }
 
 export async function DELETE(
@@ -54,18 +71,62 @@ export async function DELETE(
   const session = await authorizeRequest(request.headers, ["owner", "admin"]);
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const { id } = await params;
-  const [updated] = await getDb()
-    .update(rooms)
-    .set({ status: "blocked", updatedAt: new Date() })
-    .where(eq(rooms.id, id))
-    .returning({ id: rooms.id });
-  if (!updated) return NextResponse.json({ error: "Room not found" }, { status: 404 });
-  await getDb().insert(activityLogs).values({
-    id: crypto.randomUUID(),
-    userId: session.user.id,
-    action: "deactivated",
-    entity: "room",
-    entityId: id,
+
+  const existing = await getDb().query.rooms.findFirst({
+    where: eq(rooms.id, id),
+    with: { images: true },
   });
-  return NextResponse.json({ success: true });
+  if (!existing) return NextResponse.json({ error: "Room not found" }, { status: 404 });
+
+  const deleteAction = await getDeleteAction(id);
+  const { name } = existing;
+
+  if (deleteAction.action === "permanent-delete") {
+    try {
+      // Delete R2 storage images
+      await Promise.allSettled(
+        existing.images.map((img) => deleteRoomImage(img.imageUrl))
+      );
+      // Delete room — cascade handles room_images, room_amenities, room_blocked_dates
+      await getDb().delete(rooms).where(eq(rooms.id, id));
+      await getDb().insert(activityLogs).values({
+        id: crypto.randomUUID(),
+        userId: session.user.id,
+        action: "deleted",
+        entity: "room",
+        entityId: id,
+        details: `${name} (permanently deleted)`,
+      });
+      revalidatePath("/admin/rooms");
+      return NextResponse.json({ action: "permanent-delete", name });
+    } catch (error) {
+      console.error("Permanent delete error:", error);
+      return NextResponse.json({ error: "Failed to delete room" }, { status: 500 });
+    }
+  }
+
+  // Archive
+  try {
+    await getDb()
+      .update(rooms)
+      .set({ status: "archived", updatedAt: new Date() })
+      .where(eq(rooms.id, id));
+    await getDb().insert(activityLogs).values({
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      action: "archived",
+      entity: "room",
+      entityId: id,
+      details: name,
+    });
+    revalidatePath("/admin/rooms");
+    return NextResponse.json({
+      action: "archive",
+      name,
+      bookingCount: deleteAction.bookingCount,
+    });
+  } catch (error) {
+    console.error("Archive error:", error);
+    return NextResponse.json({ error: "Failed to archive room" }, { status: 500 });
+  }
 }

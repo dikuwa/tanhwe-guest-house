@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Faq = {
   id: string;
@@ -22,6 +23,7 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function save(faq: { id?: string; question: string; answer: string; sortOrder: number; active: boolean }) {
     setSaving(faq.id ?? "new");
@@ -43,7 +45,6 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this FAQ?")) return;
     setSaving(id);
     await fetch("/api/admin/faqs", {
       method: "DELETE",
@@ -63,35 +64,51 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
       sortOrder: items.length + 1,
       active: true,
     };
-    setItems([...items, newItem]);
+    setItems((prev) => [...prev, newItem]);
     setEditing(newItem.id);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
+    <div>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Help Centre</p>
+          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">FAQs</h1>
+          <p className="mt-1 text-sm text-neutral-500">Manage frequently asked questions.</p>
+        </div>
         <Button onClick={addNew}>
-          <Plus className="size-4" /> Add FAQ
+          <Plus className="size-4" />
+          Add FAQ
         </Button>
       </div>
 
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {error}
+        </div>
       )}
 
       <div className="space-y-3">
-        {items.map((item) => (
+        {items.map((faq) => (
           <FaqRow
-            key={item.id}
-            faq={item}
-            isEditing={editing === item.id}
-            saving={saving === item.id || saving === "new" && editing === item.id}
-            onEdit={() => setEditing(item.id)}
+            key={faq.id}
+            faq={faq}
+            isEditing={editing === faq.id}
+            saving={saving === faq.id || saving === "new"}
+            onEdit={() => setEditing(faq.id)}
             onSave={(data) => save(data)}
-            onDelete={() => remove(item.id)}
+            onDelete={() => setDeleteId(faq.id)}
             onCancel={() => {
-              if (!item.question) setItems((prev) => prev.filter((i) => i.id !== item.id));
+              if (faq.id.startsWith("new-")) {
+                setItems((prev) => prev.filter((item) => item.id !== faq.id));
+              }
               setEditing(null);
+            }}
+            deleteConfirmOpen={deleteId === faq.id}
+            onDeleteConfirmClose={() => setDeleteId(null)}
+            onDeleteConfirmed={async () => {
+              await remove(faq.id);
+              setDeleteId(null);
             }}
           />
         ))}
@@ -113,6 +130,9 @@ function FaqRow({
   onSave,
   onDelete,
   onCancel,
+  deleteConfirmOpen,
+  onDeleteConfirmClose,
+  onDeleteConfirmed,
 }: {
   faq: Faq;
   isEditing: boolean;
@@ -121,6 +141,9 @@ function FaqRow({
   onSave: (data: { id?: string; question: string; answer: string; sortOrder: number; active: boolean }) => void;
   onDelete: () => void;
   onCancel: () => void;
+  deleteConfirmOpen: boolean;
+  onDeleteConfirmClose: (v: boolean) => void;
+  onDeleteConfirmed: () => Promise<void>;
 }) {
   const [question, setQuestion] = useState(faq.question);
   const [answer, setAnswer] = useState(faq.answer);
@@ -209,6 +232,15 @@ function FaqRow({
           </Button>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={onDeleteConfirmClose}
+        title="Delete FAQ?"
+        description={`Are you sure you want to delete "${faq.question}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={onDeleteConfirmed}
+      />
     </div>
   );
 }

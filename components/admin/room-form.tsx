@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState, useCallback } from "react";
+import { FormEvent, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Save } from "lucide-react";
+import { GripVertical, Loader2, Plus, Save, Star, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +67,10 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, "");
 }
 
+const MAX_IMAGES = 5;
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 export function RoomForm({
   room,
   roomTypes,
@@ -92,6 +96,14 @@ export function RoomForm({
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeSlug, setNewTypeSlug] = useState("");
   const [creatingType, setCreatingType] = useState(false);
+
+  // New-room image state
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
+  const [pendingPrimaryIndex, setPendingPrimaryIndex] = useState(0);
+  const [imageUploading, setImageUploading] = useState(false);
+  const isEditing = !!room?.id;
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,6 +181,61 @@ export function RoomForm({
     router.refresh();
   }
 
+  // ── Image handling for new rooms ──
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (pendingFiles.length + files.length > MAX_IMAGES) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+    for (const file of files) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(`"${file.name}" is not a supported format`);
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`"${file.name}" exceeds the 5 MB limit`);
+        return;
+      }
+    }
+    const newFiles = [...pendingFiles, ...files];
+    const newPreviews = [
+      ...pendingPreviews,
+      ...files.map((f) => URL.createObjectURL(f)),
+    ];
+    setPendingFiles(newFiles);
+    setPendingPreviews(newPreviews);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removePendingImage(index: number) {
+    URL.revokeObjectURL(pendingPreviews[index]);
+    const newFiles = pendingFiles.filter((_, i) => i !== index);
+    const newPreviews = pendingPreviews.filter((_, i) => i !== index);
+    setPendingFiles(newFiles);
+    setPendingPreviews(newPreviews);
+    if (pendingPrimaryIndex >= newFiles.length) {
+      setPendingPrimaryIndex(Math.max(0, newFiles.length - 1));
+    }
+  }
+
+  function reorderPending(fromIndex: number, toIndex: number) {
+    const newFiles = [...pendingFiles];
+    const newPreviews = [...pendingPreviews];
+    const [movedFile] = newFiles.splice(fromIndex, 1);
+    const [movedPreview] = newPreviews.splice(fromIndex, 1);
+    newFiles.splice(toIndex, 0, movedFile);
+    newPreviews.splice(toIndex, 0, movedPreview);
+    setPendingFiles(newFiles);
+    setPendingPreviews(newPreviews);
+    if (pendingPrimaryIndex === fromIndex) {
+      setPendingPrimaryIndex(toIndex);
+    }
+  }
+
+  // ── Submit ──
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -191,29 +258,98 @@ export function RoomForm({
       status: form.get("status"),
       amenities,
     };
-    const response = await fetch(room?.id ? `/api/admin/rooms/${room.id}` : "/api/admin/rooms", {
-      method: room?.id ? "PATCH" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    setSaving(false);
-    if (!response.ok) return toast.error(data.error ?? "Could not save room");
+
     if (room?.id) {
+      // ── Edit mode ──
+      const response = await fetch(`/api/admin/rooms/${room.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        setSaving(false);
+        return toast.error(data.error ?? "Could not save room");
+      }
       toast.success("Room saved", {
         action: { label: "Back to rooms", onClick: () => router.push("/admin/rooms") },
       });
       router.refresh();
+      setSaving(false);
     } else {
-      toast.success("Room created", {
-        action: { label: "View room", onClick: () => router.push(`/admin/rooms/${data.id}/edit`) },
-      });
-      router.push(`/admin/rooms/${data.id}/edit`);
-      router.refresh();
+      // ── Create mode (one-submission with images) ──
+      try {
+        const response = await fetch("/api/admin/rooms", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          setSaving(false);
+          return toast.error(data.error ?? "Could not create room");
+        }
+
+        const newRoomId = data.id;
+
+        // Upload images if any
+        if (pendingFiles.length > 0) {
+          setImageUploading(true);
+          const uploadedUrls: string[] = [];
+          try {
+            for (let i = 0; i < pendingFiles.length; i++) {
+              const formData = new FormData();
+              formData.append("file", pendingFiles[i]);
+              formData.append("roomId", newRoomId);
+              const uploadRes = await fetch("/api/admin/rooms/upload-image", {
+                method: "POST",
+                body: formData,
+              });
+              if (!uploadRes.ok) {
+                const err = await uploadRes.json();
+                throw new Error(err.error ?? `Failed to upload image ${i + 1}`);
+              }
+              const { imageUrl } = await uploadRes.json();
+              uploadedUrls.push(imageUrl);
+            }
+
+            // Set primary image and order
+            if (uploadedUrls.length > 0) {
+              const ordered = [
+                uploadedUrls[pendingPrimaryIndex],
+                ...uploadedUrls.filter((_, i) => i !== pendingPrimaryIndex),
+              ];
+              await fetch(`/api/admin/rooms/${newRoomId}/images`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ imageUrls: ordered }),
+              });
+            }
+          } catch (uploadError) {
+            // Image upload failed — roll back the room
+            await fetch(`/api/admin/rooms/${newRoomId}`, { method: "DELETE" }).catch(() => {});
+            setSaving(false);
+            setImageUploading(false);
+            toast.error(
+              uploadError instanceof Error ? uploadError.message : "Failed to upload images"
+            );
+            return;
+          }
+          setImageUploading(false);
+        }
+
+        toast.success("Room created", {
+          action: { label: "View room", onClick: () => router.push(`/admin/rooms/${newRoomId}/edit`) },
+        });
+        router.push(`/admin/rooms/${newRoomId}/edit`);
+        router.refresh();
+      } catch (error) {
+        setSaving(false);
+        toast.error("An unexpected error occurred");
+        return;
+      }
     }
   }
-
-  const isEditing = !!room?.id;
 
   return (
     <form onSubmit={submit} className="space-y-8">
@@ -461,25 +597,114 @@ export function RoomForm({
       </section>
 
       {/* ── Images ── */}
-      {isEditing && (
-        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
-          <h2 className="text-base font-semibold text-neutral-800">Room images</h2>
-          <p className="mb-5 mt-1 text-sm text-neutral-500">
-            Upload up to five JPEG, PNG, or WebP images. Drag to reorder. The first image is used
-            as the main photo on room cards.
-          </p>
+      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+        <h2 className="text-base font-semibold text-neutral-800">Room images</h2>
+        <p className="mb-5 mt-1 text-sm text-neutral-500">
+          Upload up to five JPEG, PNG, or WebP images. The first image is used as the main photo on
+          room cards.
+          {!isEditing && (
+            <span className="block text-amber-600">
+              Images are uploaded after the room is created. If the upload fails, the room will not be created.
+            </span>
+          )}
+        </p>
+
+        {isEditing ? (
           <ImageUploader
             roomId={room.id!}
             existingImages={room.images}
             onImagesUploaded={() => router.refresh()}
           />
-        </section>
-      )}
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {pendingPreviews.map((url, index) => (
+                <div
+                  key={url}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50"
+                >
+                  <img
+                    src={url}
+                    alt={`Selected image ${index + 1}`}
+                    className="size-full object-cover"
+                  />
+                  <div className="absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded-md bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    <GripVertical className="size-3.5" />
+                  </div>
+                  {index === pendingPrimaryIndex && (
+                    <div className="absolute bottom-1.5 left-1.5 rounded-md bg-primary/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      Primary
+                    </div>
+                  )}
+                  <div className="absolute right-1.5 top-1.5 flex flex-col gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setPendingPrimaryIndex(index)}
+                        aria-label="Set as primary"
+                        title="Set as primary"
+                        className="flex size-6 items-center justify-center rounded-md bg-black/40 text-white hover:bg-black/60"
+                      >
+                        <Star className="size-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePendingImage(index)}
+                      aria-label={`Remove image ${index + 1}`}
+                      title="Remove image"
+                      className="flex size-6 items-center justify-center rounded-md bg-red-600/80 text-white hover:bg-red-600"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {pendingPreviews.length < MAX_IMAGES && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={saving}
+                  className="aspect-square cursor-pointer rounded-lg border-2 border-dashed border-neutral-300 flex flex-col items-center justify-center gap-2 bg-neutral-50 transition-colors hover:bg-neutral-100"
+                >
+                  <Upload className="size-8 text-neutral-400" />
+                  <span className="text-sm text-neutral-400">
+                    {pendingPreviews.length === 0 ? "Add image" : "Add more"}
+                  </span>
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={saving}
+            />
+            <div className="mt-3 flex items-center justify-between text-xs text-neutral-400">
+              <span>Supported formats: JPEG, PNG, WebP (max 5 MB each)</span>
+              {pendingPreviews.length > 0 && (
+                <span>{pendingPreviews.length} / {MAX_IMAGES}</span>
+              )}
+            </div>
+          </>
+        )}
+      </section>
 
-      <div className="flex items-center justify-end">
-        <Button type="submit" size="lg" disabled={saving}>
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          {saving ? "Saving..." : isEditing ? "Save changes" : "Create room"}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {imageUploading && (
+            <span className="flex items-center gap-2 text-amber-600">
+              <Loader2 className="size-4 animate-spin" />
+              Uploading images…
+            </span>
+          )}
+        </div>
+        <Button type="submit" size="lg" disabled={saving || imageUploading}>
+          {saving || imageUploading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+          {imageUploading ? "Uploading images…" : saving ? "Saving..." : isEditing ? "Save changes" : "Create room"}
         </Button>
       </div>
     </form>

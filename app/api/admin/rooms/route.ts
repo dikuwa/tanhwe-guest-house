@@ -20,7 +20,7 @@ export const roomInput = z.object({
   maxGuests: z.coerce.number().int().min(1).max(100),
   breakfastIncluded: z.boolean().default(false),
   featured: z.boolean().default(false),
-  status: z.enum(["active", "maintenance", "blocked"]),
+  status: z.enum(["active", "maintenance", "blocked", "archived"]),
   amenities: z.array(z.string().trim().min(1).max(80)).max(30).default([]),
 });
 

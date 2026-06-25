@@ -43,6 +43,13 @@
       "when": 1782399243200,
       "tag": "0005_cute_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782450000000,
+      "tag": "0006_soft_spacker_dave",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check, Edit3, GripVertical, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
   const [saving, setSaving] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
+  const [deleteTypeId, setDeleteTypeId] = useState<string | null>(null);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -124,7 +126,6 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
 
   async function handleDelete(id: string) {
     const type = types.find((t) => t.id === id);
-    if (!confirm(`Delete "${type!.name}"? This cannot be undone.`)) return;
     setSaving(id);
     const response = await fetch(`/api/admin/room-types/${id}`, { method: "DELETE" });
     setSaving(null);
@@ -132,7 +133,8 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
       const data = await response.json();
       return toast.error(data.error ?? "Could not delete room type", { description: data.detail });
     }
-    toast.success("Room type deleted");
+    toast.success(`"${type!.name}" deleted`);
+    setDeleteTypeId(null);
     router.refresh();
   }
 
@@ -220,12 +222,21 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
                 <Button variant="ghost" size="icon" className="size-8" onClick={() => handleArchive(type.id, type.status)} title={type.status === "active" ? "Archive" : "Activate"} disabled={saving === type.id}>
                   {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : type.status === "active" ? <Trash2 className="size-3.5 text-neutral-400" /> : <Check className="size-3.5 text-emerald-500" />}
                 </Button>
-                <Button variant="ghost" size="icon" className="size-8 text-red-500" onClick={() => handleDelete(type.id)} title="Delete permanently" disabled={saving === type.id}>
+                <Button variant="ghost" size="icon" className="size-8 text-red-500" onClick={() => setDeleteTypeId(type.id)} title="Delete permanently" disabled={saving === type.id}>
                   {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
                 </Button>
               </div>
             </div>
           )}
+          <ConfirmDialog
+            open={deleteTypeId === type.id}
+            onOpenChange={(v) => { if (!v) setDeleteTypeId(null); }}
+            title="Delete room type?"
+            description={`Are you sure you want to permanently delete "${type.name}"? Rooms using this type will not be affected. This action cannot be undone.`}
+            confirmLabel="Delete"
+            variant="destructive"
+            onConfirm={async () => { await handleDelete(type.id); }}
+          />
         </div>
       ))}
 

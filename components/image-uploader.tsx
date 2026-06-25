@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { GripVertical, Loader2, Star, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface ImageUploaderProps {
   roomId: string;
@@ -23,6 +24,7 @@ export function ImageUploader({
   const [uploadTotal, setUploadTotal] = useState(0);
   const [previewUrls, setPreviewUrls] = useState<string[]>(existingImages);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [removeIndex, setRemoveIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlsRef = useRef<string[]>(existingImages);
 
@@ -86,8 +88,6 @@ export function ImageUploader({
 
   const removeImage = async (index: number) => {
     const imageUrl = previewUrls[index];
-    if (!confirm("Remove this image?")) return;
-
     const response = await fetch("/api/admin/rooms/upload-image", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -219,7 +219,7 @@ export function ImageUploader({
               )}
               <button
                 type="button"
-                onClick={() => removeImage(index)}
+                onClick={() => setRemoveIndex(index)}
                 aria-label={`Remove image ${index + 1}`}
                 title="Remove image"
                 className="flex size-6 items-center justify-center rounded-md bg-red-600/80 text-white hover:bg-red-600"
@@ -254,6 +254,19 @@ export function ImageUploader({
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={removeIndex !== null}
+        onOpenChange={(v) => { if (!v) setRemoveIndex(null); }}
+        title="Remove image?"
+        description="This will permanently delete this image. This action cannot be undone."
+        confirmLabel="Remove"
+        variant="destructive"
+        onConfirm={async () => {
+          if (removeIndex !== null) await removeImage(removeIndex);
+          setRemoveIndex(null);
+        }}
+      />
 
       <input
         ref={fileInputRef}

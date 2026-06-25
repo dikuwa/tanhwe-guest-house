@@ -25,6 +25,7 @@ type RoomTypeOption = {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
   bedConfiguration: string | null;
   pricePerNight: number;
   maxGuests: number;
@@ -91,6 +92,7 @@ export function RoomForm({
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [pricePerNight, setPricePerNight] = useState(room?.pricePerNight ?? 0);
   const [maxGuests, setMaxGuests] = useState(room?.maxGuests ?? 2);
+  const [description, setDescription] = useState(room?.description ?? "");
   const [fieldsCustomized, setFieldsCustomized] = useState(!!room?.id);
   const [showNewTypeDialog, setShowNewTypeDialog] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
@@ -133,6 +135,7 @@ export function RoomForm({
       setPricePerNight(rt.pricePerNight);
       setMaxGuests(rt.maxGuests);
       setBreakfastIncluded(rt.breakfastIncluded);
+      setDescription(rt.description ?? "");
     } else {
       toast.warning("Existing values detected", {
         description: `Applying the defaults from "${rt.name}" will replace the current room values.`,
@@ -142,6 +145,7 @@ export function RoomForm({
             setPricePerNight(rt.pricePerNight);
             setMaxGuests(rt.maxGuests);
             setBreakfastIncluded(rt.breakfastIncluded);
+            setDescription(rt.description ?? "");
             toast.success(`Defaults from "${rt.name}" applied`);
           },
         },
@@ -154,12 +158,15 @@ export function RoomForm({
     const name = newTypeName.trim();
     if (!name) return toast.error("Room type name is required");
     const slug = newTypeSlug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const formData = new FormData(event.currentTarget);
     const payload = {
       name,
       slug,
-      bedConfiguration: "",
-      pricePerNight: Number(new FormData(event.currentTarget).get("newTypePrice")),
-      maxGuests: Number(new FormData(event.currentTarget).get("newTypeGuests")),
+      description: String(formData.get("newTypeDescription") ?? "").trim(),
+      bedConfiguration: String(formData.get("newTypeBedConfig") ?? "").trim(),
+      pricePerNight: Number(formData.get("newTypePrice")),
+      maxGuests: Number(formData.get("newTypeGuests")),
+      breakfastIncluded: formData.get("newTypeBreakfast") === "on",
       sortOrder: roomTypes.length + 1,
       status: "active",
     };
@@ -177,6 +184,10 @@ export function RoomForm({
     setNewTypeName("");
     setNewTypeSlug("");
     setRoomTypeId(data.id);
+    setPricePerNight(payload.pricePerNight);
+    setMaxGuests(payload.maxGuests);
+    setBreakfastIncluded(payload.breakfastIncluded);
+    setDescription(payload.description);
     setFieldsCustomized(true);
     router.refresh();
   }
@@ -425,6 +436,20 @@ export function RoomForm({
                         <Label htmlFor="newTypeGuests">Max guests</Label>
                         <Input id="newTypeGuests" name="newTypeGuests" type="number" min="1" defaultValue="2" className="mt-1 h-11" required />
                       </div>
+                      <div>
+                        <Label htmlFor="newTypeBedConfig">Bed configuration</Label>
+                        <Input id="newTypeBedConfig" name="newTypeBedConfig" className="mt-1 h-11" placeholder="e.g. 1 double bed" />
+                      </div>
+                      <div className="flex items-end pb-2">
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                          <Checkbox name="newTypeBreakfast" />
+                          Breakfast included
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="newTypeDescription">Description</Label>
+                      <Textarea id="newTypeDescription" name="newTypeDescription" className="mt-1" rows={2} />
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit" size="sm" disabled={creatingType}>
@@ -496,7 +521,8 @@ export function RoomForm({
               id="description"
               name="description"
               className="mt-2 min-h-28"
-              defaultValue={room?.description}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>

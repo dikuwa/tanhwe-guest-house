@@ -20,6 +20,8 @@ interface Props {
 export function ConferenceImagesManager({ initialImages }: Props) {
   const [images, setImages] = useState<ConferenceImage[]>(initialImages);
   const [uploading, setUploading] = useState(false);
+  const [uploadIndex, setUploadIndex] = useState<number | null>(null);
+  const [uploadTotal, setUploadTotal] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,60 +30,67 @@ export function ConferenceImagesManager({ initialImages }: Props) {
 
   // Upload
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (images.length >= 5) {
-      setMessage("Maximum 5 images allowed");
+    const available = 5 - images.length;
+    if (files.length > available) {
+      setMessage(`Only ${available} more image${available === 1 ? "" : "s"} allowed (max 5)`);
       return;
     }
 
     setUploading(true);
+    setUploadTotal(files.length);
     setMessage("");
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("path", "conference");
+      const added: ConferenceImage[] = [];
+      for (let i = 0; i < files.length; i++) {
+        setUploadIndex(i);
+        const formData = new FormData();
+        formData.append("file", files[i]);
+        formData.append("path", "conference");
 
-      const uploadRes = await fetch("/api/admin/upload-image", {
-        method: "POST",
-        body: formData,
-      });
+        const uploadRes = await fetch("/api/admin/upload-image", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!uploadRes.ok) {
-        const err = await uploadRes.json();
-        throw new Error(err.error ?? "Upload failed");
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error ?? "Upload failed");
+        }
+
+        const { imageUrl } = await uploadRes.json();
+
+        const saveRes = await fetch("/api/admin/conference/images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl }),
+        });
+
+        if (!saveRes.ok) {
+          throw new Error("Failed to save image record");
+        }
+
+        const { id } = await saveRes.json();
+        added.push({ id, imageUrl, altText: null, sortOrder: 0, isPrimary: false });
       }
 
-      const { imageUrl } = await uploadRes.json();
-
-      const saveRes = await fetch("/api/admin/conference/images", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl }),
+      setImages((prev) => {
+        const next = [...prev, ...added];
+        if (prev.length === 0 && added.length > 0) {
+          next[0] = { ...next[0], isPrimary: true };
+        }
+        return next;
       });
-
-      if (!saveRes.ok) {
-        throw new Error("Failed to save image record");
-      }
-
-      const { id } = await saveRes.json();
-      setImages((prev) => [
-        ...prev,
-        {
-          id,
-          imageUrl,
-          altText: null,
-          sortOrder: prev.length,
-          isPrimary: prev.length === 0,
-        },
-      ]);
-      setMessage("Image added");
+      setMessage(`${added.length} image${added.length === 1 ? "" : "s"} added`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
+      setUploadIndex(null);
+      setUploadTotal(0);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -238,10 +247,17 @@ export function ConferenceImagesManager({ initialImages }: Props) {
         )}
       </div>
 
+      {uploading && (
+        <div className="text-center text-sm text-neutral-500">
+          Uploading {uploadIndex !== null ? uploadIndex + 1 : 0} of {uploadTotal}
+        </div>
+      )}
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
+        multiple
         onChange={handleUpload}
         className="hidden"
         disabled={uploading}

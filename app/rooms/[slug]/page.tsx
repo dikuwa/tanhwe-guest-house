@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Check, Coffee, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BookingRequestForm } from "@/components/public/booking-request-form";
 import { ContactActions } from "@/components/public/contact-actions";
+import { RoomGallery } from "@/components/public/room-gallery";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 import { getPublicRoom, getPublicSettings } from "@/lib/public-data";
-import { roomFallbackImage } from "@/lib/images";
 import { getAmenityIcon, getAmenityLabel } from "@/lib/amenity-icons";
 
 type Props = {
@@ -52,41 +51,11 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
             <span className="text-sm text-muted-foreground">per room, per night</span>
           </p>
         </div>
-        <div className="mt-8 grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)]">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-muted lg:aspect-auto lg:min-h-[500px]">
-            <Image
-              src={room.imageUrl ?? roomFallbackImage.url}
-              alt={
-                room.imageUrl
-                  ? `${room.name} at Tanhwe Guest House`
-                  : roomFallbackImage.alt
-              }
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 70vw"
-              className="object-cover"
-              style={room.imageUrl ? undefined : { objectPosition: "50% 16%" }}
-            />
-          </div>
-          {room.images.length > 1 && (
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-1">
-              {room.images.slice(1, 3).map((image) => (
-                <div
-                  key={image.url}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl bg-muted"
-                >
-                  <Image
-                    src={image.url}
-                    alt={image.alt}
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 30vw"
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <RoomGallery
+          images={room.images}
+          roomName={room.name}
+          heroImageUrl={room.imageUrl}
+        />
         <div className="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_390px]">
           <div>
             <div className="flex flex-wrap gap-6 border-b pb-8 text-sm">

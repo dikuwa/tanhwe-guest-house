@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Onest } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const onest = Onest({
@@ -32,6 +33,12 @@ export default function RootLayout({
     <html lang="en" className={`${onest.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         {children}
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          duration={4000}
+        />
         <Analytics />
         <SpeedInsights />
       </body>

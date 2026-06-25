@@ -8,7 +8,7 @@ import { activityLogs, customers } from "@/lib/db/schema";
 const input = z.object({
   fullName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
-  whatsapp: z.string().trim().min(7).max(30),
+  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   address: z.string().trim().max(300).optional(),
   idOrPassport: z.string().trim().max(80).optional(),
@@ -22,10 +22,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!parsed.success)
     return NextResponse.json({ error: "Please check the customer details" }, { status: 400 });
   const { id } = await params;
+  const waNumber = parsed.data.whatsapp || parsed.data.phone;
   const [updated] = await getDb()
     .update(customers)
     .set({
       ...parsed.data,
+      whatsapp: waNumber,
       email: parsed.data.email || null,
       address: parsed.data.address || null,
       idOrPassport: parsed.data.idOrPassport || null,

@@ -12,7 +12,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     .object({ role: z.enum(["owner", "admin", "staff"]) })
     .safeParse(body);
   const imageParsed = z
-    .object({ image: z.string() })
+    .object({ image: z.union([z.string(), z.null()]) })
     .safeParse(body);
 
   if (!roleParsed.success && !imageParsed.success) {

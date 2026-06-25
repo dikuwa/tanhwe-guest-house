@@ -71,9 +71,9 @@ export function ActivityLogsList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2">
         <form
           className="relative flex-1"
           onSubmit={(e) => {
@@ -82,20 +82,20 @@ export function ActivityLogsList({
             applyFilter("q", q);
           }}
         >
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-neutral-400" />
           <Input
             name="q"
             defaultValue={currentQuery.q || ""}
             placeholder="Search details or entity..."
-            className="h-10 pl-9"
+            className="h-8 pl-8 text-xs"
           />
         </form>
         <Select
           value={currentQuery.action || ""}
           onValueChange={(v) => applyFilter("action", v ?? "")}
         >
-          <SelectTrigger className="h-10 w-36">
-            <Filter className="size-3.5" />
+          <SelectTrigger className="h-8 w-32 text-xs">
+            <Filter className="size-3" />
             <SelectValue placeholder="All actions" />
           </SelectTrigger>
           <SelectContent>
@@ -112,8 +112,8 @@ export function ActivityLogsList({
           value={currentQuery.entity || ""}
           onValueChange={(v) => applyFilter("entity", v ?? "")}
         >
-          <SelectTrigger className="h-10 w-40">
-            <Filter className="size-3.5" />
+          <SelectTrigger className="h-8 w-36 text-xs">
+            <Filter className="size-3" />
             <SelectValue placeholder="All entities" />
           </SelectTrigger>
           <SelectContent>
@@ -133,50 +133,49 @@ export function ActivityLogsList({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
-        <table className="w-full min-w-180 text-left text-sm">
-          <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white shadow-xs">
+        <table className="w-full min-w-140 text-left text-xs">
+          <thead className="border-b border-neutral-100 bg-neutral-50 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Date &amp; Time</th>
-              <th className="px-4 py-3 font-medium">User</th>
-              <th className="px-4 py-3 font-medium">Action</th>
-              <th className="px-4 py-3 font-medium">Entity</th>
-              <th className="px-4 py-3 font-medium">Details</th>
+              <th className="px-3 py-2 font-medium">Date &amp; Time</th>
+              <th className="px-3 py-2 font-medium">User</th>
+              <th className="px-3 py-2 font-medium">Action</th>
+              <th className="px-3 py-2 font-medium">Entity</th>
+              <th className="px-3 py-2 font-medium">Details</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-16 text-center text-neutral-500">
+                <td colSpan={5} className="px-3 py-12 text-center text-neutral-500 text-xs">
                   No activity logs found matching your filters.
                 </td>
               </tr>
             )}
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
-                <td className="whitespace-nowrap px-4 py-3 text-neutral-600">
+                <td className="whitespace-nowrap px-3 py-2 text-neutral-500 text-[11px]">
                   {new Date(row.createdAt).toLocaleDateString("en-NA", {
                     day: "numeric",
                     month: "short",
-                    year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
                 </td>
-                <td className="px-4 py-3">
-                  <span className="font-medium text-neutral-800">{String(row.userName || "System")}</span>
+                <td className="px-3 py-2">
+                  <span className="font-medium text-neutral-700 text-[11px]">{String(row.userName || "System")}</span>
                   {row.userRole && (
-                    <p className="text-xs capitalize text-neutral-400">{row.userRole}</p>
+                    <span className="ml-1 text-[10px] text-neutral-400">({row.userRole})</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
-                  <span className="inline-block rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium capitalize text-neutral-700">
+                <td className="px-3 py-2">
+                  <span className="inline-block rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium capitalize text-neutral-600">
                     {row.action}
                   </span>
                 </td>
-                <td className="px-4 py-3 capitalize text-neutral-700">{row.entity}</td>
-                <td className="max-w-xs truncate px-4 py-3 text-neutral-600">
-                  {row.details || <span className="italic text-neutral-400">&mdash;</span>}
+                <td className="px-3 py-2 capitalize text-neutral-600 text-[11px]">{row.entity}</td>
+                <td className="max-w-56 truncate px-3 py-2 text-neutral-500 text-[11px]">
+                  {row.details || <span className="italic text-neutral-300">&mdash;</span>}
                 </td>
               </tr>
             ))}
@@ -185,14 +184,14 @@ export function ActivityLogsList({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-[11px]">
         <p className="text-neutral-500">
           {total} log{total === 1 ? "" : "s"}
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Button
             variant="outline"
-            size="sm"
+            size="xs"
             disabled={page <= 1}
             onClick={() => goToPage(page - 1)}
           >
@@ -200,7 +199,7 @@ export function ActivityLogsList({
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="xs"
             disabled={page >= pageCount}
             onClick={() => goToPage(page + 1)}
           >

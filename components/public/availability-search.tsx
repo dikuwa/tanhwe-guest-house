@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { BedDouble, CalendarCheck, CalendarDays, Search } from "lucide-react";
+import { BedDouble, CalendarCheck, CalendarDays, Loader2, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type RoomOption = { slug: string; name: string };
 
@@ -35,19 +36,34 @@ export function AvailabilitySearch({
   const [guests, setGuests] = useState("1");
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    const ci = checkIn ? checkIn.toISOString().slice(0, 10) : "";
-    const co = checkOut ? checkOut.toISOString().slice(0, 10) : "";
+    if (submitting) return;
+    if (!checkIn) {
+      toast.error("Missing check-in date", { description: "Please select your check-in date." });
+      return;
+    }
+    if (!checkOut) {
+      toast.error("Missing check-out date", { description: "Please select your check-out date." });
+      return;
+    }
+    if (checkOut <= checkIn) {
+      toast.error("Invalid date range", { description: "Check-out must be after check-in." });
+      return;
+    }
+    setSubmitting(true);
+    const ci = checkIn.toISOString().slice(0, 10);
+    const co = checkOut.toISOString().slice(0, 10);
     const params = new URLSearchParams({ checkIn: ci, checkOut: co, guests });
     router.push(`/rooms/${roomSlug}?${params}`);
   }
 
   const triggerClass = cn(
-    "flex h-12 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-sm transition-colors",
+    "flex h-11 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-sm transition-colors",
     "hover:border-neutral-300 hover:bg-neutral-50",
-    "focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:outline-none"
+    "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
   );
 
   if (!compact) {
@@ -70,7 +86,7 @@ export function AvailabilitySearch({
               {/* Stacked on mobile (<sm), side-by-side on sm+ */}
               <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(100px,0.8fr)]">
                 <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-                  <SelectTrigger id="search-room" className="h-12 bg-white">
+                  <SelectTrigger id="search-room" className="h-11 bg-white">
                     <SelectValue placeholder="Select a room" />
                   </SelectTrigger>
                   <SelectContent>
@@ -89,8 +105,8 @@ export function AvailabilitySearch({
                   required
                   value={guests}
                   onChange={(event) => setGuests(event.target.value)}
-                  className="h-12 bg-white"
-                  placeholder="Guests"
+                   className="h-11 bg-white"
+                   placeholder="Guests"
                   title="Number of guests"
                 />
               </div>
@@ -180,11 +196,11 @@ export function AvailabilitySearch({
               </p>
               <Button
                 type="submit"
-                className="h-12 w-full bg-orange-500 text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500/30"
-                disabled={!roomSlug}
+                className="h-11 w-full bg-orange-500 text-white hover:bg-orange-600 focus:ring-2 focus:ring-orange-500/30"
+                disabled={!roomSlug || submitting}
               >
-                <Search className="mr-2 size-4" />
-                Check
+                {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+                {submitting ? "Checking availability\u2026" : "Check Availability"}
               </Button>
             </div>
           </div>
@@ -285,9 +301,9 @@ export function AvailabilitySearch({
               className="h-12 bg-background"
             />
           </div>
-          <Button type="submit" size="lg" className="h-12 self-end" disabled={!roomSlug}>
-            <Search className="size-4" />
-            Search
+          <Button type="submit" size="lg" className="self-end" disabled={!roomSlug || submitting}>
+            {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+            {submitting ? "Checking availability\u2026" : "Check Availability"}
           </Button>
         </div>
       </div>

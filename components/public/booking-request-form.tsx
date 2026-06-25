@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -85,8 +86,7 @@ export function BookingRequestForm(props: Props) {
       const phoneErr = validatePhone(phone);
       if (phoneErr) errors.phone = phoneErr;
     }
-    if (!whatsapp.trim()) errors.whatsapp = "WhatsApp number is required";
-    else {
+    if (whatsapp.trim()) {
       const waErr = validatePhone(whatsapp);
       if (waErr) errors.whatsapp = waErr;
     }
@@ -103,7 +103,12 @@ export function BookingRequestForm(props: Props) {
     setError("");
 
     const form = new FormData(event.currentTarget);
-    if (!validateForm(form)) return;
+    if (!validateForm(form)) {
+      toast.error("Please correct the highlighted fields", {
+        description: "Some required fields are missing or invalid.",
+      });
+      return;
+    }
 
     setSubmitting(true);
     const body = Object.fromEntries(form.entries());
@@ -124,10 +129,13 @@ export function BookingRequestForm(props: Props) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to send booking request");
       setSuccess(data);
+      toast.success("Booking request submitted", {
+        description: `Reference: ${data.bookingNumber}. We will get back to you shortly.`,
+      });
     } catch (requestError) {
-      setError(
-        requestError instanceof Error ? requestError.message : "Unable to send booking request"
-      );
+      const message = requestError instanceof Error ? requestError.message : "Unable to send booking request";
+      setError(message);
+      toast.error("Booking submission failed", { description: message });
     } finally {
       setSubmitting(false);
     }
@@ -227,8 +235,8 @@ export function BookingRequestForm(props: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="whatsapp">WhatsApp</Label>
-            <Input id="whatsapp" name="whatsapp" type="tel" required placeholder="+264 81 234 5678" className={cn("h-10", fieldErrors.whatsapp && "border-destructive")} />
+            <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional)</span></Label>
+            <Input id="whatsapp" name="whatsapp" type="tel" placeholder="Same as phone if left empty" className={cn("h-10", fieldErrors.whatsapp && "border-destructive")} />
             {fieldErrors.whatsapp && (
               <p className="flex items-center gap-1 text-xs text-destructive">
                 <AlertCircle className="size-3" /> {fieldErrors.whatsapp}

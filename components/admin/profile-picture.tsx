@@ -1,8 +1,12 @@
 "use client";
 
+"use client";
+
 import { useState, useRef } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Camera, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface ProfilePictureProps {
@@ -12,16 +16,15 @@ interface ProfilePictureProps {
 }
 
 export function ProfilePicture({ currentImage, userName, userId }: ProfilePictureProps) {
+  const router = useRouter();
   const [image, setImage] = useState<string | null>(currentImage);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    setMessage("");
 
     try {
       const formData = new FormData();
@@ -40,7 +43,6 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
 
       const { imageUrl } = await res.json();
 
-      // Save the URL to the user's profile
       const saveRes = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -48,10 +50,12 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
       });
 
       if (!saveRes.ok) throw new Error("Failed to save profile picture");
+
       setImage(imageUrl);
-      setMessage("Profile picture updated");
+      toast.success("Profile picture updated");
+      router.refresh();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -60,20 +64,20 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
 
   const handleRemove = async () => {
     if (!confirm("Remove your profile picture?")) return;
-    setMessage("");
 
     try {
       const saveRes = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: "" }),
+        body: JSON.stringify({ image: null }),
       });
 
       if (!saveRes.ok) throw new Error("Failed to remove profile picture");
       setImage(null);
-      setMessage("Profile picture removed");
+      toast.success("Profile picture removed");
+      router.refresh();
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Failed to remove");
+      toast.error(err instanceof Error ? err.message : "Failed to remove");
     }
   };
 
@@ -114,7 +118,6 @@ export function ProfilePicture({ currentImage, userName, userId }: ProfilePictur
           )}
         </div>
         <p className="text-xs text-neutral-400">JPEG, PNG, or WebP. Max 5 MB.</p>
-        {message && <p className="text-xs text-green-600">{message}</p>}
       </div>
       <input
         ref={fileInputRef}

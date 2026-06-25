@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Menu } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { AdminNav } from "./admin-nav";
@@ -13,6 +14,7 @@ type Session = {
     name: string;
     email: string;
     role: string;
+    image: string | null;
   };
 };
 
@@ -24,7 +26,15 @@ export function AdminLayoutShell({
   children: React.ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { name, role } = session.user;
+  const { name, role, image } = session.user;
+
+  const userAvatar = image ? (
+    <Image src={image} alt={name} width={32} height={32} className="size-8 rounded-full object-cover" />
+  ) : (
+    <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
+      {name.charAt(0).toUpperCase()}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -60,9 +70,7 @@ export function AdminLayoutShell({
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
-            <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
-              {name.charAt(0).toUpperCase()}
-            </div>
+            {userAvatar}
           </div>
         </header>
 
@@ -74,9 +82,7 @@ export function AdminLayoutShell({
               <p className="text-sm font-medium text-neutral-800">{name}</p>
               <p className="text-xs capitalize text-neutral-500">{String(role)}</p>
             </div>
-            <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
-              {name.charAt(0).toUpperCase()}
-            </div>
+            {userAvatar}
           </div>
         </header>
 

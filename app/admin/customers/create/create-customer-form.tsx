@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,10 +22,13 @@ export function CreateCustomerForm() {
     setDuplicates([]);
 
     const form = new FormData(event.currentTarget);
+    const phone = String(form.get("phone") ?? "");
+    let whatsapp = String(form.get("whatsapp") ?? "");
+    if (!whatsapp) whatsapp = phone;
     const payload = {
       fullName: String(form.get("fullName") ?? ""),
-      phone: String(form.get("phone") ?? ""),
-      whatsapp: String(form.get("whatsapp") ?? ""),
+      phone,
+      whatsapp,
       email: String(form.get("email") ?? ""),
       address: String(form.get("address") ?? ""),
       idOrPassport: String(form.get("idOrPassport") ?? ""),
@@ -41,6 +45,7 @@ export function CreateCustomerForm() {
     setSaving(false);
 
     if (response.ok) {
+      toast.success("Customer created");
       router.push(`/admin/customers/${data.id}`);
       router.refresh();
       return;
@@ -50,7 +55,7 @@ export function CreateCustomerForm() {
       setDuplicates(data.duplicates);
       setError(data.error ?? "Possible duplicate customer found");
     } else {
-      setError(data.error ?? "Could not create customer");
+      toast.error(data.error ?? "Could not create customer");
     }
   }
 
@@ -66,8 +71,8 @@ export function CreateCustomerForm() {
           <Input id="phone" name="phone" type="tel" className="mt-2 h-12" placeholder="+264 XX XXX XXXX" required />
         </div>
         <div>
-          <Label htmlFor="whatsapp">WhatsApp</Label>
-          <Input id="whatsapp" name="whatsapp" type="tel" className="mt-2 h-12" placeholder="Same as phone if same" required />
+          <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional)</span></Label>
+          <Input id="whatsapp" name="whatsapp" type="tel" className="mt-2 h-12" placeholder="Same as phone if left empty" />
         </div>
         <div>
           <Label htmlFor="email">Email (optional)</Label>

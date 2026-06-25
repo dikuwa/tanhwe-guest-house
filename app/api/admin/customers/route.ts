@@ -8,7 +8,7 @@ import { activityLogs, customers } from "@/lib/db/schema";
 const input = z.object({
   fullName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
-  whatsapp: z.string().trim().min(7).max(30),
+  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   address: z.string().trim().max(300).optional(),
   idOrPassport: z.string().trim().max(50).optional(),
@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
   // Check for existing customers with same phone or email
   const normalizedPhone = sql<string>`regexp_replace(${customers.phone}, '[^0-9]', '', 'g')`;
   const normalizedWhatsapp = sql<string>`regexp_replace(${customers.whatsapp}, '[^0-9]', '', 'g')`;
+  const waNumber = parsed.data.whatsapp || parsed.data.phone;
   const identityPhone = parsed.data.phone.replace(/\D/g, "");
-  const identityWhatsapp = parsed.data.whatsapp.replace(/\D/g, "");
+  const identityWhatsapp = waNumber.replace(/\D/g, "");
   const identityEmail = parsed.data.email?.trim().toLowerCase();
 
   const existing = await getDb()
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
       id,
       fullName: parsed.data.fullName,
       phone: parsed.data.phone,
-      whatsapp: parsed.data.whatsapp,
+      whatsapp: waNumber,
       email: parsed.data.email || null,
       address: parsed.data.address || null,
       idOrPassport: parsed.data.idOrPassport || null,

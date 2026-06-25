@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BellPlus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +32,6 @@ type Options = {
 export function FollowUpForm({ options }: { options: Options }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [type, setType] = useState("manual");
@@ -42,7 +42,6 @@ export function FollowUpForm({ options }: { options: Options }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError("");
     const payload = {
       bookingId,
       customerId,
@@ -59,7 +58,8 @@ export function FollowUpForm({ options }: { options: Options }) {
     });
     const data = await response.json();
     setSaving(false);
-    if (!response.ok) return setError(data.error ?? "Could not create follow-up");
+    if (!response.ok) return toast.error(data.error ?? "Could not create follow-up");
+    toast.success("Follow-up created");
     event.currentTarget.reset();
     setBookingId("");
     setCustomerId("");
@@ -210,11 +210,6 @@ export function FollowUpForm({ options }: { options: Options }) {
           {saving ? "Creating..." : "Create follow-up"}
         </Button>
       </div>
-      {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 sm:col-span-2 lg:col-span-4">
-          {error}
-        </p>
-      )}
     </form>
   );
 }

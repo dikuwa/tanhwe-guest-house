@@ -16,7 +16,7 @@ const input = z.object({
   guestsCount: z.coerce.number().int().min(1).max(100),
   fullName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
-  whatsapp: z.string().trim().min(7).max(30),
+  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(2000).optional(),
   status: z.enum(["pending", "confirmed"]).default("confirmed"),
@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
       { error: availability.reason ?? "Room is unavailable for those dates" },
       { status: 409 }
     );
-  const matchedCustomer = await findConfidentCustomerMatch(parsed.data);
+  const waNumber = parsed.data.whatsapp || parsed.data.phone;
+  const matchedCustomer = await findConfidentCustomerMatch({ ...parsed.data, whatsapp: waNumber });
   const customerId = matchedCustomer?.id ?? crypto.randomUUID(),
     bookingId = crypto.randomUUID();
   const bookingNumber = `TG-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
         id: customerId,
         fullName: parsed.data.fullName,
         phone: parsed.data.phone,
-        whatsapp: parsed.data.whatsapp,
+        whatsapp: waNumber,
         email: parsed.data.email || null,
       });
     await tx.insert(bookings).values({

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { eq, ilike, or, sql } from "drizzle-orm";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, bookings, customers, followUps } from "@/lib/db/schema";
+import { activityLogs, bookingRooms, bookings, customers, documents, followUps, payments, reminderLogs } from "@/lib/db/schema";
 
 export async function POST(request: NextRequest) {
   const session = await authorizeRequest(request.headers, ["owner"]);
@@ -80,6 +80,19 @@ export async function POST(request: NextRequest) {
           sql`delete from ${followUps} where ${followUps.bookingId} is not null and not exists (select 1 from ${bookings} where ${bookings.id} = ${followUps.bookingId})`
         );
         return NextResponse.json({ message: "Orphaned follow-ups cleaned" });
+      }
+
+      case "reset-all": {
+        // Delete in order of dependencies (child tables first)
+        await db.delete(bookingRooms);
+        await db.delete(payments);
+        await db.delete(documents);
+        await db.delete(reminderLogs);
+        await db.delete(followUps);
+        await db.delete(bookings);
+        await db.delete(customers);
+        await db.delete(activityLogs);
+        return NextResponse.json({ message: "All data has been reset. System is now empty." });
       }
 
       default:

@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { toast } from "sonner";
 
 type Option = {
   id: string;
@@ -56,7 +57,6 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
   const [checkOut, setCheckOut] = useState("");
   const [roomId, setRoomId] = useState("");
   const [status, setStatus] = useState("confirmed");
-  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   function validateForm(formData: FormData): boolean {
@@ -74,7 +74,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
     }
     const phoneErr = validatePhone(phone);
     if (phoneErr) errors.phone = phoneErr;
-    const waErr = validatePhone(whatsapp);
+    const waErr = whatsapp ? validatePhone(whatsapp) : undefined;
     if (waErr) errors.whatsapp = waErr;
     const emailErr = validateEmail(email);
     if (emailErr) errors.email = emailErr;
@@ -85,7 +85,6 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
     setFieldErrors({});
 
     const formData = new FormData(event.currentTarget);
@@ -104,7 +103,8 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
     });
     const data = await response.json();
     setSaving(false);
-    if (!response.ok) return setError(data.error ?? "Could not create booking");
+    if (!response.ok) return toast.error(data.error ?? "Could not create booking");
+    toast.success(`Booking ${data.bookingNumber} created`);
     router.push("/admin/bookings");
     router.refresh();
   }
@@ -189,11 +189,11 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
           <FieldError>{fieldErrors.phone}</FieldError>
         </div>
         <div>
-          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional, defaults to phone)</span></Label>
           <Input
             id="whatsapp"
             name="whatsapp"
-            required
+            placeholder="Same as phone if left empty"
             className={cn("mt-2 h-12", fieldErrors.whatsapp && "border-destructive")}
           />
           <FieldError>{fieldErrors.whatsapp}</FieldError>
@@ -213,14 +213,6 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
           <Textarea id="notes" name="notes" className="mt-2" />
         </div>
       </div>
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600"
-        >
-          {error}
-        </p>
-      )}
       <div className="mt-6 flex justify-end">
         <Button type="submit" size="lg" disabled={saving || rooms.length === 0}>
           {saving && <Loader2 className="size-4 animate-spin" />}

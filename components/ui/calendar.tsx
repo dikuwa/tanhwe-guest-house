@@ -26,42 +26,40 @@ export function Calendar({
       classNames={{
         months: "flex flex-col",
         month: "flex flex-col gap-2",
-        caption: "flex items-center justify-between",
+        month_caption: "flex items-center justify-between",
         caption_label: "text-sm font-semibold px-1 text-left",
         nav: "flex items-center gap-0.5",
-        nav_button:
+        button_previous:
           "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-        nav_button_previous: "",
-        nav_button_next: "",
-        table: "w-full border-collapse table-fixed",
-        head_row: "",
-        head_cell: "h-7 text-xs font-medium text-muted-foreground text-center",
-        row: "",
-        cell: cn(
-          "relative h-8 p-0 text-sm text-center",
-          "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-          "focus-within:relative focus-within:z-20",
-          "[&:has([aria-selected])]:bg-primary/10",
-          "[&:has([aria-selected].day-range-end)]:rounded-r-md",
-          "[&:has([aria-selected].day-range-start)]:rounded-l-md"
-        ),
+        button_next:
+          "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+        month_grid: "w-full border-collapse",
+        weekdays: "",
+        weekday: "h-7 w-9 text-xs font-medium text-muted-foreground text-center",
+        week: "",
         day: cn(
-          "inline-flex size-8 items-center justify-center rounded-md text-sm transition-colors",
+          "h-9 w-9 p-0 text-sm text-center",
+          "focus-within:relative focus-within:z-20"
+        ),
+        day_button: cn(
+          "inline-flex size-9 items-center justify-center rounded-md text-sm transition-colors",
           "hover:bg-accent hover:text-accent-foreground",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
           "aria-selected:bg-primary aria-selected:text-primary-foreground",
           "aria-selected:hover:bg-primary aria-selected:hover:text-primary-foreground"
         ),
-        day_range_start:
-          "day-range-start rounded-l-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-        day_range_end:
-          "day-range-end rounded-r-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "font-semibold ring-1 ring-primary/30",
-        day_outside: "text-muted-foreground opacity-40",
-        day_disabled: "text-muted-foreground opacity-25",
-        day_hidden: "invisible",
+        selected:
+          "bg-primary/10 text-foreground font-semibold rounded-md aria-selected:bg-primary aria-selected:text-primary-foreground",
+        today: "font-semibold ring-1 ring-primary/30",
+        outside: "text-muted-foreground opacity-40",
+        disabled: "text-muted-foreground opacity-25",
+        hidden: "invisible",
+        range_start:
+          "rounded-l-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+        range_end:
+          "rounded-r-md bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+        range_middle:
+          "bg-primary/10 text-foreground",
         ...classNames,
       }}
       components={{

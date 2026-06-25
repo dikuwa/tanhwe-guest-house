@@ -3,6 +3,7 @@
 import { FormEvent, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Save } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,7 +53,6 @@ function generateSlug(name: string): string {
 export function RoomForm({ room }: { room?: RoomValue }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
   const [status, setStatus] = useState(room?.status ?? "active");
   const [breakfastIncluded, setBreakfastIncluded] = useState(room?.breakfastIncluded ?? false);
   const [featured, setFeatured] = useState(room?.featured ?? false);
@@ -79,7 +79,6 @@ export function RoomForm({ room }: { room?: RoomValue }) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setError("");
     const form = new FormData(event.currentTarget);
     form.set("status", status);
     form.set("breakfastIncluded", breakfastIncluded ? "on" : "");
@@ -104,7 +103,8 @@ export function RoomForm({ room }: { room?: RoomValue }) {
     });
     const data = await response.json();
     setSaving(false);
-    if (!response.ok) return setError(data.error ?? "Could not save room");
+    if (!response.ok) return toast.error(data.error ?? "Could not save room");
+    toast.success(room?.id ? "Room saved" : "Room created");
     router.push(`/admin/rooms/${room?.id ?? data.id}/edit`);
     router.refresh();
   }
@@ -273,12 +273,6 @@ export function RoomForm({ room }: { room?: RoomValue }) {
             onImagesUploaded={() => router.refresh()}
           />
         </section>
-      )}
-
-      {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-          {error}
-        </p>
       )}
 
       <div className="flex items-center justify-between">

@@ -15,7 +15,7 @@ const schema = z.object({
   guestsCount: z.coerce.number().int().min(1).max(30),
   fullName: z.string().trim().min(2).max(100),
   phone: z.string().trim().min(7).max(30),
-  whatsapp: z.string().trim().min(7).max(30),
+  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(1000).optional(),
   preferredContact: z.enum(["whatsapp", "phone", "email"]).default("whatsapp"),
@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const matchedCustomer = await findConfidentCustomerMatch(body.data);
+  const waNumber = body.data.whatsapp || body.data.phone;
+  const matchedCustomer = await findConfidentCustomerMatch({ ...body.data, whatsapp: waNumber });
   const customerId = matchedCustomer?.id ?? crypto.randomUUID();
   const bookingId = crypto.randomUUID();
   const bookingNumber = `TG-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
         id: customerId,
         fullName: body.data.fullName,
         phone: body.data.phone,
-        whatsapp: body.data.whatsapp,
+        whatsapp: waNumber,
         email: body.data.email || null,
       });
     await tx.insert(bookings).values({

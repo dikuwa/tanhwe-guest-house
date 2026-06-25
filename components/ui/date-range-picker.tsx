@@ -85,7 +85,7 @@ export function DateRangePicker({
           <PopoverTrigger
             id={checkInId}
             className={cn(
-              "mt-1 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "mt-1 flex h-11 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
               "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
               checkIn ? "text-neutral-800" : "text-neutral-400"
             )}
@@ -111,7 +111,7 @@ export function DateRangePicker({
           <PopoverTrigger
             id={checkOutId}
             className={cn(
-              "mt-1 flex h-12 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
+              "mt-1 flex h-11 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
               "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
               checkOut ? "text-neutral-800" : "text-neutral-400"
             )}

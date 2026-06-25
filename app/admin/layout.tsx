@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import { AdminLayoutShell } from "@/components/admin/admin-layout-shell";
 import { requireAuth } from "@/lib/auth-middleware";
 
@@ -6,6 +7,7 @@ type SafeUser = {
   name: string;
   email: string;
   role: string;
+  image: string | null;
 };
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +17,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     name: session.user.name,
     email: session.user.email as string,
     role: String(session.user.role),
+    image: (session.user.image as string | null) ?? null,
   } satisfies SafeUser;
 
-  return <AdminLayoutShell session={{ user }}>{children}</AdminLayoutShell>;
+  return (
+    <>
+      <AdminLayoutShell session={{ user }}>{children}</AdminLayoutShell>
+      <Toaster richColors position="top-right" />
+    </>
+  );
 }

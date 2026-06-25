@@ -1,15 +1,14 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent } from "react";
 import { Save } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 type Setting = { id: string; key: string; value: string; description: string | null };
 export function SettingsForm({ settings }: { settings: Setting[] }) {
-  const [message, setMessage] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMessage("");
     const form = new FormData(event.currentTarget);
     const response = await fetch("/api/admin/settings", {
       method: "PATCH",
@@ -17,7 +16,8 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
       body: JSON.stringify(Object.fromEntries(form)),
     });
     const data = await response.json();
-    setMessage(response.ok ? "Saved." : (data.error ?? "Could not save"));
+    if (!response.ok) return toast.error(data.error ?? "Could not save");
+    toast.success("Setting saved");
   }
   return (
     <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white shadow-xs">
@@ -39,11 +39,6 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
           </Button>
         </form>
       ))}
-      {message && (
-        <p role="status" className="px-5 pb-5 text-sm text-neutral-500">
-          {message}
-        </p>
-      )}
     </div>
   );
 }

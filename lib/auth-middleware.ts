@@ -9,18 +9,31 @@ function isRole(value: unknown): value is Role {
   return typeof value === "string" && roles.includes(value as Role);
 }
 
+function isActiveUser(user: { status: string | null; deletedAt: Date | null } | undefined): boolean {
+  return !!user && user.status === "active" && !user.deletedAt;
+}
+
 export async function getCurrentSession() {
   return getAuth().api.getSession({ headers: await headers() });
+}
+
+async function getUserStatus(userId: string): Promise<{ status: string | null; deletedAt: Date | null } | undefined> {
+  try {
+    const result = await getDb().query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: { status: true, deletedAt: true },
+    });
+    return result ?? undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export async function requireAuth() {
   const session = await getCurrentSession();
   if (!session || !isRole(session.user.role)) redirect("/login");
-  const dbUser = await getDb().query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: { status: true, deletedAt: true },
-  });
-  if (!dbUser || dbUser.status !== "active" || dbUser.deletedAt) redirect("/login");
+  const dbUser = await getUserStatus(session.user.id);
+  if (dbUser && !isActiveUser(dbUser)) redirect("/login");
   return session;
 }
 
@@ -35,10 +48,7 @@ export async function authorizeRequest(requestHeaders: Headers, allowedRoles: re
   if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
     return null;
   }
-  const dbUser = await getDb().query.users.findFirst({
-    where: eq(users.id, session.user.id),
-    columns: { status: true, deletedAt: true },
-  });
-  if (!dbUser || dbUser.status !== "active" || dbUser.deletedAt) return null;
+  const dbUser = await getUserStatus(session.user.id);
+  if (dbUser && !isActiveUser(dbUser)) return null;
   return session;
 }

@@ -43,10 +43,12 @@ const items = [
     roles: ["owner", "admin", "staff"],
   },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
+  { href: "/admin/conference-images", label: "Conference", icon: BedDouble, roles: ["owner", "admin"] },
   { href: "/admin/faqs", label: "FAQs", icon: HelpCircle, roles: ["owner", "admin"] },
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, roles: ["owner", "admin"] },
   { href: "/admin/activity-logs", label: "Activity Logs", icon: BarChart3, roles: ["owner", "admin"] },
   { href: "/admin/users", label: "Users", icon: UserCog, roles: ["owner"] },
+  { href: "/admin/maintenance", label: "Maintenance", icon: Settings, roles: ["owner"] },
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];
 

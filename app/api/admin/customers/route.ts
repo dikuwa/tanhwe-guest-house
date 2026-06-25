@@ -11,6 +11,7 @@ const input = z.object({
   whatsapp: z.string().trim().min(7).max(30),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   address: z.string().trim().max(300).optional(),
+  idOrPassport: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(3000).optional(),
 });
 
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
       whatsapp: parsed.data.whatsapp,
       email: parsed.data.email || null,
       address: parsed.data.address || null,
+      idOrPassport: parsed.data.idOrPassport || null,
       notes: parsed.data.notes || null,
     });
     await tx.insert(activityLogs).values({

@@ -1,5 +1,8 @@
 import "server-only";
 
+export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+
 import {
   DeleteObjectCommand,
   ListObjectsV2Command,
@@ -45,6 +48,13 @@ function getR2Client(): S3Client {
     credentials: { accessKeyId, secretAccessKey },
   });
   return client;
+}
+
+function extensionForImageType(type: string): string {
+  if (type === "image/jpeg") return "jpg";
+  if (type === "image/png") return "png";
+  if (type === "image/webp") return "webp";
+  throw new Error("Unsupported image type");
 }
 
 function extensionFor(type: string): string {
@@ -98,6 +108,47 @@ function keyFromPublicUrl(imageUrl: string): string {
   const key = decodeURIComponent(candidate.pathname.slice(base.pathname.length));
   if (!key || key.includes("..")) throw new Error("Invalid R2 object key");
   return key;
+}
+
+export async function uploadGenericImage(file: File, path: string): Promise<string> {
+  if (!IMAGE_TYPES.includes(file.type as (typeof IMAGE_TYPES)[number])) {
+    throw new Error("Unsupported image type");
+  }
+  if (file.size <= 0 || file.size > MAX_IMAGE_SIZE) {
+    throw new Error("Image must be between 1 byte and 5 MB");
+  }
+
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!hasValidSignature(bytes, file.type))
+    throw new Error("File contents do not match its image type");
+
+  // Sanitize path: only allow alphanumeric and hyphens
+  const sanitized = path.replace(/[^a-zA-Z0-9_-]/g, "");
+  if (!sanitized || sanitized.length > 64) throw new Error("Invalid path");
+
+  const key = `${sanitized}/${crypto.randomUUID()}.${extensionForImageType(file.type)}`;
+  const { bucket } = getR2Config();
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: bytes,
+      ContentType: file.type,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
+
+  return publicObjectUrl(key);
+}
+
+export async function deleteGenericImage(imageUrl: string): Promise<void> {
+  const { bucket } = getR2Config();
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: keyFromPublicUrl(imageUrl),
+    })
+  );
 }
 
 export async function uploadRoomImage(file: File, roomId: string): Promise<string> {

@@ -27,6 +27,7 @@ export function CreateCustomerForm() {
       whatsapp: String(form.get("whatsapp") ?? ""),
       email: String(form.get("email") ?? ""),
       address: String(form.get("address") ?? ""),
+      idOrPassport: String(form.get("idOrPassport") ?? ""),
       notes: String(form.get("notes") ?? ""),
     };
 
@@ -75,6 +76,10 @@ export function CreateCustomerForm() {
         <div>
           <Label htmlFor="address">Address (optional)</Label>
           <Input id="address" name="address" className="mt-2 h-12" />
+        </div>
+        <div>
+          <Label htmlFor="idOrPassport">ID or passport (optional)</Label>
+          <Input id="idOrPassport" name="idOrPassport" className="mt-2 h-12" />
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="notes">Notes (optional)</Label>

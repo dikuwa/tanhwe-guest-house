@@ -420,6 +420,19 @@ export const testimonials = pgTable(
   (table) => [index("testimonials_sort_order_idx").on(table.sortOrder)]
 );
 
+export const conferenceImages = pgTable(
+  "conference_images",
+  {
+    id: text("id").primaryKey(),
+    imageUrl: text("image_url").notNull(),
+    altText: text("alt_text"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("conference_images_sort_order_idx").on(table.sortOrder)]
+);
+
 export const settings = pgTable("settings", {
   id: text("id").primaryKey(),
   key: text("key").notNull().unique(),

@@ -104,9 +104,18 @@ export function RoomForm({ room }: { room?: RoomValue }) {
     const data = await response.json();
     setSaving(false);
     if (!response.ok) return toast.error(data.error ?? "Could not save room");
-    toast.success(room?.id ? "Room saved" : "Room created");
-    router.push(`/admin/rooms/${room?.id ?? data.id}/edit`);
-    router.refresh();
+    if (room?.id) {
+      toast.success("Room saved", {
+        action: { label: "Back to rooms", onClick: () => router.push("/admin/rooms") },
+      });
+      router.refresh();
+    } else {
+      toast.success("Room created", {
+        action: { label: "View room", onClick: () => router.push(`/admin/rooms/${data.id}/edit`) },
+      });
+      router.push(`/admin/rooms/${data.id}/edit`);
+      router.refresh();
+    }
   }
 
   const isEditing = !!room?.id;

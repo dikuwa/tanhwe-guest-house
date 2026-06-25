@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilePlus2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -50,6 +51,9 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
     const data = await response.json();
     setSaving(false);
     if (!response.ok) return setError(data.error ?? "Could not create document");
+    toast.success(`${data.type} created`, {
+      action: { label: "View document", onClick: () => router.push(`/admin/documents/${data.id}`) },
+    });
     router.push(`/admin/documents/${data.id}`);
     router.refresh();
   }

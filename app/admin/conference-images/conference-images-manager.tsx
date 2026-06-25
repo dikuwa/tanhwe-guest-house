@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { GripVertical, Loader2, Star, Trash2, Upload, Save } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 type ConferenceImage = {
@@ -23,7 +24,6 @@ export function ConferenceImagesManager({ initialImages }: Props) {
   const [uploadIndex, setUploadIndex] = useState<number | null>(null);
   const [uploadTotal, setUploadTotal] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef(images);
   imagesRef.current = images;
@@ -35,13 +35,12 @@ export function ConferenceImagesManager({ initialImages }: Props) {
 
     const available = 5 - images.length;
     if (files.length > available) {
-      setMessage(`Only ${available} more image${available === 1 ? "" : "s"} allowed (max 5)`);
+      toast.error(`Only ${available} more image${available === 1 ? "" : "s"} allowed (max 5)`);
       return;
     }
 
     setUploading(true);
     setUploadTotal(files.length);
-    setMessage("");
 
     try {
       const added: ConferenceImage[] = [];
@@ -77,6 +76,7 @@ export function ConferenceImagesManager({ initialImages }: Props) {
         added.push({ id, imageUrl, altText: null, sortOrder: 0, isPrimary: false });
       }
 
+      toast.success(`${added.length} image${added.length === 1 ? "" : "s"} added`);
       setImages((prev) => {
         const next = [...prev, ...added];
         if (prev.length === 0 && added.length > 0) {
@@ -84,9 +84,8 @@ export function ConferenceImagesManager({ initialImages }: Props) {
         }
         return next;
       });
-      setMessage(`${added.length} image${added.length === 1 ? "" : "s"} added`);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Upload failed");
+      toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
       setUploadIndex(null);
@@ -107,13 +106,13 @@ export function ConferenceImagesManager({ initialImages }: Props) {
     });
 
     if (!res.ok) {
-      setMessage("Failed to delete image");
+      toast.error("Failed to delete image");
       return;
     }
 
     const updated = images.filter((_, i) => i !== index);
     setImages(updated);
-    setMessage("Image removed");
+    toast.success("Image removed");
   };
 
   // Set as primary
@@ -134,9 +133,9 @@ export function ConferenceImagesManager({ initialImages }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageUrls: imgs.map((i) => i.imageUrl) }),
       });
-      setMessage("Order saved");
+      toast.success("Order saved");
     } catch {
-      setMessage("Failed to save order");
+      toast.error("Failed to save order");
     }
   };
 
@@ -268,14 +267,6 @@ export function ConferenceImagesManager({ initialImages }: Props) {
         <span>Drag to reorder &middot; {images.length} / 5</span>
       </div>
 
-      {message && (
-        <p
-          role="status"
-          className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700"
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

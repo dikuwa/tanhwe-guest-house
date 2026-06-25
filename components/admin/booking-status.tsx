@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import { bookingStatusOptions } from "@/components/forms/status-select";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +47,7 @@ export function BookingStatus({ id, status }: { id: string; status: string }) {
         setBusy(false);
         if (!response.ok) {
           const data = await response.json();
-          alert(data.error ?? "Status update failed");
+          toast.error(data.error ?? "Status update failed");
           return;
         }
         router.refresh();

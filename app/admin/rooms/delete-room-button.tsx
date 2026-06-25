@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 export function DeleteRoomButton({
@@ -32,7 +33,7 @@ export function DeleteRoomButton({
 
     if (!response.ok) {
       const data = await response.json();
-      alert(data.error ?? "Could not delete room");
+      toast.error(data.error ?? "Could not delete room");
       return;
     }
 

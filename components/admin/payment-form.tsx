@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, WalletCards } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,14 +25,12 @@ type BookingOption = {
 export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
   const [bookingId, setBookingId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    setMessage("");
     const form = event.currentTarget;
     const payload = {
       ...Object.fromEntries(new FormData(form)),
@@ -45,12 +44,14 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
     });
     const data = await response.json();
     setSaving(false);
-    setMessage(response.ok ? "Payment recorded." : (data.error ?? "Could not record payment"));
     if (response.ok) {
+      toast.success("Payment recorded");
       form.reset();
       setBookingId("");
       setPaymentMethod("cash");
       router.refresh();
+    } else {
+      toast.error(data.error ?? "Could not record payment");
     }
   }
 
@@ -98,11 +99,6 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
         {saving ? <Loader2 className="size-4 animate-spin" /> : <WalletCards className="size-4" />}
         {saving ? "Saving..." : "Record payment"}
       </Button>
-      {message && (
-        <p role="status" className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700 md:col-span-4">
-          {message}
-        </p>
-      )}
     </form>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { GripVertical, Loader2, Star, Trash2, Upload } from "lucide-react";
+import { toast } from "sonner";
 
 interface ImageUploaderProps {
   roomId: string;
@@ -37,7 +38,7 @@ export function ImageUploader({
     const files = Array.from(e.target.files || []);
 
     if (previewUrls.length + files.length > maxImages) {
-      alert(`Maximum ${maxImages} images allowed`);
+      toast.error(`Maximum ${maxImages} images allowed`);
       return;
     }
 
@@ -70,7 +71,7 @@ export function ImageUploader({
       onImagesUploaded(newUrls);
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Failed to upload images");
+      toast.error("Failed to upload images");
     } finally {
       setUploading(false);
       setUploadingIndex(null);
@@ -93,7 +94,7 @@ export function ImageUploader({
       body: JSON.stringify({ imageUrl }),
     });
     if (!response.ok) {
-      alert("Failed to delete image");
+      toast.error("Failed to delete image");
       return;
     }
     const newUrls = urlsRef.current.filter((_, i) => i !== index);

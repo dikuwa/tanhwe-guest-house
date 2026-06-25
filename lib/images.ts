@@ -5,6 +5,14 @@
  * Replace these paths when migrating to a CDN.
  */
 
+export const heroDesktopImage = {
+  url: "/images/hero-desktop.webp",
+};
+
+export const heroMobileImage = {
+  url: "/images/hero-mobile.webp",
+};
+
 export const heroImage = {
   url: "/images/tanhwe-room-img01.webp",
   alt: "Tanhwe Guest House — comfortable accommodation in Mukwe, Namibia",

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Coffee, MapPin, Presentation, ShieldCheck, Trees } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,6 @@ import { SiteHeader } from "@/components/public/site-header";
 import { FaqSection } from "@/components/public/faq-section";
 import { TestimonialCarousel } from "@/components/public/testimonial-carousel";
 import { getPublicFaqs, getPublicRooms, getPublicSettings, getPublicTestimonials } from "@/lib/public-data";
-import { heroImage } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
 
@@ -29,21 +27,40 @@ export default async function Home() {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main>
-        <section className="relative isolate overflow-hidden bg-neutral-50">
-          <div className="mx-auto grid min-h-[580px] max-w-[1320px] items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[.88fr_1.12fr] lg:px-10 lg:py-20">
-            <div className="relative z-10 max-w-xl lg:pl-8">
+        <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-neutral-900 md:min-h-[calc(100svh-4rem)]">
+          {/* Responsive background image */}
+          <picture>
+            <source media="(max-width: 767px)" srcSet="/images/hero-mobile.webp" />
+            <source media="(min-width: 768px)" srcSet="/images/hero-desktop.webp" />
+            <img
+              alt=""
+              fetchPriority="high"
+              className="absolute inset-0 size-full object-cover object-[55%_center] max-md:object-[center_15%]"
+              src="/images/hero-desktop.webp"
+            />
+          </picture>
+
+          {/* Desktop dark overlay */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-black/82 from-0% via-black/68 via-30% via-black/30 via-60% to-black/18 to-100% md:block" />
+
+          {/* Mobile dark overlay */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/28 from-0% via-black/34 via-28% via-black/70 via-58% to-black/92 to-100% md:hidden" />
+
+          {/* Hero content */}
+          <div className="relative z-10 mx-auto flex w-full max-w-[1320px] flex-1 items-center px-4 py-16 sm:px-6 lg:px-10 lg:py-20">
+            <div className="max-w-xl lg:pl-8">
               <Badge
                 variant="outline"
                 className="border-neutral-300 bg-white/80 text-neutral-600"
               >
                 <MapPin className="size-3.5" /> Mukwe, Namibia
               </Badge>
-              <h1 className="mt-6 font-heading text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+              <h1 className="mt-6 font-heading text-5xl font-bold leading-[1.05] tracking-tight text-white sm:text-6xl lg:text-7xl">
                 Stay easy.
                 <br />
                 <span className="text-primary">Feel at home.</span>
               </h1>
-              <p className="mt-5 max-w-lg text-lg leading-8 text-neutral-500">
+              <p className="mt-5 max-w-lg text-lg leading-8 text-white/70">
                 Comfortable rooms, breakfast included, and a welcome that keeps things simple.
               </p>
               <ContactActions
@@ -52,26 +69,16 @@ export default async function Home() {
                 className="mt-8"
               />
             </div>
-            <div className="relative mx-auto w-full max-w-2xl lg:max-w-none">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-100 shadow-lg">
-                <Image
-                  src={heroImage.url}
-                  alt={heroImage.alt}
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-3 left-4 rounded-lg border border-neutral-200/60 bg-white/80 px-3.5 py-2.5 shadow-xs backdrop-blur sm:left-8">
-                <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
-                  Our promise
-                </p>
-                <p className="mt-0.5 text-sm text-neutral-600">
-                  Comfort &middot; Hospitality &middot; Convenience
-                </p>
-              </div>
-            </div>
+          </div>
+
+          {/* Promise card */}
+          <div className="absolute bottom-4 left-4 z-10 rounded-lg border border-neutral-200/60 bg-white/80 px-3.5 py-2.5 shadow-xs backdrop-blur sm:left-8 lg:bottom-8">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
+              Our promise
+            </p>
+            <p className="mt-0.5 text-sm text-neutral-600">
+              Comfort &middot; Hospitality &middot; Convenience
+            </p>
           </div>
         </section>
 

@@ -1,5 +1,6 @@
 import { UserForm } from "@/components/admin/user-form";
 import { UserRole } from "@/components/admin/user-role";
+import { UserActions } from "@/components/admin/user-actions";
 import { getUsers } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
 
@@ -33,6 +34,7 @@ export default async function AdminUsers() {
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Added</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -53,6 +55,9 @@ export default async function AdminUsers() {
                     />
                   </td>
                   <td className="px-4 py-4">{user.createdAt.toLocaleDateString("en-NA")}</td>
+                  <td className="px-4 py-4">
+                    {user.id !== session.user.id && <UserActions userId={user.id} userName={user.name} />}
+                  </td>
                 </tr>
               ))}
             </tbody>

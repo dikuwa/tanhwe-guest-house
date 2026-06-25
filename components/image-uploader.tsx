@@ -24,6 +24,7 @@ export function ImageUploader({
   const [uploadTotal, setUploadTotal] = useState(0);
   const [previewUrls, setPreviewUrls] = useState<string[]>(existingImages);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [removeIndex, setRemoveIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlsRef = useRef<string[]>(existingImages);
@@ -131,11 +132,19 @@ export function ImageUploader({
     }
   };
 
+  const moveItem = useCallback((from: number, to: number) => {
+    if (from === to) return;
+    const urls = [...urlsRef.current];
+    const [moved] = urls.splice(from, 1);
+    urls.splice(to, 0, moved);
+    updateUrls(urls);
+    return urls;
+  }, []);
+
   const handleDragStart = useCallback(
     (index: number) => (e: React.DragEvent) => {
       setDragIndex(index);
       e.dataTransfer.effectAllowed = "move";
-      // Slight delay so the visual feedback is crisp
       requestAnimationFrame(() => {
         (e.target as HTMLElement).classList.add("opacity-40");
       });
@@ -147,26 +156,41 @@ export function ImageUploader({
     (index: number) => (e: React.DragEvent) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
-      if (dragIndex === null || dragIndex === index) return;
-      const urls = [...urlsRef.current];
-      const [moved] = urls.splice(dragIndex, 1);
-      urls.splice(index, 0, moved);
-      setDragIndex(index);
-      updateUrls(urls);
+      setDragOverIndex(index);
     },
-    [dragIndex]
+    []
+  );
+
+  const handleDragLeave = useCallback(
+    () => setDragOverIndex(null),
+    []
+  );
+
+  const handleDrop = useCallback(
+    (index: number) => (e: React.DragEvent) => {
+      e.preventDefault();
+      if (dragIndex === null || dragIndex === index) {
+        setDragOverIndex(null);
+        return;
+      }
+      const urls = moveItem(dragIndex, index);
+      if (urls) {
+        saveOrder(urls);
+        onImagesUploaded(urls);
+      }
+      setDragIndex(null);
+      setDragOverIndex(null);
+    },
+    [dragIndex, moveItem, onImagesUploaded]
   );
 
   const handleDragEnd = useCallback(
     (e: React.DragEvent) => {
       (e.target as HTMLElement).classList.remove("opacity-40");
       setDragIndex(null);
-      // Read from ref to get the latest array (avoids stale closure)
-      const finalOrder = urlsRef.current;
-      saveOrder(finalOrder);
-      onImagesUploaded(finalOrder);
+      setDragOverIndex(null);
     },
-    [onImagesUploaded]
+    []
   );
 
   // ── Render ──────────────────────────────────────────────
@@ -181,6 +205,8 @@ export function ImageUploader({
             onDragStart={handleDragStart(index)}
             onDragOver={handleDragOver(index)}
             onDragEnd={handleDragEnd}
+            onDrop={handleDrop(index)}
+            onDragLeave={handleDragLeave}
             className="group relative aspect-square cursor-grab overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 active:cursor-grabbing"
           >
             <Image
@@ -229,7 +255,7 @@ export function ImageUploader({
             </div>
 
             {/* Drop indicator */}
-            {dragIndex !== null && dragIndex !== index && (
+            {dragOverIndex === index && (
               <div className="pointer-events-none absolute inset-0 rounded-lg ring-2 ring-primary/60" />
             )}
           </div>

@@ -243,7 +243,11 @@ export function RoomForm({
     form.set("status", status);
     form.set("breakfastIncluded", breakfastIncluded ? "on" : "");
     form.set("featured", featured ? "on" : "");
-    const typeText = selectedType?.name ?? form.get("type") ?? "";
+    const typeText = selectedType?.name ?? room?.type ?? "";
+    if (!typeText || typeText.trim().length < 2) {
+      setSaving(false);
+      return toast.error("Please select a room type before saving");
+    }
     const payload = {
       name: form.get("name"),
       slug: slug,

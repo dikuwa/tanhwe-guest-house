@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { AdminNav } from "./admin-nav";
 import { MobileDrawer } from "./mobile-drawer";
@@ -83,13 +83,13 @@ export function AdminLayoutShell({
             <button
               ref={hamburgerRef}
               type="button"
-              aria-label="Open dashboard navigation"
+              aria-label={drawerOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
               aria-expanded={drawerOpen}
               aria-controls="admin-nav-drawer"
-              className="inline-flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
-              onClick={() => setDrawerOpen(true)}
+              className="inline-flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-600 hover:bg-neutral-100 transition-colors"
+              onClick={() => setDrawerOpen((v) => !v)}
             >
-              <Menu className="size-4" />
+              {drawerOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
             </button>
             <TanhweLogo href="/admin" size="sm" className="max-w-[170px]" />
           </div>

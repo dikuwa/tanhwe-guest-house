@@ -13,6 +13,7 @@ export const roomInput = z.object({
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   type: z.string().trim().min(2).max(80),
+  roomTypeId: z.string().uuid().nullable().optional(),
   description: z.string().trim().max(3000).default(""),
   pricePerNight: z.coerce.number().int().min(0).max(1_000_000),
   availableUnits: z.coerce.number().int().min(1).max(100),

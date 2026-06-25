@@ -3,8 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import { RoomForm } from "@/components/admin/room-form";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth-middleware";
+import { getActiveRoomTypes } from "@/lib/admin-data";
 export default async function NewRoomPage() {
   await requireRole(["owner", "admin"]);
+  const roomTypes = await getActiveRoomTypes();
   return (
     <div className="mx-auto max-w-4xl">
       <Button variant="ghost" size="sm" render={<Link href="/admin/rooms" />}>
@@ -15,7 +17,7 @@ export default async function NewRoomPage() {
       <p className="mb-6 mt-2 text-sm text-muted-foreground">
         Create the room first, then upload its images.
       </p>
-      <RoomForm />
+      <RoomForm roomTypes={roomTypes} />
     </div>
   );
 }

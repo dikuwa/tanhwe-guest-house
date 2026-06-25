@@ -93,6 +93,29 @@ export const verifications = pgTable(
   (table) => [index("verifications_identifier_idx").on(table.identifier)]
 );
 
+export const roomTypes = pgTable(
+  "room_types",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    bedConfiguration: text("bed_configuration"),
+    pricePerNight: integer("price_per_night").notNull(),
+    maxGuests: integer("max_guests").notNull().default(2),
+    breakfastIncluded: boolean("breakfast_included").notNull().default(false),
+    amenities: text("amenities").array(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    status: text("status").notNull().default("active"),
+    ...timestamps,
+  },
+  (table) => [
+    check("room_types_price_positive", sql`${table.pricePerNight} >= 0`),
+    check("room_types_guests_positive", sql`${table.maxGuests} >= 1`),
+    check("room_types_status_check", sql`${table.status} in ('active', 'inactive')`),
+  ]
+);
+
 export const rooms = pgTable(
   "rooms",
   {
@@ -100,6 +123,7 @@ export const rooms = pgTable(
     name: text("name").notNull(),
     slug: text("slug").notNull().unique(),
     type: text("type").notNull(),
+    roomTypeId: text("room_type_id").references(() => roomTypes.id, { onDelete: "set null" }),
     description: text("description"),
     pricePerNight: integer("price_per_night").notNull(),
     availableUnits: integer("available_units").notNull().default(1),
@@ -114,6 +138,7 @@ export const rooms = pgTable(
     check("rooms_units_positive", sql`${table.availableUnits} >= 1`),
     check("rooms_guests_positive", sql`${table.maxGuests} >= 1`),
     check("rooms_status_check", sql`${table.status} in ('active', 'maintenance', 'blocked')`),
+    index("rooms_room_type_id_idx").on(table.roomTypeId),
   ]
 );
 
@@ -460,9 +485,14 @@ export const shareLinks = pgTable(
   ]
 );
 
-export const roomsRelations = relations(rooms, ({ many }) => ({
+export const roomTypesRelations = relations(roomTypes, ({ many }) => ({
+  rooms: many(rooms),
+}));
+
+export const roomsRelations = relations(rooms, ({ one, many }) => ({
   images: many(roomImages),
   amenities: many(roomAmenities),
+  roomType: one(roomTypes, { fields: [rooms.roomTypeId], references: [roomTypes.id] }),
 }));
 export const roomImagesRelations = relations(roomImages, ({ one }) => ({
   room: one(rooms, { fields: [roomImages.roomId], references: [rooms.id] }),

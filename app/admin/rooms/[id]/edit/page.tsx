@@ -4,12 +4,13 @@ import { ArrowLeft } from "lucide-react";
 import { RoomForm } from "@/components/admin/room-form";
 import { Button } from "@/components/ui/button";
 import { requireRole } from "@/lib/auth-middleware";
-import { getAdminRoom } from "@/lib/admin-data";
+import { getAdminRoom, getActiveRoomTypes } from "@/lib/admin-data";
 export default async function EditRoomPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(["owner", "admin"]);
   const { id } = await params;
   const room = await getAdminRoom(id);
   if (!room) notFound();
+  const roomTypes = await getActiveRoomTypes();
   return (
     <div className="mx-auto max-w-4xl">
       <Button variant="ghost" size="sm" render={<Link href="/admin/rooms" />}>
@@ -29,6 +30,7 @@ export default async function EditRoomPage({ params }: { params: Promise<{ id: s
             .sort((a, b) => a.sortOrder - b.sortOrder)
             .map((item) => item.imageUrl),
         }}
+        roomTypes={roomTypes}
       />
     </div>
   );

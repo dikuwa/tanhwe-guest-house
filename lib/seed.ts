@@ -1,7 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { asc, eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
-import { accounts, customers, faqs, roles, roomAmenities, rooms, settings, testimonials, users } from "./db/schema";
+import { accounts, customers, faqs, roles, roomAmenities, roomTypes, rooms, settings, testimonials, users } from "./db/schema";
 
 async function seed() {
   const db = getDb();
@@ -54,6 +54,86 @@ async function seed() {
     console.log(`✓ Owner account already exists: ${email}`);
   }
 
+  // ── Room Types ──────────────────────────────────────────────────
+  await db
+    .insert(roomTypes)
+    .values([
+      {
+        id: "rt_standard_single",
+        name: "Standard Single Room",
+        slug: "standard-single-room",
+        bedConfiguration: "1 single bed",
+        pricePerNight: 650,
+        maxGuests: 1,
+        breakfastIncluded: false,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Work desk", "Wardrobe", "Fan", "Fresh towels", "Toiletries", "Daily housekeeping"],
+        sortOrder: 1,
+        description: "A compact and comfortable room suited to solo travellers, contractors and short business stays.",
+      },
+      {
+        id: "rt_standard_double",
+        name: "Standard Double Room",
+        slug: "standard-double-room",
+        bedConfiguration: "1 double bed",
+        pricePerNight: 900,
+        maxGuests: 2,
+        breakfastIncluded: false,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Work desk", "Wardrobe", "Tea and coffee facilities", "Fresh towels", "Toiletries", "Daily housekeeping"],
+        sortOrder: 2,
+        description: "A comfortable double room for couples, solo guests and business travellers.",
+      },
+      {
+        id: "rt_standard_twin",
+        name: "Standard Twin Room",
+        slug: "standard-twin-room",
+        bedConfiguration: "2 single beds",
+        pricePerNight: 850,
+        maxGuests: 2,
+        breakfastIncluded: false,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Work desk", "Wardrobe", "Tea and coffee facilities", "Fresh towels", "Toiletries", "Daily housekeeping"],
+        sortOrder: 3,
+        description: "A practical room with two separate beds, ideal for colleagues, friends or family members sharing.",
+      },
+      {
+        id: "rt_deluxe_double",
+        name: "Deluxe Double Room",
+        slug: "deluxe-double-room",
+        bedConfiguration: "1 large double bed",
+        pricePerNight: 1050,
+        maxGuests: 2,
+        breakfastIncluded: false,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Mini fridge", "Tea and coffee facilities", "Bottled water", "Work desk", "Wardrobe", "Fresh towels", "Toiletries", "Daily housekeeping", "Fan"],
+        sortOrder: 4,
+        description: "A spacious double room with additional comfort, upgraded amenities and a refreshment area.",
+      },
+      {
+        id: "rt_family",
+        name: "Family Room",
+        slug: "family-room",
+        bedConfiguration: "1 double bed and 1 single bed",
+        pricePerNight: 1250,
+        maxGuests: 3,
+        breakfastIncluded: false,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Mini fridge", "Tea and coffee facilities", "Work desk", "Wardrobe", "Fresh towels", "Toiletries", "Daily housekeeping"],
+        sortOrder: 5,
+        description: "A spacious room suitable for small families or three guests sharing.",
+      },
+      {
+        id: "rt_executive",
+        name: "Executive Room",
+        slug: "executive-room",
+        bedConfiguration: "1 large double bed",
+        pricePerNight: 1200,
+        maxGuests: 2,
+        breakfastIncluded: true,
+        amenities: ["Free Wi-Fi", "Private bathroom", "Television", "Mini fridge", "Tea and coffee facilities", "Bottled water", "Work desk", "Wardrobe", "Fresh towels", "Premium toiletries", "Daily housekeeping"],
+        sortOrder: 6,
+        description: "A spacious premium room suited to business travellers, longer stays and guests wanting additional comfort.",
+      },
+    ])
+    .onConflictDoNothing();
+
+  // ── Rooms ───────────────────────────────────────────────────────
   await db
     .insert(rooms)
     .values([
@@ -62,9 +142,10 @@ async function seed() {
         name: "Double Room",
         slug: "double-room",
         type: "double",
+        roomTypeId: "rt_standard_double",
         description: "Comfortable double room with ensuite bathroom",
         pricePerNight: 500,
-        availableUnits: 3,
+        availableUnits: 1,
         maxGuests: 2,
         breakfastIncluded: true,
       },
@@ -73,9 +154,10 @@ async function seed() {
         name: "Single Room",
         slug: "single-room",
         type: "single",
+        roomTypeId: "rt_standard_single",
         description: "Cozy single room for solo travellers",
         pricePerNight: 650,
-        availableUnits: 2,
+        availableUnits: 1,
         maxGuests: 1,
         breakfastIncluded: true,
       },
@@ -84,6 +166,7 @@ async function seed() {
         name: "Executive Suite",
         slug: "executive-suite",
         type: "suite",
+        roomTypeId: null,
         description: "Suite with a living area and premium amenities",
         pricePerNight: 1200,
         availableUnits: 1,

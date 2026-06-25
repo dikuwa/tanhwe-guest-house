@@ -8,6 +8,7 @@ import {
   customers,
   documents,
   followUps,
+  roomTypes,
   rooms,
   users,
   settings,
@@ -101,6 +102,32 @@ export async function getDashboardData() {
     checkOuts: checkOuts.value,
     recent,
   };
+}
+
+export async function getActiveRoomTypes() {
+  return getDb()
+    .select()
+    .from(roomTypes)
+    .where(eq(roomTypes.status, "active"))
+    .orderBy(asc(roomTypes.sortOrder), asc(roomTypes.name));
+}
+
+export async function getAdminRoomTypes() {
+  return getDb()
+    .select({
+      id: roomTypes.id,
+      name: roomTypes.name,
+      slug: roomTypes.slug,
+      description: roomTypes.description,
+      bedConfiguration: roomTypes.bedConfiguration,
+      pricePerNight: roomTypes.pricePerNight,
+      maxGuests: roomTypes.maxGuests,
+      breakfastIncluded: roomTypes.breakfastIncluded,
+      sortOrder: roomTypes.sortOrder,
+      status: roomTypes.status,
+    })
+    .from(roomTypes)
+    .orderBy(asc(roomTypes.sortOrder), asc(roomTypes.name));
 }
 
 export async function getActiveRoomOptions() {

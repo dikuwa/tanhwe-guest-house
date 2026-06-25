@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, LogOut, Search } from "lucide-react";
+import { PanelLeftClose, LogOut, Search } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { authClient } from "@/lib/auth-client";
@@ -108,7 +108,7 @@ export function MobileDrawer({
                 className="inline-flex size-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 transition-colors"
                 onClick={onClose}
               >
-                <ChevronLeft className="size-5" />
+                <PanelLeftClose className="size-5" />
               </button>
             </div>
 

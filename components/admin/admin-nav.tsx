@@ -13,8 +13,6 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquareQuote,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
   UserCog,
   Users,

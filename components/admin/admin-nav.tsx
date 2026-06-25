@@ -21,7 +21,7 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-const items = [
+export const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, roles: ["owner", "admin", "staff"] },
   { href: "/admin/rooms", label: "Rooms", icon: BedDouble, roles: ["owner", "admin"] },
   { href: "/admin/rooms/types", label: "Room Types", icon: BedDouble, roles: ["owner", "admin"] },
@@ -46,8 +46,8 @@ export function AdminNav({ role, collapsed, onItemClick }: { role: string; colla
     <>
       <nav
         className={cn(
-          "flex gap-0.5 overflow-x-auto p-2 md:flex-col md:overflow-visible",
-          collapsed && "md:items-center"
+          "flex flex-col gap-0.5 p-2",
+          collapsed && "items-center"
         )}
         aria-label="Admin navigation"
       >

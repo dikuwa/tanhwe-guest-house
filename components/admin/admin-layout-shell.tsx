@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
@@ -28,6 +28,7 @@ export function AdminLayoutShell({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
   const { name, role, image } = session.user;
 
   const userAvatar = image ? (
@@ -43,7 +44,10 @@ export function AdminLayoutShell({
       <MobileDrawer
         role={String(role)}
         open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          hamburgerRef.current?.focus();
+        }}
       />
 
       {/* Desktop sidebar */}
@@ -77,14 +81,17 @@ export function AdminLayoutShell({
         <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-white px-4 md:hidden">
           <div className="flex items-center gap-3">
             <button
+              ref={hamburgerRef}
               type="button"
-              aria-label="Open admin menu"
+              aria-label="Open dashboard navigation"
+              aria-expanded={drawerOpen}
+              aria-controls="admin-nav-drawer"
               className="inline-flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
               onClick={() => setDrawerOpen(true)}
             >
               <Menu className="size-4" />
             </button>
-            <TanhweLogo size="sm" showIcon={false} />
+            <TanhweLogo href="/admin" size="sm" className="max-w-[170px]" />
           </div>
           <div className="flex items-center gap-2">
             <NotificationBell />

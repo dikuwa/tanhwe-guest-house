@@ -5,6 +5,7 @@ import { allowPublicRequest } from "@/lib/public-rate-limit";
 import { getDb } from "@/lib/db";
 import { bookingRooms, bookings, customers } from "@/lib/db/schema";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
+import { notifyOps } from "@/lib/notifications";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const schema = z.object({
@@ -95,6 +96,14 @@ export async function POST(request: NextRequest) {
       nights: availability.nights,
       subtotal: availability.subtotal,
     });
+  });
+
+  await notifyOps({
+    type: "booking_requested",
+    title: `New booking request: ${bookingNumber}`,
+    description: `${body.data.fullName} — ${availability.room.name}`,
+    bookingId,
+    link: `/admin/bookings/${bookingId}`,
   });
 
   return NextResponse.json(

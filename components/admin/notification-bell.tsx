@@ -215,7 +215,13 @@ export function NotificationBell() {
                               }}
                               className="text-[10px] font-medium text-primary hover:text-primary/80"
                             >
-                              View booking
+                              {notification.type === "payment_recorded"
+                                ? "View payment"
+                                : notification.type.startsWith("document")
+                                  ? "View document"
+                                  : notification.type.startsWith("follow-up")
+                                    ? "View follow-up"
+                                    : "View booking"}
                             </Link>
                           )}
                         </div>

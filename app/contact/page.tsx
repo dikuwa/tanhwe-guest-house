@@ -105,7 +105,7 @@ export default async function ContactPage() {
               <a
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
                 href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-                  "Hello Tanhwe Guest House. I am planning to visit the guest house and would like to request the correct location pin and arrival directions. Thank you."
+                  "Hello Tanhwe Guest House — LOCATION REQUEST. I am planning to visit and would appreciate your exact map pin and directions to the guest house. Thank you."
                 )}`}
                 target="_blank"
                 rel="noreferrer"

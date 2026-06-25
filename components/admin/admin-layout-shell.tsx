@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { AdminNav } from "./admin-nav";
 import { MobileDrawer } from "./mobile-drawer";
 import { NotificationBell } from "./notification-bell";
+import { cn } from "@/lib/utils";
 
 type Session = {
   user: {
@@ -26,6 +27,7 @@ export function AdminLayoutShell({
   children: React.ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { name, role, image } = session.user;
 
   const userAvatar = image ? (
@@ -45,16 +47,32 @@ export function AdminLayoutShell({
       />
 
       {/* Desktop sidebar */}
-      <aside className="hidden border-r border-neutral-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:w-60 lg:flex-col">
-        <div className="flex h-14 items-center justify-between border-b border-neutral-100 px-4">
-          <TanhweLogo href="/admin" size="sm" />
+      <aside
+        className={cn(
+          "hidden border-r border-neutral-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:flex-col transition-all duration-200",
+          sidebarCollapsed ? "lg:w-16" : "lg:w-60"
+        )}
+      >
+        <div className={cn(
+          "flex h-14 shrink-0 items-center border-b border-neutral-100",
+          sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"
+        )}>
+          {!sidebarCollapsed && <TanhweLogo href="/admin" size="sm" />}
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="inline-flex size-8 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
-          <AdminNav role={String(role)} />
+          <AdminNav role={String(role)} collapsed={sidebarCollapsed} />
         </div>
       </aside>
 
-      <div className="lg:pl-60">
+      <div className={cn("transition-all duration-200", sidebarCollapsed ? "lg:pl-16" : "lg:pl-60")}>
         {/* Mobile top bar */}
         <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-white px-4 lg:hidden">
           <div className="flex items-center gap-3">

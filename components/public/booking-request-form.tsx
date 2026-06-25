@@ -188,7 +188,6 @@ export function BookingRequestForm(props: Props) {
             required
             value={roomsCount}
             onChange={(event) => setRoomsCount(event.target.value)}
-            className="h-10"
           />
         </div>
         <div className="space-y-1.5">
@@ -201,7 +200,6 @@ export function BookingRequestForm(props: Props) {
             required
             value={guestsCount}
             onChange={(event) => setGuestsCount(event.target.value)}
-            className="h-10"
           />
         </div>
       </div>
@@ -210,7 +208,7 @@ export function BookingRequestForm(props: Props) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="fullName">Full name</Label>
-            <Input id="fullName" name="fullName" autoComplete="name" required className={cn("h-10", fieldErrors.fullName && "border-destructive")} />
+            <Input id="fullName" name="fullName" autoComplete="name" required className={cn(fieldErrors.fullName && "border-destructive")} />
             {fieldErrors.fullName && (
               <p className="flex items-center gap-1 text-xs text-destructive">
                 <AlertCircle className="size-3" /> {fieldErrors.fullName}
@@ -226,7 +224,7 @@ export function BookingRequestForm(props: Props) {
               autoComplete="tel"
               required
               placeholder="+264 81 234 5678"
-              className={cn("h-10", fieldErrors.phone && "border-destructive")}
+              className={cn(fieldErrors.phone && "border-destructive")}
             />
             {fieldErrors.phone && (
               <p className="flex items-center gap-1 text-xs text-destructive">
@@ -236,7 +234,7 @@ export function BookingRequestForm(props: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional)</span></Label>
-            <Input id="whatsapp" name="whatsapp" type="tel" placeholder="Same as phone if left empty" className={cn("h-10", fieldErrors.whatsapp && "border-destructive")} />
+            <Input id="whatsapp" name="whatsapp" type="tel" placeholder="Same as phone if left empty" className={cn(fieldErrors.whatsapp && "border-destructive")} />
             {fieldErrors.whatsapp && (
               <p className="flex items-center gap-1 text-xs text-destructive">
                 <AlertCircle className="size-3" /> {fieldErrors.whatsapp}
@@ -245,7 +243,7 @@ export function BookingRequestForm(props: Props) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className={cn("h-10", fieldErrors.email && "border-destructive")} />
+            <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className={cn(fieldErrors.email && "border-destructive")} />
             {fieldErrors.email && (
               <p className="flex items-center gap-1 text-xs text-destructive">
                 <AlertCircle className="size-3" /> {fieldErrors.email}
@@ -258,7 +256,7 @@ export function BookingRequestForm(props: Props) {
               value={preferredContact}
               onValueChange={(value) => value && setPreferredContact(value)}
             >
-              <SelectTrigger id="preferred-contact" className="h-10 w-full">
+              <SelectTrigger id="preferred-contact" className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

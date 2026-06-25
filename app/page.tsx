@@ -63,11 +63,11 @@ export default async function Home() {
                   className="object-cover"
                 />
               </div>
-              <div className="absolute -bottom-4 left-4 rounded-xl border border-neutral-200 bg-white/95 px-5 py-4 shadow-sm backdrop-blur sm:left-8">
-                <p className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              <div className="absolute -bottom-3 left-4 rounded-lg border border-neutral-200/60 bg-white/80 px-3.5 py-2.5 shadow-xs backdrop-blur sm:left-8">
+                <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">
                   Our promise
                 </p>
-                <p className="mt-1 font-heading text-lg font-bold text-neutral-800">
+                <p className="mt-0.5 text-sm text-neutral-600">
                   Comfort &middot; Hospitality &middot; Convenience
                 </p>
               </div>
@@ -143,10 +143,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section
-          id="conference"
-          className="mx-auto grid max-w-[1180px] gap-10 px-4 py-24 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:py-32"
-        >
+        <section className="mx-auto grid max-w-[1180px] gap-10 px-4 py-24 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:py-32">
           <div className="min-h-[360px] rounded-xl bg-secondary p-8 text-secondary-foreground sm:p-12">
             <Presentation className="size-10 text-primary" />
             <h2 className="mt-10 max-w-xl font-heading text-4xl font-bold sm:text-5xl">
@@ -173,6 +170,9 @@ export default async function Home() {
               message="Hello Tanhwe Guest House, I would like to enquire about your conference facilities."
               className="mt-8"
             />
+            <Link href="/conference" className={buttonVariants({ variant: "link", className: "mt-3 self-start" })}>
+              View conference details <ArrowRight />
+            </Link>
           </div>
         </section>
 

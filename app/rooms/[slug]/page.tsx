@@ -38,7 +38,6 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
                 <MapPin />
                 {settings.location}
               </Badge>
-              {room.breakfastIncluded && <Badge>Breakfast included</Badge>}
             </div>
             <h1 className="mt-4 font-heading text-4xl font-bold sm:text-6xl">{room.name}</h1>
           </div>

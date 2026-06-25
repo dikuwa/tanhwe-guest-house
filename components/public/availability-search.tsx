@@ -217,7 +217,7 @@ export function AvailabilitySearch({
           <div className="space-y-1.5">
             <Label htmlFor="search-room-compact">Room</Label>
             <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
-              <SelectTrigger id="search-room-compact" className="h-12 w-full bg-background">
+              <SelectTrigger id="search-room-compact" className="w-full bg-background">
                 <SelectValue placeholder="Select a room" />
               </SelectTrigger>
               <SelectContent>
@@ -235,7 +235,7 @@ export function AvailabilitySearch({
               <PopoverTrigger
                 id="search-check-in-c"
                 className={cn(
-                  "flex h-12 w-full items-center rounded-md border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
+                  "flex h-11 w-full items-center rounded-lg border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
                   "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none",
                   checkIn ? "text-neutral-800" : "text-neutral-400"
                 )}
@@ -267,7 +267,7 @@ export function AvailabilitySearch({
               <PopoverTrigger
                 id="search-check-out-c"
                 className={cn(
-                  "flex h-12 w-full items-center rounded-md border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
+                  "flex h-11 w-full items-center rounded-lg border border-neutral-200 bg-background px-3 text-sm shadow-xs transition-colors",
                   "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none",
                   checkOut ? "text-neutral-800" : "text-neutral-400"
                 )}
@@ -298,7 +298,7 @@ export function AvailabilitySearch({
               required
               value={guests}
               onChange={(event) => setGuests(event.target.value)}
-              className="h-12 bg-background"
+              className="bg-background"
             />
           </div>
           <Button type="submit" size="lg" className="self-end" disabled={!roomSlug || submitting}>

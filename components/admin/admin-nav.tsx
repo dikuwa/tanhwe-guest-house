@@ -7,11 +7,14 @@ import {
   BedDouble,
   BellRing,
   BookOpen,
+  ExternalLink,
   FileText,
   HelpCircle,
   LayoutDashboard,
   LogOut,
   MessageSquareQuote,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   UserCog,
   Users,
@@ -23,25 +26,10 @@ import { Button } from "@/components/ui/button";
 const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, roles: ["owner", "admin", "staff"] },
   { href: "/admin/rooms", label: "Rooms", icon: BedDouble, roles: ["owner", "admin"] },
-  {
-    href: "/admin/bookings",
-    label: "Bookings",
-    icon: BookOpen,
-    roles: ["owner", "admin", "staff"],
-  },
+  { href: "/admin/bookings", label: "Bookings", icon: BookOpen, roles: ["owner", "admin", "staff"] },
   { href: "/admin/customers", label: "Customers", icon: Users, roles: ["owner", "admin", "staff"] },
-  {
-    href: "/admin/documents",
-    label: "Documents",
-    icon: FileText,
-    roles: ["owner", "admin"],
-  },
-  {
-    href: "/admin/follow-ups",
-    label: "Follow-ups",
-    icon: BellRing,
-    roles: ["owner", "admin", "staff"],
-  },
+  { href: "/admin/documents", label: "Documents", icon: FileText, roles: ["owner", "admin"] },
+  { href: "/admin/follow-ups", label: "Follow-ups", icon: BellRing, roles: ["owner", "admin", "staff"] },
   { href: "/admin/reports", label: "Reports", icon: BarChart3, roles: ["owner"] },
   { href: "/admin/conference-images", label: "Conference", icon: BedDouble, roles: ["owner", "admin"] },
   { href: "/admin/faqs", label: "FAQs", icon: HelpCircle, roles: ["owner", "admin"] },
@@ -52,13 +40,16 @@ const items = [
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];
 
-export function AdminNav({ role }: { role: string }) {
+export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   return (
     <>
       <nav
-        className="flex gap-0.5 overflow-x-auto p-2 lg:flex-col lg:overflow-visible"
+        className={cn(
+          "flex gap-0.5 overflow-x-auto p-2 lg:flex-col lg:overflow-visible",
+          collapsed && "lg:items-center"
+        )}
         aria-label="Admin navigation"
       >
         {items
@@ -70,26 +61,51 @@ export function AdminNav({ role }: { role: string }) {
               <Link
                 key={item.href}
                 href={item.href}
+                title={collapsed ? item.label : undefined}
                 className={cn(
                   "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:pl-4",
+                  collapsed && "lg:justify-center lg:px-2",
                   active &&
                     "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
                 )}
               >
                 {active && (
-                  <span className="absolute left-0 top-1/2 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary lg:block" />
+                  <span className={cn(
+                    "absolute left-0 top-1/2 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary",
+                    !collapsed && "lg:block",
+                    collapsed && "lg:hidden"
+                  )} />
+                )}
+                {active && collapsed && (
+                  <span className="absolute left-0 top-1/2 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
                 )}
                 <item.icon className="size-4 shrink-0" />
-                {item.label}
+                {!collapsed && item.label}
               </Link>
             );
           })}
       </nav>
-      <div className="mt-auto border-t border-neutral-100 p-2">
+      <div className={cn("mt-auto border-t border-neutral-100 p-2", collapsed && "lg:flex lg:flex-col lg:items-center lg:gap-1")}>
+        <Link
+          href="/"
+          target="_blank"
+          rel="noreferrer"
+          title={collapsed ? "Open website" : undefined}
+          className={cn(
+            "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900",
+            collapsed && "lg:justify-center lg:px-2"
+          )}
+        >
+          <ExternalLink className="size-4 shrink-0" />
+          {!collapsed && "Open website"}
+        </Link>
         <Button
           variant="ghost"
-          size="sm"
-          className="w-full justify-start text-neutral-500"
+          size={collapsed ? "icon" : "sm"}
+          className={cn(
+            "text-neutral-500",
+            collapsed ? "size-9" : "w-full justify-start"
+          )}
           onClick={async () => {
             await authClient.signOut();
             router.replace("/login");
@@ -97,7 +113,7 @@ export function AdminNav({ role }: { role: string }) {
           }}
         >
           <LogOut className="size-4" />
-          Sign out
+          {!collapsed && "Sign out"}
         </Button>
       </div>
     </>

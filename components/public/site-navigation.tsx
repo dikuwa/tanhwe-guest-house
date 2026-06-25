@@ -10,7 +10,7 @@ import { TanhweLogo } from "@/components/tanhwe-logo";
 
 const links = [
   { href: "/rooms", label: "Rooms" },
-  { href: "/#conference", label: "Conference" },
+  { href: "/conference", label: "Conference" },
   { href: "/contact", label: "Contact" },
 ];
 

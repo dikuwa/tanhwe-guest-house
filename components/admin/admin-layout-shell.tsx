@@ -49,8 +49,8 @@ export function AdminLayoutShell({
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden border-r border-neutral-200 bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:flex lg:flex-col transition-all duration-200",
-          sidebarCollapsed ? "lg:w-16" : "lg:w-60"
+          "hidden border-r border-neutral-200 bg-white md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:flex-col transition-all duration-200",
+          sidebarCollapsed ? "md:w-16" : "md:w-60"
         )}
       >
         <div className={cn(
@@ -72,9 +72,9 @@ export function AdminLayoutShell({
         </div>
       </aside>
 
-      <div className={cn("transition-all duration-200", sidebarCollapsed ? "lg:pl-16" : "lg:pl-60")}>
+      <div className={cn("transition-all duration-200", sidebarCollapsed ? "md:pl-16" : "md:pl-60")}>
         {/* Mobile top bar */}
-        <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-white px-4 lg:hidden">
+        <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-white px-4 md:hidden">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -93,7 +93,7 @@ export function AdminLayoutShell({
         </header>
 
         {/* Desktop top bar */}
-        <header className="hidden h-14 items-center justify-end border-b border-neutral-100 bg-white px-6 lg:flex">
+        <header className="hidden h-14 items-center justify-end border-b border-neutral-100 bg-white px-6 md:flex">
           <div className="flex items-center gap-3">
             <NotificationBell />
             <div className="text-right">
@@ -104,7 +104,7 @@ export function AdminLayoutShell({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 md:p-8">{children}</main>
       </div>
     </div>
   );

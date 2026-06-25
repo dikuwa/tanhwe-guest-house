@@ -38,15 +38,15 @@ const items = [
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["owner"] },
 ];
 
-export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolean }) {
+export function AdminNav({ role, collapsed, onItemClick }: { role: string; collapsed?: boolean; onItemClick?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   return (
     <>
       <nav
         className={cn(
-          "flex gap-0.5 overflow-x-auto p-2 lg:flex-col lg:overflow-visible",
-          collapsed && "lg:items-center"
+          "flex gap-0.5 overflow-x-auto p-2 md:flex-col md:overflow-visible",
+          collapsed && "md:items-center"
         )}
         aria-label="Admin navigation"
       >
@@ -59,10 +59,11 @@ export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolea
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={onItemClick}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 lg:pl-4",
-                  collapsed && "lg:justify-center lg:px-2",
+                  "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:pl-4",
+                  collapsed && "md:justify-center md:px-2",
                   active &&
                     "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
                 )}
@@ -70,8 +71,8 @@ export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolea
                 {active && (
                   <span className={cn(
                     "absolute left-0 top-1/2 hidden h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary",
-                    !collapsed && "lg:block",
-                    collapsed && "lg:hidden"
+                    !collapsed && "md:block",
+                    collapsed && "md:hidden"
                   )} />
                 )}
                 {active && collapsed && (
@@ -83,15 +84,16 @@ export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolea
             );
           })}
       </nav>
-      <div className={cn("mt-auto border-t border-neutral-100 p-2", collapsed && "lg:flex lg:flex-col lg:items-center lg:gap-1")}>
+      <div className={cn("mt-auto border-t border-neutral-100 p-2", collapsed && "md:flex md:flex-col md:items-center md:gap-1")}>
         <Link
           href="/"
           target="_blank"
           rel="noreferrer"
+          onClick={onItemClick}
           title={collapsed ? "Open website" : undefined}
           className={cn(
             "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900",
-            collapsed && "lg:justify-center lg:px-2"
+            collapsed && "md:justify-center md:px-2"
           )}
         >
           <ExternalLink className="size-4 shrink-0" />
@@ -105,6 +107,7 @@ export function AdminNav({ role, collapsed }: { role: string; collapsed?: boolea
             collapsed ? "size-9" : "w-full justify-start"
           )}
           onClick={async () => {
+            onItemClick?.();
             await authClient.signOut();
             router.replace("/login");
             router.refresh();

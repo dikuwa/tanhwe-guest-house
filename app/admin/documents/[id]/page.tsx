@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, Download, Landmark, MessageCircle, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Download, Landmark, MessageCircle, ShieldCheck, Wallet } from "lucide-react";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { DocumentEmailButton } from "@/components/admin/document-email-button";
 import { SignatureBlock } from "@/components/signature-block";
@@ -190,92 +190,69 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
         </div>
 
         {/* ── Banking Details & Payment Methods ── */}
-        {settings.paymentVisible && (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {settings.bankTransferEnabled && settings.bankingAccountName && (
-              <div className="rounded-lg border bg-muted/20 p-5">
-                <div className="flex items-center gap-2">
-                  <Landmark className="size-4 text-muted-foreground" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Banking Details
-                  </h3>
-                </div>
-                <div className="mt-4 space-y-2.5 text-sm" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.5rem 1rem", alignItems: "baseline" }}>
-                  <span className="text-muted-foreground">Account Name</span>
-                  <span>{settings.bankingAccountName}</span>
-                  {settings.bankingAccountNumber && (
-                    <>
-                      <span className="text-muted-foreground">Account Number</span>
-                      <span className="font-mono">{settings.bankingAccountNumber}</span>
-                    </>
-                  )}
-                  {settings.bankingBankName && (
-                    <>
-                      <span className="text-muted-foreground">Bank</span>
-                      <span>{settings.bankingBankName}</span>
-                    </>
-                  )}
-                  {settings.bankingBranchName && (
-                    <>
-                      <span className="text-muted-foreground">Branch</span>
-                      <span>{settings.bankingBranchName}</span>
-                    </>
-                  )}
-                  {settings.bankingBranchCode && (
-                    <>
-                      <span className="text-muted-foreground">Branch Code</span>
-                      <span>{settings.bankingBranchCode}</span>
-                    </>
-                  )}
-                  {settings.bankingAccountType && (
-                    <>
-                      <span className="text-muted-foreground">Account Type</span>
-                      <span>{settings.bankingAccountType}</span>
-                    </>
-                  )}
-                  {settings.bankingSwiftBic && (
-                    <>
-                      <span className="text-muted-foreground">SWIFT/BIC</span>
-                      <span className="font-mono">{settings.bankingSwiftBic}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="rounded-lg border bg-muted/20 p-5">
-              <div className="flex items-center gap-2">
-                <Wallet className="size-4 text-muted-foreground" />
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Payment Methods
-                </h3>
-              </div>
-              <div className="mt-4 space-y-4">
-                {settings.bankTransferEnabled && (
-                  <div className="flex items-start gap-3">
-                    <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
-                    <div>
-                      <p className="text-sm font-medium">Bank Transfer</p>
-                      <p className="text-sm text-muted-foreground">
-                        Pay via bank transfer using the details provided.
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {settings.mobileWalletsEnabled && (
-                  <div className="flex items-start gap-3">
-                    <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
-                    <div>
-                      <p className="text-sm font-medium">Mobile Wallets</p>
-                      <p className="text-sm text-muted-foreground">
-                        {settings.mobileWalletDescription}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+        {(settings.bankingVisible || settings.paymentVisible) && (
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          {settings.bankingVisible && settings.bankingAccountName && (
+          <div className="rounded-lg border bg-muted/20 p-5">
+            <div className="flex items-center gap-2">
+              <Landmark className="size-4 text-muted-foreground" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Banking Details
+              </h3>
+            </div>
+            <div className="mt-4 space-y-2.5 text-sm" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.5rem 1rem", alignItems: "baseline" }}>
+              <span className="text-muted-foreground">Account Name</span>
+              <span>{settings.bankingAccountName}</span>
+              <span className="text-muted-foreground">Account Number</span>
+              <span className="font-mono">{settings.bankingAccountNumber}</span>
+              <span className="text-muted-foreground">Bank</span>
+              <span>{settings.bankingBankName}</span>
+              <span className="text-muted-foreground">Branch</span>
+              <span>{settings.bankingBranchName}</span>
+              {settings.bankingBranchCode && (
+              <><span className="text-muted-foreground">Branch Code</span><span>{settings.bankingBranchCode}</span></>
+              )}
+              {settings.bankingAccountType && (
+              <><span className="text-muted-foreground">Account Type</span><span>{settings.bankingAccountType}</span></>
+              )}
+              {settings.bankingSwiftBic && (
+              <><span className="text-muted-foreground">SWIFT/BIC</span><span>{settings.bankingSwiftBic}</span></>
+              )}
             </div>
           </div>
+          )}
+
+          {settings.paymentVisible && (
+          <div className="rounded-lg border bg-muted/20 p-5">
+            <div className="flex items-center gap-2">
+              <Wallet className="size-4 text-muted-foreground" />
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Payment Methods
+              </h3>
+            </div>
+            <div className="mt-4 space-y-4">
+              {settings.bankTransferEnabled && (
+              <div className="flex items-start gap-3">
+                <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                <div>
+                  <p className="text-sm font-medium">{settings.bankTransferTitle}</p>
+                  <p className="text-sm text-muted-foreground">{settings.bankTransferInstructions}</p>
+                </div>
+              </div>
+              )}
+              {settings.mobileWalletsEnabled && (
+              <div className="flex items-start gap-3">
+                <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                <div>
+                  <p className="text-sm font-medium">{settings.mobileWalletTitle}</p>
+                  <p className="text-sm text-muted-foreground">{settings.mobileWalletDescription}</p>
+                </div>
+              </div>
+              )}
+            </div>
+          </div>
+          )}
+        </div>
         )}
 
         {/* ── Contact & Signature ── */}
@@ -285,29 +262,34 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
               Contact Us
             </p>
             <div className="mt-3 space-y-1.5 text-sm">
-              {settings.primaryPhone && <p>{settings.primaryPhone}</p>}
-              {settings.businessEmail && <p>{settings.businessEmail}</p>}
-              {settings.physicalAddress && <p>{settings.physicalAddress}</p>}
+              <p>Phone: {settings.primaryPhone}</p>
+              <p>Email: {settings.businessEmail}</p>
+              <p>Location: {settings.town}{settings.town && settings.region ? ", " : ""}{settings.region}{settings.region && settings.country ? ", " : ""}{settings.country}</p>
             </div>
           </div>
-          {owner && (
-            <div className="sm:text-right">
-              <SignatureBlock ownerName={owner.name} roleLabel={settings.managerRoleLabel} />
-            </div>
+          {settings.signatureVisible && (
+          <div className="sm:text-right">
+            <SignatureBlock ownerName={settings.signatoryName} roleLabel={settings.signatoryRole} />
+          </div>
           )}
         </div>
 
-        {/* ── Footer ── */}
-        {settings.footerText && (
-          <p className="mt-8 text-center text-xs text-muted-foreground border-t pt-4">
-            {settings.footerText}
-          </p>
+        {/* ── Secure Payment Footer ── */}
+        {settings.secureFooterVisible && (
+        <div className="mt-8 border-t pt-6 text-center">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
+            <span>{settings.secureFooterMessage}</span>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            {settings.acceptedPaymentTypes.split(",").map((type) => (
+              <span key={type.trim()} className="font-semibold tracking-wide text-neutral-400">
+                {type.trim()}
+              </span>
+            ))}
+          </div>
+        </div>
         )}
-
-        {/* ── Closing ── */}
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          Thank you for choosing {settings.businessName}.
-        </p>
       </article>
     </div>
   );

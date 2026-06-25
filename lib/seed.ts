@@ -318,6 +318,78 @@ async function seed() {
         value: "",
         description: "Optional footer text on documents",
       },
+      {
+        id: "setting_document_payment_visible",
+        key: "document_payment_visible",
+        value: "true",
+        description: "Show payment methods on documents",
+      },
+      {
+        id: "setting_document_banking_visible",
+        key: "document_banking_visible",
+        value: "true",
+        description: "Show banking details on documents",
+      },
+      {
+        id: "setting_document_signature_visible",
+        key: "document_signature_visible",
+        value: "true",
+        description: "Show signature on documents",
+      },
+      {
+        id: "setting_document_signature_image",
+        key: "document_signature_image",
+        value: "",
+        description: "URL of uploaded signature image",
+      },
+      {
+        id: "setting_document_signatory_name",
+        key: "document_signatory_name",
+        value: "Thomas Kamushambe",
+        description: "Name displayed as document signatory",
+      },
+      {
+        id: "setting_document_signatory_role",
+        key: "document_signatory_role",
+        value: "Managing Director",
+        description: "Role/title of the document signatory",
+      },
+      {
+        id: "setting_document_secure_footer_visible",
+        key: "document_secure_footer_visible",
+        value: "true",
+        description: "Show secure payment footer on documents",
+      },
+      {
+        id: "setting_document_secure_footer_message",
+        key: "document_secure_footer_message",
+        value: "Secure payments. All transactions are safe and encrypted.",
+        description: "Message displayed in the secure payment footer",
+      },
+      {
+        id: "setting_payment_bank_transfer_title",
+        key: "payment_bank_transfer_title",
+        value: "Bank Transfer",
+        description: "Title for the bank transfer payment method",
+      },
+      {
+        id: "setting_payment_bank_transfer_instructions",
+        key: "payment_bank_transfer_instructions",
+        value: "Pay via bank transfer using the details provided.",
+        description: "Instructions shown for bank transfer payments",
+      },
+      {
+        id: "setting_payment_mobile_wallets_title",
+        key: "payment_mobile_wallets_title",
+        value: "Mobile Wallets",
+        description: "Title for the mobile wallets payment method",
+      },
+      {
+        id: "setting_accepted_payment_types",
+        key: "accepted_payment_types",
+        value: "Visa,Mastercard,eWallet",
+        description: "Comma-separated list of accepted payment card types",
+      },
     ])
     .onConflictDoNothing();
 

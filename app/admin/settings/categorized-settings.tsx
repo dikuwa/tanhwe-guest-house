@@ -14,6 +14,9 @@ const BOOLEAN_KEYS = new Set([
   "payment_bank_transfer_enabled",
   "payment_mobile_wallets_enabled",
   "document_payment_visible",
+  "document_banking_visible",
+  "document_signature_visible",
+  "document_secure_footer_visible",
 ]);
 
 const LONG_TEXT_KEYS = new Set([
@@ -21,6 +24,9 @@ const LONG_TEXT_KEYS = new Set([
   "payment_supported_wallets",
   "physical_address",
   "document_footer_text",
+  "payment_bank_transfer_instructions",
+  "document_secure_footer_message",
+  "accepted_payment_types",
 ]);
 
 export function CategorizedSettings({

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusSelect, roomStatusOptions } from "@/components/forms/status-select";
-import { AmenitySelector } from "@/components/forms/amenity-selector";
+import { RoomAmenitiesSelector } from "@/components/forms/room-amenities-selector";
 import { ImageUploader } from "@/components/image-uploader";
 import { PREDEFINED_AMENITIES } from "@/lib/amenity-icons";
 
@@ -250,12 +250,12 @@ export function RoomForm({ room }: { room?: RoomValue }) {
 
       {/* ── Amenities ── */}
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
-        <h2 className="text-base font-semibold text-neutral-800">Amenities</h2>
+        <h2 className="text-base font-semibold text-neutral-800">Room Amenities</h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Select the amenities available in this room. Icons are displayed automatically.
+          Choose the amenities available for this room.
         </p>
         <div className="mt-5">
-          <AmenitySelector value={amenities} onChange={setAmenities} id="amenities" />
+          <RoomAmenitiesSelector value={amenities} onChange={setAmenities} id="amenities" />
         </div>
       </section>
 
@@ -275,12 +275,7 @@ export function RoomForm({ room }: { room?: RoomValue }) {
         </section>
       )}
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-neutral-400">
-          {amenities.length > 0 && (
-            <>{amenities.length} amenit{amenities.length === 1 ? "y" : "ies"} selected</>
-          )}
-        </p>
+      <div className="flex items-center justify-end">
         <Button type="submit" size="lg" disabled={saving}>
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
           {saving ? "Saving..." : isEditing ? "Save changes" : "Create room"}

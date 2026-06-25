@@ -36,8 +36,13 @@ type Snapshot = {
 type DocSettings = {
   businessName: string;
   physicalAddress: string;
+  town: string;
+  region: string;
+  country: string;
   primaryPhone: string;
   businessEmail: string;
+  websiteUrl: string;
+  logoUrl: string;
   location: string;
   currency: string;
   bankingAccountName: string;
@@ -48,12 +53,23 @@ type DocSettings = {
   bankingAccountType: string;
   bankingSwiftBic: string;
   bankTransferEnabled: boolean;
+  bankTransferTitle: string;
+  bankTransferInstructions: string;
   mobileWalletsEnabled: boolean;
+  mobileWalletTitle: string;
   mobileWalletDescription: string;
+  supportedWallets: string;
+  acceptedPaymentTypes: string;
   managerRoleLabel: string;
   signatureImage: string;
+  signatoryName: string;
+  signatoryRole: string;
   footerText: string;
   paymentVisible: boolean;
+  bankingVisible: boolean;
+  signatureVisible: boolean;
+  secureFooterVisible: boolean;
+  secureFooterMessage: string;
   ownerName: string;
 };
 
@@ -112,29 +128,54 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     bankingAccountType = "",
     bankingSwiftBic = "",
     bankTransferEnabled = false,
+    bankTransferTitle = "Bank Transfer",
+    bankTransferInstructions = "Pay via bank transfer using the details provided.",
     mobileWalletsEnabled = false,
+    mobileWalletTitle = "Mobile Wallets",
     mobileWalletDescription = "",
+    acceptedPaymentTypes = "Visa,Mastercard,eWallet",
     managerRoleLabel = "Managing Director",
+    signatureImage = "",
+    signatoryName = "Thomas Kamushambe",
+    signatoryRole = "Managing Director",
     footerText = "",
     paymentVisible = true,
+    bankingVisible = true,
+    signatureVisible = true,
+    secureFooterVisible = true,
+    secureFooterMessage = "Secure payments. All transactions are safe and encrypted.",
     primaryPhone = "",
     businessEmail = "",
     physicalAddress = "",
-    ownerName = "",
+    town = "",
+    region = "",
+    country = "",
   } = settings ?? {
     businessName: "Tanhwe Guest House",
     location: "Mukwe, Namibia",
     currency: "N$",
     bankTransferEnabled: false,
+    bankTransferTitle: "Bank Transfer",
+    bankTransferInstructions: "Pay via bank transfer using the details provided.",
     mobileWalletsEnabled: false,
+    mobileWalletTitle: "Mobile Wallets",
     mobileWalletDescription: "",
+    acceptedPaymentTypes: "Visa,Mastercard,eWallet",
     managerRoleLabel: "Managing Director",
+    signatoryName: "Thomas Kamushambe",
+    signatoryRole: "Managing Director",
     footerText: "",
     paymentVisible: true,
+    bankingVisible: true,
+    signatureVisible: true,
+    secureFooterVisible: true,
+    secureFooterMessage: "Secure payments. All transactions are safe and encrypted.",
     primaryPhone: "",
     businessEmail: "",
     physicalAddress: "",
-    ownerName: "",
+    town: "",
+    region: "",
+    country: "",
     bankingAccountName: "",
     bankingAccountNumber: "",
     bankingBankName: "",
@@ -142,6 +183,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     bankingBranchCode: "",
     bankingAccountType: "",
     bankingSwiftBic: "",
+    signatureImage: "",
   };
   const fmt = (value: number) => `${currency} ${value.toFixed(2)}`;
 
@@ -236,76 +278,55 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
         </View>
 
         {/* ── Banking & Payment Cards ── */}
-        {paymentVisible && (
-          <View style={styles.cardsRow}>
-            {bankTransferEnabled && bankingAccountName && (
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>Banking Details</Text>
-                <Text style={styles.label}>Account Name</Text>
-                <Text style={styles.value}>{bankingAccountName}</Text>
-                {bankingAccountNumber && (
-                  <>
-                    <Text style={styles.label}>Account Number</Text>
-                    <Text style={styles.mono}>{bankingAccountNumber}</Text>
-                  </>
-                )}
-                {bankingBankName && (
-                  <>
-                    <Text style={styles.label}>Bank</Text>
-                    <Text style={styles.value}>{bankingBankName}</Text>
-                  </>
-                )}
-                {bankingBranchName && (
-                  <>
-                    <Text style={styles.label}>Branch</Text>
-                    <Text style={styles.value}>{bankingBranchName}</Text>
-                  </>
-                )}
-                {bankingBranchCode && (
-                  <>
-                    <Text style={styles.label}>Branch Code</Text>
-                    <Text style={styles.value}>{bankingBranchCode}</Text>
-                  </>
-                )}
-                {bankingAccountType && (
-                  <>
-                    <Text style={styles.label}>Account Type</Text>
-                    <Text style={styles.value}>{bankingAccountType}</Text>
-                  </>
-                )}
-                {bankingSwiftBic && (
-                  <>
-                    <Text style={styles.label}>SWIFT/BIC</Text>
-                    <Text style={styles.mono}>{bankingSwiftBic}</Text>
-                  </>
-                )}
-              </View>
+        {(bankingVisible || paymentVisible) && (
+        <View style={styles.cardsRow}>
+          {bankingVisible && bankingAccountName && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Banking Details</Text>
+            <Text style={styles.label}>Account Name</Text>
+            <Text style={styles.value}>{bankingAccountName}</Text>
+            <Text style={styles.label}>Account Number</Text>
+            <Text style={styles.mono}>{bankingAccountNumber}</Text>
+            <Text style={styles.label}>Bank</Text>
+            <Text style={styles.value}>{bankingBankName}</Text>
+            <Text style={styles.label}>Branch</Text>
+            <Text style={styles.value}>{bankingBranchName}</Text>
+            {bankingBranchCode && (
+            <><Text style={styles.label}>Branch Code</Text><Text style={styles.value}>{bankingBranchCode}</Text></>
             )}
-
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Payment Methods</Text>
-              {bankTransferEnabled && (
-                <View style={styles.paymentItem}>
-                  <Text style={styles.paymentIcon}>&#x1F3E6;</Text>
-                  <View>
-                    <Text style={styles.paymentLabel}>Bank Transfer</Text>
-                    <Text style={styles.paymentDesc}>
-                      Pay via bank transfer using the details provided.
-                    </Text>
-                  </View>
-                </View>
-              )}
-              {mobileWalletsEnabled && (
-                <View style={styles.paymentItem}>
-                  <Text style={styles.paymentIcon}>&#x1F4B3;</Text>
-                  <View>
-                    <Text style={styles.paymentLabel}>Mobile Wallets</Text>
-                    <Text style={styles.paymentDesc}>{mobileWalletDescription}</Text>
-                  </View>
-                </View>
-              )}
-            </View>
+            {bankingAccountType && (
+            <><Text style={styles.label}>Account Type</Text><Text style={styles.value}>{bankingAccountType}</Text></>
+            )}
+            {bankingSwiftBic && (
+            <><Text style={styles.label}>SWIFT/BIC</Text><Text style={styles.value}>{bankingSwiftBic}</Text></>
+            )}
           </View>
+          )}
+
+          {paymentVisible && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Payment Methods</Text>
+            {bankTransferEnabled && (
+            <View style={styles.paymentItem}>
+              <Text style={styles.paymentIcon}>&#x1F3E6;</Text>
+              <View>
+                <Text style={styles.paymentLabel}>{bankTransferTitle}</Text>
+                <Text style={styles.paymentDesc}>{bankTransferInstructions}</Text>
+              </View>
+            </View>
+            )}
+            {mobileWalletsEnabled && (
+            <View style={styles.paymentItem}>
+              <Text style={styles.paymentIcon}>&#x1F4B3;</Text>
+              <View>
+                <Text style={styles.paymentLabel}>{mobileWalletTitle}</Text>
+                <Text style={styles.paymentDesc}>{mobileWalletDescription}</Text>
+              </View>
+            </View>
+            )}
+          </View>
+          )}
+        </View>
         )}
 
         {/* ── Contact & Signature ── */}
@@ -314,12 +335,17 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             <Text style={{ fontSize: 9, fontWeight: 700, color: "#667085", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
               Contact Us
             </Text>
-            {primaryPhone && <Text style={{ fontSize: 10, marginBottom: 2 }}>{primaryPhone}</Text>}
-            {businessEmail && <Text style={{ fontSize: 10, marginBottom: 2 }}>{businessEmail}</Text>}
-            {physicalAddress && <Text style={{ fontSize: 10, marginBottom: 2 }}>{physicalAddress}</Text>}
+            <Text style={{ fontSize: 10, marginBottom: 2 }}>Phone: {primaryPhone}</Text>
+            <Text style={{ fontSize: 10, marginBottom: 2 }}>Email: {businessEmail}</Text>
+            <Text style={{ fontSize: 10, marginBottom: 2 }}>
+              Location: {town}{town && region ? ", " : ""}{region}{region && country ? ", " : ""}{country}
+            </Text>
           </View>
-          {ownerName && (
-            <View style={styles.ownerBlock}>
+          {signatureVisible && (
+          <View style={styles.ownerBlock}>
+            {signatureImage ? (
+              <Text style={{ fontSize: 10, fontWeight: 700, color: "#1C1C1C" }}>{signatoryName}</Text>
+            ) : (
               <Text
                 style={{
                   fontFamily: "Allura",
@@ -330,23 +356,33 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
                   marginBottom: 4,
                 }}
               >
-                {ownerName}
+                {signatoryName}
               </Text>
-              <Text style={{ fontSize: 10, fontWeight: 700, color: "#1C1C1C" }}>{ownerName}</Text>
-              <Text style={{ fontSize: 9, color: "#667085" }}>{managerRoleLabel}</Text>
-            </View>
+            )}
+            <Text style={{ fontSize: 10, fontWeight: 700, color: "#1C1C1C" }}>{signatoryName}</Text>
+            <Text style={{ fontSize: 9, color: "#667085" }}>{signatoryRole}</Text>
+          </View>
           )}
         </View>
 
-        {/* ── Footer ── */}
-        {footerText && (
-          <Text style={styles.footer}>{footerText}</Text>
+        {/* ── Secure Payment Footer ── */}
+        {secureFooterVisible && (
+        <View>
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20, paddingTop: 12, borderTop: "1px solid #E5E7EB", gap: 6 }}>
+            <Text style={{ fontSize: 10, color: "#059669" }}>&#x2714;</Text>
+            <Text style={{ fontSize: 8, color: "#667085" }}>
+              {secureFooterMessage}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 6, gap: 16 }}>
+            {acceptedPaymentTypes.split(",").map((type) => (
+              <Text key={type.trim()} style={{ fontSize: 8, fontWeight: 700, color: "#9CA3AF", letterSpacing: 1 }}>
+                {type.trim()}
+              </Text>
+            ))}
+          </View>
+        </View>
         )}
-
-        {/* ── Closing ── */}
-        <Text style={styles.closing}>
-          Thank you for choosing {businessName}.
-        </Text>
       </Page>
     </Document>
   );

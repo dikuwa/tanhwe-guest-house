@@ -51,6 +51,16 @@ const allowed = [
   "document_signature_image",
   "document_footer_text",
   "document_payment_visible",
+  "document_banking_visible",
+  "document_signature_visible",
+  "document_signatory_name",
+  "document_signatory_role",
+  "document_secure_footer_visible",
+  "document_secure_footer_message",
+  "payment_bank_transfer_title",
+  "payment_bank_transfer_instructions",
+  "payment_mobile_wallets_title",
+  "accepted_payment_types",
 ] as const;
 const input = z.object({ key: z.enum(allowed), value: z.string().trim().min(1).max(1000) });
 export async function PATCH(request: NextRequest) {

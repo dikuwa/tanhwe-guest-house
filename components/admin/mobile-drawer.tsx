@@ -67,7 +67,7 @@ export function MobileDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
             aria-hidden="true"
           />
 
@@ -77,11 +77,12 @@ export function MobileDrawer({
             role="dialog"
             aria-modal="true"
             aria-label="Admin navigation menu"
-            initial={{ x: -280 }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: -280 }}
+            exit={{ x: "-100%" }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-neutral-200 bg-white shadow-lg lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex w-[85vw] max-w-[320px] flex-col border-r border-neutral-200 bg-white shadow-lg md:hidden"
+            aria-controls="admin-nav-drawer"
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-100 px-4">
               <TanhweLogo size="sm" showIcon={false} />
@@ -94,8 +95,8 @@ export function MobileDrawer({
                 <X className="size-4" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto">
-              <AdminNav role={role} />
+            <div id="admin-nav-drawer" className="flex-1 overflow-y-auto">
+              <AdminNav role={role} onItemClick={onClose} />
             </div>
           </motion.div>
         </>

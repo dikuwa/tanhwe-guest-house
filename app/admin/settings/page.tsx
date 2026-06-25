@@ -9,9 +9,9 @@ import { eq } from "drizzle-orm";
 
 const CATEGORIES = {
   business: ["business_name", "physical_address", "town", "region", "country", "business_email", "primary_phone", "website_url", "logo_url"],
-  banking: ["banking_account_name", "banking_account_number", "banking_bank_name", "banking_branch_name", "banking_branch_code", "banking_account_type", "banking_swift_bic"],
-  payment: ["payment_bank_transfer_enabled", "payment_mobile_wallets_enabled", "payment_mobile_wallet_description", "payment_supported_wallets"],
-  document: ["document_manager_role_label", "document_signature_image", "document_footer_text", "document_payment_visible"],
+  banking: ["banking_account_name", "banking_account_number", "banking_bank_name", "banking_branch_name", "banking_branch_code", "banking_account_type", "banking_swift_bic", "document_banking_visible"],
+  payment: ["payment_bank_transfer_enabled", "payment_bank_transfer_title", "payment_bank_transfer_instructions", "payment_mobile_wallets_enabled", "payment_mobile_wallets_title", "payment_mobile_wallet_description", "payment_supported_wallets"],
+  document: ["document_payment_visible", "document_signature_visible", "document_signatory_name", "document_signatory_role", "document_manager_role_label", "document_signature_image", "document_secure_footer_visible", "document_secure_footer_message", "accepted_payment_types", "document_footer_text"],
 } as const;
 
 const CATEGORY_LABELS: Record<string, string> = {

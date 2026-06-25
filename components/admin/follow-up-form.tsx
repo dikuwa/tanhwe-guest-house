@@ -29,7 +29,7 @@ type Options = {
   staffOptions: OptionBase[];
 };
 
-export function FollowUpForm({ options }: { options: Options }) {
+export function FollowUpForm({ options, onCreated }: { options: Options; onCreated?: (item: any) => void }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [bookingId, setBookingId] = useState("");
@@ -60,6 +60,7 @@ export function FollowUpForm({ options }: { options: Options }) {
     setSaving(false);
     if (!response.ok) return toast.error(data.error ?? "Could not create follow-up");
     toast.success("Follow-up created");
+    onCreated?.(data.followUp);
     event.currentTarget.reset();
     setBookingId("");
     setCustomerId("");

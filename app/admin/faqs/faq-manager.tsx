@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2, Plus, Save, Trash2, EyeOff, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ type Faq = {
 };
 
 export function FaqManager({ initial }: { initial: Faq[] }) {
-  const router = useRouter();
   const [items, setItems] = useState<Faq[]>(initial);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -40,8 +38,13 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
       setError(data.error ?? "Could not save FAQ");
       return;
     }
+    const data = await response.json();
     setEditing(null);
-    router.refresh();
+    if (faq.id) {
+      setItems((prev) => prev.map((item) => item.id === faq.id ? { ...item, question: faq.question, answer: faq.answer, sortOrder: faq.sortOrder, active: faq.active } : item));
+    } else {
+      setItems((prev) => prev.map((item) => item.id.startsWith("new-") ? { ...item, id: data.id, question: faq.question, answer: faq.answer, sortOrder: faq.sortOrder, active: faq.active } : item));
+    }
   }
 
   async function remove(id: string) {
@@ -53,7 +56,6 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
     });
     setSaving(null);
     setItems((prev) => prev.filter((item) => item.id !== id));
-    router.refresh();
   }
 
   function addNew() {

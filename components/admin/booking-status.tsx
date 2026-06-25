@@ -28,7 +28,7 @@ const next: Record<string, string[]> = {
   "checked-in": ["checked-out"],
 };
 
-export function BookingStatus({ id, status }: { id: string; status: string }) {
+export function BookingStatus({ id, status, onStatusChange }: { id: string; status: string; onStatusChange?: (id: string, newStatus: string) => void }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const options = next[status] ?? [];
@@ -50,6 +50,7 @@ export function BookingStatus({ id, status }: { id: string; status: string }) {
           toast.error(data.error ?? "Status update failed");
           return;
         }
+        if (value) onStatusChange?.(id, value);
         router.refresh();
       }}
       disabled={busy || options.length === 0}

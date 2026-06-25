@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { Loader2, Plus, Save, Trash2, EyeOff, Star, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,6 @@ type Testimonial = {
 };
 
 export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
-  const router = useRouter();
   const [items, setItems] = useState<Testimonial[]>(initial);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -44,8 +42,13 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
       setError(data.error ?? "Could not save testimonial");
       return;
     }
+    const data = await response.json();
     setEditing(null);
-    router.refresh();
+    if (t.id) {
+      setItems((prev) => prev.map((item) => item.id === t.id ? { ...item, guestName: t.guestName, guestType: t.guestType, guestImage: t.guestImage ?? null, text: t.text, sortOrder: t.sortOrder, featured: t.featured, active: t.active } : item));
+    } else {
+      setItems((prev) => prev.map((item) => item.id.startsWith("new-") ? { ...item, id: data.id, guestName: t.guestName, guestType: t.guestType, guestImage: t.guestImage ?? null, text: t.text, sortOrder: t.sortOrder, featured: t.featured, active: t.active } : item));
+    }
   }
 
   async function remove(id: string) {
@@ -57,7 +60,6 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
     });
     setSaving(null);
     setItems((prev) => prev.filter((item) => item.id !== id));
-    router.refresh();
   }
 
   function addNew() {

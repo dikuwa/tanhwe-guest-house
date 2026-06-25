@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-export function FollowUpComplete({ id }: { id: string }) {
+export function FollowUpComplete({ id, onCompleted }: { id: string; onCompleted?: (id: string) => void }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   return (
@@ -15,7 +15,10 @@ export function FollowUpComplete({ id }: { id: string }) {
         setSaving(true);
         const response = await fetch(`/api/admin/follow-ups/${id}`, { method: "PATCH" });
         setSaving(false);
-        if (response.ok) router.refresh();
+        if (response.ok) {
+          onCompleted?.(id);
+          router.refresh();
+        }
       }}
     >
       {saving ? <Loader2 className="animate-spin" /> : <Check />}Complete

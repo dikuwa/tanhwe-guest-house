@@ -11,10 +11,12 @@ export function DeleteRoomButton({
   id,
   name,
   disabled,
+  onDeleted,
 }: {
   id: string;
   name: string;
   disabled?: boolean;
+  onDeleted?: (id: string) => void;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -49,7 +51,7 @@ export function DeleteRoomButton({
   }
 
   async function confirmDelete() {
-    // Already executed on first click — this just refreshes
+    onDeleted?.(id);
     router.refresh();
   }
 

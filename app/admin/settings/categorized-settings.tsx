@@ -65,12 +65,12 @@ function SettingsGroup({
 
 function SettingRow({ setting }: { setting: Setting }) {
   const [saving, setSaving] = useState(false);
+  const [value, setValue] = useState(setting.value);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
-    const form = new FormData(event.currentTarget);
-    const body = { key: setting.key, value: String(form.get("value") ?? "") };
+    const body = { key: setting.key, value };
     const response = await fetch("/api/admin/settings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -84,7 +84,7 @@ function SettingRow({ setting }: { setting: Setting }) {
 
   if (BOOLEAN_KEYS.has(setting.key)) {
     return (
-      <form onSubmit={submit} className="flex items-center justify-between gap-4 py-4">
+      <form id={`form-${setting.key}`} onSubmit={submit} className="flex items-center justify-between gap-4 py-4">
         <div>
           <Label htmlFor={`setting-${setting.key}`} className="text-sm font-medium">
             {setting.description ?? setting.key}
@@ -93,17 +93,24 @@ function SettingRow({ setting }: { setting: Setting }) {
         </div>
         <div className="flex items-center gap-3">
           <input type="hidden" name="key" value={setting.key} />
-          <input type="hidden" name="value" id={`setting-${setting.key}-hidden`} value={setting.value === "true" ? "false" : "true"} />
+          <input type="hidden" name="value" value={value} />
           <Switch
             id={`setting-${setting.key}`}
-            checked={setting.value === "true"}
+            checked={value === "true"}
             onCheckedChange={(checked) => {
-              // Update the hidden input and submit
-              const hidden = document.getElementById(`setting-${setting.key}-hidden`) as HTMLInputElement;
-              if (hidden) hidden.value = checked ? "true" : "false";
-              // Submit the form
-              const form = document.getElementById(`form-${setting.key}`) as HTMLFormElement;
-              if (form) form.requestSubmit();
+              setValue(checked ? "true" : "false");
+              setSaving(true);
+              const body = { key: setting.key, value: checked ? "true" : "false" };
+              fetch("/api/admin/settings", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+              }).then(async (res) => {
+                const data = await res.json();
+                setSaving(false);
+                if (!res.ok) { toast.error(data.error ?? "Could not save"); setValue(setting.value); return; }
+                toast.success(`${setting.description ?? setting.key} saved`);
+              });
             }}
           />
           <Button type="submit" variant="ghost" size="icon" className="size-8" disabled={saving}>
@@ -126,7 +133,8 @@ function SettingRow({ setting }: { setting: Setting }) {
           <Input
             id={`setting-${setting.key}`}
             name="value"
-            defaultValue={setting.value}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
             required
             className="flex-1"
           />
@@ -146,7 +154,7 @@ function SettingRow({ setting }: { setting: Setting }) {
         <Label htmlFor={`setting-${setting.key}`}>{setting.description ?? setting.key}</Label>
         <p className="mt-1 text-xs text-neutral-400">{setting.key}</p>
       </div>
-      <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required />
+      <Input id={`setting-${setting.key}`} name="value" value={value} onChange={(e) => setValue(e.target.value)} required />
       <Button type="submit" variant="outline" size="sm" disabled={saving}>
         {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
         {saving ? "Saving..." : "Save"}

@@ -1,6 +1,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { getAuth, roles, type Role } from "./auth";
+import { getDb } from "./db";
+import { users } from "./db/schema";
 
 function isRole(value: unknown): value is Role {
   return typeof value === "string" && roles.includes(value as Role);
@@ -13,6 +16,11 @@ export async function getCurrentSession() {
 export async function requireAuth() {
   const session = await getCurrentSession();
   if (!session || !isRole(session.user.role)) redirect("/login");
+  const dbUser = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { status: true, deletedAt: true },
+  });
+  if (!dbUser || dbUser.status !== "active" || dbUser.deletedAt) redirect("/login");
   return session;
 }
 
@@ -27,5 +35,10 @@ export async function authorizeRequest(requestHeaders: Headers, allowedRoles: re
   if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
     return null;
   }
+  const dbUser = await getDb().query.users.findFirst({
+    where: eq(users.id, session.user.id),
+    columns: { status: true, deletedAt: true },
+  });
+  if (!dbUser || dbUser.status !== "active" || dbUser.deletedAt) return null;
   return session;
 }

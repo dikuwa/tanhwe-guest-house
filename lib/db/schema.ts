@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 const timestamps = {
@@ -33,11 +34,30 @@ export const users = pgTable(
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
     role: text("role").notNull().default("staff"),
+    status: text("status").notNull().default("active"),
+    jobTitle: text("job_title"),
+    phone: text("phone"),
+    invitedAt: timestamp("invited_at", { withTimezone: true }),
+    invitationExpiresAt: timestamp("invitation_expires_at", { withTimezone: true }),
+    invitationToken: text("invitation_token"),
+    disabledAt: timestamp("disabled_at", { withTimezone: true }),
+    disabledBy: text("disabled_by"),
+    disabledReason: text("disabled_reason"),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    revokedBy: text("revoked_by"),
+    revokedReason: text("revoked_reason"),
+    lockedAt: timestamp("locked_at", { withTimezone: true }),
+    lockedReason: text("locked_reason"),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    permissionGrants: text("permission_grants").array().default(sql`'{}'::text[]`),
+    permissionRestrictions: text("permission_restrictions").array().default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("users_email_unique").on(sql`lower(${table.email})`),
     check("users_role_check", sql`${table.role} in ('owner', 'admin', 'staff')`),
+    check("users_status_check", sql`${table.status} in ('invited', 'active', 'disabled', 'revoked', 'locked')`),
   ]
 );
 

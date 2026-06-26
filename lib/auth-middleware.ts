@@ -13,7 +13,7 @@ function isActiveUser(user: { status: string | null; deletedAt: Date | null } | 
   return !!user && user.status === "active" && !user.deletedAt;
 }
 
-export async function getCurrentSession() {
+async function safeGetSession() {
   try {
     return await getAuth().api.getSession({ headers: await headers() });
   } catch {
@@ -21,7 +21,7 @@ export async function getCurrentSession() {
   }
 }
 
-async function getUserStatus(userId: string): Promise<{ status: string | null; deletedAt: Date | null } | undefined> {
+async function safeGetUserStatus(userId: string) {
   try {
     const result = await getDb().query.users.findFirst({
       where: eq(users.id, userId),
@@ -33,16 +33,26 @@ async function getUserStatus(userId: string): Promise<{ status: string | null; d
   }
 }
 
-export async function requireAuth() {
+async function safeApiGetSession(requestHeaders: Headers) {
   try {
-    const session = await getCurrentSession();
-    if (!session || !isRole(session.user.role)) redirect("/login");
-    const dbUser = await getUserStatus(session.user.id);
-    if (dbUser && !isActiveUser(dbUser)) redirect("/login");
-    return session;
+    return await getAuth().api.getSession({ headers: requestHeaders });
   } catch {
-    redirect("/login");
+    return null;
   }
+}
+
+export async function getCurrentSession() {
+  return safeGetSession();
+}
+
+export async function requireAuth() {
+  const session = await safeGetSession();
+  if (!session || !isRole(session.user.role)) redirect("/login");
+
+  const dbUser = await safeGetUserStatus(session.user.id);
+  if (dbUser && !isActiveUser(dbUser)) redirect("/login");
+
+  return session;
 }
 
 export async function requireRole(allowedRoles: readonly Role[]) {
@@ -52,15 +62,13 @@ export async function requireRole(allowedRoles: readonly Role[]) {
 }
 
 export async function authorizeRequest(requestHeaders: Headers, allowedRoles: readonly Role[]) {
-  try {
-    const session = await getAuth().api.getSession({ headers: requestHeaders });
-    if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
-      return null;
-    }
-    const dbUser = await getUserStatus(session.user.id);
-    if (dbUser && !isActiveUser(dbUser)) return null;
-    return session;
-  } catch {
+  const session = await safeApiGetSession(requestHeaders);
+  if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
     return null;
   }
+
+  const dbUser = await safeGetUserStatus(session.user.id);
+  if (dbUser && !isActiveUser(dbUser)) return null;
+
+  return session;
 }

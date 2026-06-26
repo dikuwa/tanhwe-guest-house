@@ -130,7 +130,7 @@ export function MobileNav({
         style={{
           position: "absolute",
           top: 0,
-          right: 0,
+          left: 0,
           bottom: 0,
           width: "min(88vw, 380px)",
           maxWidth: "100%",
@@ -138,9 +138,9 @@ export function MobileNav({
           flexDirection: "column",
           overflow: "hidden",
           background: "var(--background, #ffffff)",
-          borderLeft: "1px solid var(--border, #e5e7eb)",
+          borderRight: "1px solid var(--border, #e5e7eb)",
           boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-          transform: open ? "translateX(0)" : "translateX(100%)",
+          transform: open ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 220ms cubic-bezier(0.32, 0.72, 0, 1)",
         }}
       >

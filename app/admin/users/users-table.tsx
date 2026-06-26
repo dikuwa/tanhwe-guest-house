@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import { UserForm } from "@/components/admin/user-form";
 import { UserActions } from "@/components/admin/user-actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface User {
   id: string;
@@ -25,19 +27,16 @@ interface UsersTableProps {
 }
 
 type StatusFilter = "all" | "active" | "invited" | "disabled" | "revoked" | "locked";
-type RoleFilter = "all" | "owner" | "admin" | "staff";
 
 export function UsersTable({ users: initial, currentUserId }: UsersTableProps) {
   const [users, setUsers] = useState<User[]>(initial);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 
   const filtered = useMemo(() => {
     return users.filter((user) => {
       if (user.deletedAt) return false;
       if (statusFilter !== "all" && user.status !== statusFilter) return false;
-      if (roleFilter !== "all" && user.role !== roleFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -50,7 +49,7 @@ export function UsersTable({ users: initial, currentUserId }: UsersTableProps) {
       }
       return true;
     });
-  }, [users, search, statusFilter, roleFilter]);
+  }, [users, search, statusFilter]);
 
   const summary = useMemo(() => {
     const activeUsers = users.filter((u) => !u.deletedAt);
@@ -99,41 +98,33 @@ export function UsersTable({ users: initial, currentUserId }: UsersTableProps) {
 
   return (
     <div className="space-y-4">
-      <UserForm onCreated={handleCreated} />
-
-      <div className="flex flex-wrap gap-2">
-        {(["all", "active", "invited", "disabled", "revoked", "locked"] as const).map((f) => (
-          <Button
-            key={f}
-            variant={statusFilter === f ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter(f)}
-          >
-            {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)} ({summary[f === "all" ? "total" : f]})
-          </Button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 shadow-xs">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(["all", "active", "invited", "disabled", "revoked", "locked"] as const).map((f) => (
+            <Button
+              key={f}
+              variant={statusFilter === f ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter(f)}
+            >
+              {f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1)} ({summary[f === "all" ? "total" : f]})
+            </Button>
+          ))}
+        </div>
+        <UserForm onCreated={handleCreated} />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(["all", "owner", "admin", "staff"] as const).map((f) => (
-          <Button
-            key={f}
-            variant={roleFilter === f ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setRoleFilter(f)}
-          >
-            {f === "all" ? "Any role" : f.charAt(0).toUpperCase() + f.slice(1)}
-          </Button>
-        ))}
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search by name, email, phone, role, or job title..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9"
+          aria-label="Search users"
+        />
       </div>
-
-      <input
-        type="search"
-        placeholder="Search by name, email, phone, role, or job title..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full rounded-md border px-3 py-2 text-sm"
-      />
 
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full min-w-200 text-left text-sm">
@@ -154,9 +145,9 @@ export function UsersTable({ users: initial, currentUserId }: UsersTableProps) {
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
                     {user.image ? (
-                      <img src={user.image} alt="" className="h-8 w-8 rounded-full object-cover" />
+                      <img src={user.image} alt="" className="size-8 rounded-full object-cover" />
                     ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                      <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                     )}

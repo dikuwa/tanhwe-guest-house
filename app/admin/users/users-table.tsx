@@ -98,7 +98,7 @@ export function UsersTable({ users: initial, currentUserId }: UsersTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-card p-3 shadow-none">
         <div className="flex flex-wrap items-center gap-1.5">
           {(["all", "active", "invited", "disabled", "revoked", "locked"] as const).map((f) => (
             <Button

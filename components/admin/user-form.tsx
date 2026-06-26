@@ -14,6 +14,52 @@ import {
 } from "@/components/ui/select";
 import { PERMISSIONS, getRoleDefaults, isOwnerOnly } from "@/lib/permissions";
 import type { Permission } from "@/lib/permissions";
+import { Crown, Eye, EyeOff, Plus, Shield, User, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const categoryLabels: Record<string, string> = {
+  bookings: "Bookings",
+  rooms: "Rooms",
+  customers: "Customers",
+  payments: "Payments",
+  documents: "Documents",
+  follow_ups: "Follow-ups",
+  users: "Users",
+  permissions: "Permissions",
+  settings: "Settings",
+  finance: "Finance",
+  security: "Security",
+  testimonials: "Testimonials",
+  faqs: "FAQs",
+  dashboard: "Dashboard",
+};
+
+const permissionGroups: { label: string; permissions: Permission[] }[] = (() => {
+  const groups = new Map<string, Permission[]>();
+  const order: string[] = [];
+  for (const perm of Object.values(PERMISSIONS)) {
+    const category = perm.split(":")[0] as keyof typeof categoryLabels;
+    if (!groups.has(category)) {
+      groups.set(category, []);
+      order.push(category);
+    }
+    groups.get(category)!.push(perm);
+  }
+  return order.map((cat) => ({
+    label: categoryLabels[cat] || cat,
+    permissions: groups.get(cat)!,
+  }));
+})();
+
+function permissionLabel(perm: string): string {
+  return perm.split(":").pop()!.replace(/_/g, " ");
+}
+
+const roleIcons = {
+  owner: Crown,
+  admin: Shield,
+  staff: User,
+} as const;
 
 interface UserFormProps {
   onCreated?: (user: { id: string; name: string; email: string; role: string; status: string }) => void;
@@ -27,14 +73,14 @@ export function UserForm({ onCreated }: UserFormProps) {
   const [phone, setPhone] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"owner" | "admin" | "staff">("staff");
   const [sendMethod, setSendMethod] = useState<"none" | "email">("none");
   const [grants, setGrants] = useState<Permission[]>(getRoleDefaults("staff"));
   const [{ nameErr, emailErr, passwordErr }, setErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLFormElement>(null);
 
-  function handleRoleChange(value: string | null) {
-    const newRole = value as "owner" | "admin" | "staff";
+  function handleRoleChange(newRole: "owner" | "admin" | "staff") {
     setRole(newRole);
     setGrants(getRoleDefaults(newRole));
   }
@@ -90,6 +136,7 @@ export function UserForm({ onCreated }: UserFormProps) {
       setOpen(false);
       setName(""); setEmail(""); setPhone(""); setJobTitle(""); setPassword("");
       setRole("staff"); setSendMethod("none"); setGrants(getRoleDefaults("staff"));
+      setShowPassword(false);
       setErrors({});
       formRef.current?.reset();
 
@@ -102,92 +149,160 @@ export function UserForm({ onCreated }: UserFormProps) {
   }
 
   return (
-    <div>
-      <Button onClick={() => setOpen(true)}>Add user</Button>
+    <>
+      <Button onClick={() => setOpen(true)}>
+        <Plus className="size-4" />
+        Add user
+      </Button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">New user</h2>
-              <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>X</Button>
-            </div>
-
-            <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="uf-name">Name</Label>
-                <Input id="uf-name" value={name} onChange={(e) => setName(e.target.value)} />
-                {nameErr && <p className="mt-1 text-sm text-red-500">{nameErr}</p>}
+          <div className="mx-4 flex w-full max-w-[720px] max-h-[88vh] flex-col rounded-xl border bg-card shadow-lg">
+            <form ref={formRef} onSubmit={onSubmit} className="flex max-h-[88vh] flex-col">
+              <div className="flex shrink-0 items-center justify-between border-b px-6 py-4">
+                <h2 className="text-lg font-semibold">New user</h2>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
+                  aria-label="Close"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
 
-              <div>
-                <Label htmlFor="uf-email">Email</Label>
-                <Input id="uf-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                {emailErr && <p className="mt-1 text-sm text-red-500">{emailErr}</p>}
-              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="uf-name">Name</Label>
+                    <Input id="uf-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
+                    {nameErr && <p className="mt-1 text-sm text-red-500">{nameErr}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="uf-email">Email</Label>
+                    <Input id="uf-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
+                    {emailErr && <p className="mt-1 text-sm text-red-500">{emailErr}</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="uf-phone">Phone</Label>
+                    <Input id="uf-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1.5" />
+                  </div>
+                  <div>
+                    <Label htmlFor="uf-jobTitle">Job title</Label>
+                    <Input id="uf-jobTitle" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="mt-1.5" />
+                  </div>
+                  <div>
+                    <Label htmlFor="uf-password">Password</Label>
+                    <div className="relative mt-1.5">
+                      <Input
+                        id="uf-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Min 12 characters"
+                        className="pr-9"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
+                    {passwordErr && <p className="mt-1 text-sm text-red-500">{passwordErr}</p>}
+                  </div>
+                  <div>
+                    <Label>Send login details via</Label>
+                    <div className="mt-1.5">
+                      <Select value={sendMethod} onValueChange={(v) => setSendMethod(v as "none" | "email")}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Manually copy later</SelectItem>
+                          <SelectItem value="email">Email</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
 
-              <div>
-                <Label htmlFor="uf-phone">Phone</Label>
-                <Input id="uf-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
+                <div className="mt-5">
+                  <Label>Role</Label>
+                  <div className="mt-1.5 grid grid-cols-3 gap-3">
+                    {(["owner", "admin", "staff"] as const).map((r) => {
+                      const Icon = roleIcons[r];
+                      const selected = role === r;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => handleRoleChange(r)}
+                          className={cn(
+                            "flex flex-col items-center gap-1 rounded-lg border p-3 text-sm transition-colors",
+                            selected
+                              ? "border-primary bg-primary/5 text-primary font-medium"
+                              : "border-border text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground"
+                          )}
+                          aria-pressed={selected}
+                        >
+                          <Icon className="size-5" />
+                          <span className="capitalize">{r}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Role permissions are applied automatically.
+                  </p>
+                </div>
 
-              <div>
-                <Label htmlFor="uf-jobTitle">Job title</Label>
-                <Input id="uf-jobTitle" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
-              </div>
-
-              <div>
-                <Label htmlFor="uf-password">Password</Label>
-                <Input id="uf-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 12 characters" />
-                {passwordErr && <p className="mt-1 text-sm text-red-500">{passwordErr}</p>}
-              </div>
-
-              <div>
-                <Label>Role</Label>
-                <Select value={role} onValueChange={handleRoleChange}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="owner">Owner</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Send login details via</Label>
-                <Select value={sendMethod} onValueChange={(v) => setSendMethod(v as "none" | "email")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Manually copy later</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="mb-2 block">Permissions</Label>
-                <div className="max-h-48 space-y-1 overflow-y-auto rounded border p-2 text-sm">
-                  {Object.values(PERMISSIONS).map((perm) => {
-                    const disabled = isOwnerOnly(perm) && role !== "owner";
-                    const checked = grants.includes(perm);
-                    return (
-                      <label key={perm} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={disabled || checked}
-                          disabled={disabled}
-                          onChange={() => togglePermission(perm)}
-                        />
-                        <span className={disabled ? "text-gray-400" : ""}>{perm}</span>
-                      </label>
-                    );
-                  })}
+                <div className="mt-5">
+                  <Label className="mb-2 block">Permissions</Label>
+                  <div className="max-h-64 overflow-y-auto rounded-lg border p-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {permissionGroups.map((group) => (
+                        <div key={group.label}>
+                          <h4 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+                            {group.label}
+                          </h4>
+                          <div className="space-y-1">
+                            {group.permissions.map((perm) => {
+                              const disabled = isOwnerOnly(perm) && role !== "owner";
+                              const checked = grants.includes(perm);
+                              return (
+                                <label
+                                  key={perm}
+                                  className={cn(
+                                    "flex cursor-pointer items-center gap-2 text-sm",
+                                    disabled && "cursor-not-allowed"
+                                  )}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={disabled || checked}
+                                    disabled={disabled}
+                                    onChange={() => togglePermission(perm)}
+                                    className="size-4 rounded border-border"
+                                  />
+                                  <span className={disabled ? "text-muted-foreground" : ""}>
+                                    {permissionLabel(perm)}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+              <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-4">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
                 <Button type="submit" disabled={submitting}>
                   {submitting ? "Creating..." : "Create user"}
                 </Button>
@@ -196,6 +311,6 @@ export function UserForm({ onCreated }: UserFormProps) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

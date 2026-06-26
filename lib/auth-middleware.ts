@@ -14,7 +14,11 @@ function isActiveUser(user: { status: string | null; deletedAt: Date | null } | 
 }
 
 export async function getCurrentSession() {
-  return getAuth().api.getSession({ headers: await headers() });
+  try {
+    return await getAuth().api.getSession({ headers: await headers() });
+  } catch {
+    return null;
+  }
 }
 
 async function getUserStatus(userId: string): Promise<{ status: string | null; deletedAt: Date | null } | undefined> {
@@ -30,11 +34,15 @@ async function getUserStatus(userId: string): Promise<{ status: string | null; d
 }
 
 export async function requireAuth() {
-  const session = await getCurrentSession();
-  if (!session || !isRole(session.user.role)) redirect("/login");
-  const dbUser = await getUserStatus(session.user.id);
-  if (dbUser && !isActiveUser(dbUser)) redirect("/login");
-  return session;
+  try {
+    const session = await getCurrentSession();
+    if (!session || !isRole(session.user.role)) redirect("/login");
+    const dbUser = await getUserStatus(session.user.id);
+    if (dbUser && !isActiveUser(dbUser)) redirect("/login");
+    return session;
+  } catch {
+    redirect("/login");
+  }
 }
 
 export async function requireRole(allowedRoles: readonly Role[]) {
@@ -44,11 +52,15 @@ export async function requireRole(allowedRoles: readonly Role[]) {
 }
 
 export async function authorizeRequest(requestHeaders: Headers, allowedRoles: readonly Role[]) {
-  const session = await getAuth().api.getSession({ headers: requestHeaders });
-  if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
+  try {
+    const session = await getAuth().api.getSession({ headers: requestHeaders });
+    if (!session || !isRole(session.user.role) || !allowedRoles.includes(session.user.role)) {
+      return null;
+    }
+    const dbUser = await getUserStatus(session.user.id);
+    if (dbUser && !isActiveUser(dbUser)) return null;
+    return session;
+  } catch {
     return null;
   }
-  const dbUser = await getUserStatus(session.user.id);
-  if (dbUser && !isActiveUser(dbUser)) return null;
-  return session;
 }

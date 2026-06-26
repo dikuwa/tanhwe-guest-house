@@ -13,7 +13,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
       <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
         <TanhweLogo href="/" size="sm" />
-        <SiteNavigation />
+        <SiteNavigation phone={settings.phone} whatsapp={settings.whatsapp} />
         <div className="flex items-center gap-2">
           <a
             href={phoneHref}

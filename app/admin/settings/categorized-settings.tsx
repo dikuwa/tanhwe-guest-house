@@ -138,7 +138,7 @@ function SettingRow({ setting }: { setting: Setting }) {
             required
             className="flex-1"
           />
-          <Button type="submit" variant="outline" size="sm" disabled={saving}>
+          <Button type="submit" variant="outline" disabled={saving}>
             {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
             {saving ? "Saving..." : "Save"}
           </Button>
@@ -155,7 +155,7 @@ function SettingRow({ setting }: { setting: Setting }) {
         <p className="mt-1 text-xs text-neutral-400">{setting.key}</p>
       </div>
       <Input id={`setting-${setting.key}`} name="value" value={value} onChange={(e) => setValue(e.target.value)} required />
-      <Button type="submit" variant="outline" size="sm" disabled={saving}>
+      <Button type="submit" variant="outline" disabled={saving}>
         {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
         {saving ? "Saving..." : "Save"}
       </Button>

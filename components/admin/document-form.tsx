@@ -61,9 +61,9 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
+      className="grid gap-4 rounded-xl border bg-card p-5 shadow-xs lg:grid-cols-[1.6fr_1.1fr_1fr_auto] lg:items-end md:grid-cols-2"
     >
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <Label htmlFor="document-booking">Booking</Label>
         <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
           <SelectTrigger id="document-booking" className="w-full">
@@ -78,7 +78,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <Label htmlFor="document-type">Document type</Label>
         <Select value={type} onValueChange={(v) => v && setType(v)}>
           <SelectTrigger id="document-type" className="w-full">
@@ -91,21 +91,20 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="expiresAt">Valid until</Label>
+      <div className="space-y-1.5 min-w-0">
+        <Label htmlFor="expiresAt">
+          Valid until <span className="text-muted-foreground font-normal">(optional)</span>
+        </Label>
         <Popover>
-          <PopoverTrigger>
-            <button
-              id="expiresAt"
-              type="button"
-              className={cn(
-                "mt-2 flex w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                expiresAt ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              {expiresAt ? format(expiresAt, "d MMM yyyy") : "Optional"}
-            </button>
+          <PopoverTrigger
+            id="expiresAt"
+            className={cn(
+              "flex h-11 w-full items-center rounded-lg border border-input bg-transparent px-3 text-sm transition-colors",
+              "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+              expiresAt ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
+            {expiresAt ? format(expiresAt, "d MMM yyyy") : "Pick a date"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar
@@ -123,7 +122,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
         {saving ? "Creating..." : "Create"}
       </Button>
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 md:col-span-4">
+        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 md:col-span-2 lg:col-span-4">
           {error}
         </p>
       )}

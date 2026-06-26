@@ -162,7 +162,7 @@ function FaqRow({
               id={`faq-q-${faq.id}`}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="mt-1.5 h-12"
+              className="mt-1.5"
               required
             />
           </div>
@@ -185,7 +185,7 @@ function FaqRow({
                 min="0"
                 value={sortOrder}
                 onChange={(e) => setSortOrder(Number(e.target.value))}
-                className="mt-1.5 h-10 w-24"
+                className="mt-1.5 w-24"
               />
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-6">
@@ -199,10 +199,10 @@ function FaqRow({
             </label>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={onCancel} disabled={saving}>
+            <Button variant="outline" onClick={onCancel} disabled={saving}>
               Cancel
             </Button>
-            <Button size="sm" disabled={saving || !question.trim() || !answer.trim()} onClick={() => onSave({ id: faq.id.startsWith("new-") ? undefined : faq.id, question, answer, sortOrder, active })}>
+            <Button disabled={saving || !question.trim() || !answer.trim()} onClick={() => onSave({ id: faq.id.startsWith("new-") ? undefined : faq.id, question, answer, sortOrder, active })}>
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
               {faq.id.startsWith("new-") ? "Create" : "Save"}
             </Button>

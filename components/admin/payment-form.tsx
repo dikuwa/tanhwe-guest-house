@@ -60,9 +60,9 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs md:grid-cols-[1.6fr_1fr_1fr_auto] md:items-end"
+      className="grid gap-4 rounded-xl border bg-card p-5 shadow-xs lg:grid-cols-[1.5fr_1fr_1fr_auto] lg:items-end md:grid-cols-2"
     >
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <Label htmlFor="payment-booking">Booking</Label>
         <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
           <SelectTrigger id="payment-booking" className="w-full">
@@ -77,11 +77,11 @@ export function PaymentForm({ bookings }: { bookings: BookingOption[] }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <Label htmlFor="payment-amount">Amount (N$)</Label>
-        <Input id="payment-amount" name="amount" type="number" min="1" step="1" required className="mt-2" />
+        <Input id="payment-amount" name="amount" type="number" min="1" step="1" required />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 min-w-0">
         <Label htmlFor="payment-method">Method</Label>
         <Select value={paymentMethod} onValueChange={(v) => v && setPaymentMethod(v)}>
           <SelectTrigger id="payment-method" className="w-full">

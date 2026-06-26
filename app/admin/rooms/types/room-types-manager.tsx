@@ -190,12 +190,12 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button type="submit" size="sm" disabled={saving === type.id}>
-                  {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
+                <Button type="submit" disabled={saving === type.id}>
+                  {saving === type.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                   Save
                 </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(null)}>
-                  <X className="size-3.5" />
+                <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                  <X className="size-4" />
                   Cancel
                 </Button>
               </div>

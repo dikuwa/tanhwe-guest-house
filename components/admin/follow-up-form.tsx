@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { PrioritySelect } from "@/components/forms/priority-select";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+
 
 type OptionBase = { id: string; label: string };
 type BookingOption = OptionBase & { customerId: string; customerName?: string; checkIn?: Date };
@@ -157,18 +157,11 @@ export function FollowUpForm({ options, onCreated }: { options: Options; onCreat
       <div className="space-y-1.5">
         <Label htmlFor="follow-due">Due date</Label>
         <Popover>
-          <PopoverTrigger>
-            <button
-              id="follow-due"
-              type="button"
-              className={cn(
-                "mt-2 flex w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-                "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-                dueDate ? "text-neutral-800" : "text-neutral-400"
-              )}
-            >
-              {dueDate ? format(dueDate, "d MMM yyyy") : "Select date"}
-            </button>
+          <PopoverTrigger
+            id="follow-due"
+            className="flex h-11 w-full items-center rounded-lg border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
+          >
+            {dueDate ? format(dueDate, "d MMM yyyy") : "Select date"}
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
             <Calendar

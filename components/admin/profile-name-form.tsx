@@ -37,7 +37,7 @@ export function ProfileNameForm({ userName }: { userName: string }) {
         <Label htmlFor="profile-name">Display name</Label>
         <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1" required />
       </div>
-      <Button type="submit" variant="outline" size="sm" disabled={saving || name.trim() === userName}>
+      <Button type="submit" variant="outline" disabled={saving || name.trim() === userName}>
         {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}
         {saving ? "Saving..." : "Save"}
       </Button>

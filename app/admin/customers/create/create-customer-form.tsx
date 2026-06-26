@@ -66,27 +66,27 @@ export function CreateCustomerForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Label htmlFor="fullName">Full name</Label>
-          <Input id="fullName" name="fullName" className="mt-2 h-12" required />
+          <Input id="fullName" name="fullName" className="mt-2" required />
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" type="tel" className="mt-2 h-12" placeholder="+264 XX XXX XXXX" required />
+          <Input id="phone" name="phone" type="tel" className="mt-2" placeholder="+264 XX XXX XXXX" required />
         </div>
         <div>
           <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional)</span></Label>
-          <Input id="whatsapp" name="whatsapp" type="tel" className="mt-2 h-12" placeholder="Same as phone if left empty" />
+          <Input id="whatsapp" name="whatsapp" type="tel" className="mt-2" placeholder="Same as phone if left empty" />
         </div>
         <div>
           <Label htmlFor="email">Email (optional)</Label>
-          <Input id="email" name="email" type="email" className="mt-2 h-12" />
+          <Input id="email" name="email" type="email" className="mt-2" />
         </div>
         <div>
           <Label htmlFor="address">Address (optional)</Label>
-          <Input id="address" name="address" className="mt-2 h-12" />
+          <Input id="address" name="address" className="mt-2" />
         </div>
         <div>
           <Label htmlFor="idOrPassport">ID or passport (optional)</Label>
-          <Input id="idOrPassport" name="idOrPassport" className="mt-2 h-12" />
+          <Input id="idOrPassport" name="idOrPassport" className="mt-2" />
         </div>
         <div className="sm:col-span-2">
           <Label htmlFor="notes">Notes (optional)</Label>

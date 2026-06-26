@@ -33,7 +33,7 @@ export function SettingsForm({ settings }: { settings: Setting[] }) {
             <p className="mt-1 text-xs text-neutral-400">{setting.key}</p>
           </div>
           <Input id={`setting-${setting.key}`} name="value" defaultValue={setting.value} required />
-          <Button type="submit" variant="outline" size="sm">
+          <Button type="submit" variant="outline">
             <Save className="size-3.5" />
             Save
           </Button>

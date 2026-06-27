@@ -298,7 +298,7 @@ function TestimonialRow({
                 type="checkbox"
                 checked={featured}
                 onChange={(e) => setFeatured(e.target.checked)}
-                className="size-4 rounded border-neutral-300"
+                className="size-4 rounded accent-primary"
               />
               <Star className="size-3.5 text-amber-500" />
               Featured
@@ -308,7 +308,7 @@ function TestimonialRow({
                 type="checkbox"
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
-                className="size-4 rounded border-neutral-300"
+                className="size-4 rounded accent-primary"
               />
               Active
             </label>

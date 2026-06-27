@@ -283,7 +283,7 @@ export function UserForm({ onCreated }: UserFormProps) {
                                     checked={disabled || checked}
                                     disabled={disabled}
                                     onChange={() => togglePermission(perm)}
-                                    className="size-4 rounded border-border"
+                                    className="size-4 rounded accent-primary"
                                   />
                                   <span className={disabled ? "text-muted-foreground" : ""}>
                                     {permissionLabel(perm)}

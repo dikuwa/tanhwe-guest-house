@@ -193,7 +193,7 @@ function FaqRow({
                 type="checkbox"
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
-                className="size-4 rounded border-neutral-300"
+                className="size-4 rounded accent-primary"
               />
               Active
             </label>

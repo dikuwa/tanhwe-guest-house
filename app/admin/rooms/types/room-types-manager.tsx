@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -38,6 +39,7 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
   const [saving, setSaving] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,6 +163,23 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
     }
   }
 
+  async function handleDelete(id: string) {
+    setDeleteConfirm(null);
+    setSaving(id);
+    try {
+      const response = await fetch(`/api/admin/room-types/${id}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return void toast.error(data.error ?? data.detail ?? "Could not delete room type");
+      toast.success("Room type deleted");
+      setTypes((prev) => prev.filter((t) => t.id !== id));
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not delete room type");
+    } finally {
+      setSaving(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {types.length === 0 ? (
@@ -252,6 +271,9 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
                     <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-amber-600" onClick={() => handleArchive(type.id, type.status)} title={type.status === "active" ? "Archive" : "Activate"} disabled={saving === type.id}>
                       {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : type.status === "active" ? <Trash2 className="size-3.5" /> : <Check className="size-3.5 text-emerald-500" />}
                     </Button>
+                    <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-red-600" onClick={() => setDeleteConfirm(type.id)} title="Delete" disabled={saving === type.id}>
+                      {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                    </Button>
                   </div>
                 </div>
               )}
@@ -305,6 +327,17 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
           </form>
         </DialogContent>
       </Dialog>
+      {deleteConfirm && (
+        <ConfirmDialog
+          open={!!deleteConfirm}
+          onOpenChange={() => setDeleteConfirm(null)}
+          onConfirm={() => handleDelete(deleteConfirm)}
+          title="Delete room type?"
+          description="This will permanently delete this room type. Only room types not associated with any rooms can be deleted. Archive the type instead if it has rooms assigned."
+          confirmLabel="Delete"
+          variant="destructive"
+        />
+      )}
     </div>
   );
 }

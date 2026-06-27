@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Loader2, Plus, Save, Trash2, EyeOff, Star, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -294,21 +295,17 @@ function TestimonialRow({
               />
             </div>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-6">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-                className="size-4 rounded accent-primary"
+                onCheckedChange={(checked) => setFeatured(checked)}
               />
               <Star className="size-3.5 text-amber-500" />
               Featured
             </label>
             <label className="flex cursor-pointer items-center gap-2 text-sm text-neutral-700 mt-6">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={active}
-                onChange={(e) => setActive(e.target.checked)}
-                className="size-4 rounded accent-primary"
+                onCheckedChange={(checked) => setActive(checked)}
               />
               Active
             </label>

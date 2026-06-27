@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -278,12 +279,10 @@ export function UserForm({ onCreated }: UserFormProps) {
                                     disabled && "cursor-not-allowed"
                                   )}
                                 >
-                                  <input
-                                    type="checkbox"
+                                  <Checkbox
                                     checked={disabled || checked}
                                     disabled={disabled}
-                                    onChange={() => togglePermission(perm)}
-                                    className="size-4 rounded accent-primary"
+                                    onCheckedChange={() => togglePermission(perm)}
                                   />
                                   <span className={disabled ? "text-muted-foreground" : ""}>
                                     {permissionLabel(perm)}

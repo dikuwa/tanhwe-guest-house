@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatusPill } from "@/components/ui/status-pill";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   Dialog,
@@ -27,9 +28,6 @@ type Block = {
   isActive: boolean;
   roomUnitCount: number;
 };
-
-const activePill = "bg-blue-100 text-blue-800";
-const inactivePill = "bg-gray-100 text-gray-600";
 
 export function BlocksManager() {
   const router = useRouter();
@@ -225,9 +223,7 @@ export function BlocksManager() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-neutral-800">{block.name}</h3>
                       <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium font-mono leading-none text-gray-600">{block.shortCode}</span>
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-none ${block.isActive ? activePill : inactivePill}`}>
-                        {block.isActive ? "Active" : "Inactive"}
-                      </span>
+                      <StatusPill status={block.isActive ? "active" : "inactive"} label={block.isActive ? "Active" : "Inactive"} />
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {block.roomUnitCount} room unit{block.roomUnitCount === 1 ? "" : "s"}

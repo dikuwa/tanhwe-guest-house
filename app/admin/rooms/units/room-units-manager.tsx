@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatusPill } from "@/components/ui/status-pill";
 import {
   Select,
   SelectContent,
@@ -59,19 +60,6 @@ type RoomUnit = {
   roomName: string;
   roomSlug: string;
   roomStatus: string;
-};
-
-const recordStatusColors: Record<string, string> = {
-  true: "bg-blue-100 text-blue-800",
-  false: "bg-gray-100 text-gray-600",
-};
-
-const opStatusColors: Record<string, string> = {
-  available: "bg-blue-100 text-blue-800",
-  cleaning: "bg-yellow-100 text-yellow-800",
-  maintenance: "bg-orange-100 text-orange-800",
-  blocked: "bg-red-100 text-red-800",
-  inactive: "bg-gray-100 text-gray-600",
 };
 
 export function RoomUnitsManager({
@@ -222,15 +210,28 @@ export function RoomUnitsManager({
 
   async function handleUpdate(id: string, event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
+    const formEl = event.currentTarget;
+    const form = new FormData(formEl);
+
+    function val(name: string): string {
+      const v = form.get(name);
+      const s = v != null ? String(v) : "";
+      if (s && s !== "null") return s;
+      const el = formEl.querySelector<HTMLInputElement>(`input[name="${name}"]`);
+      return el?.value ?? "";
+    }
+
     const payload: Record<string, unknown> = {
-      blockId: String(form.get("blockId")),
+      blockId: val("blockId"),
       roomNumber: Number(form.get("roomNumber")),
-      roomId: String(form.get("roomId")),
-      operationalStatus: String(form.get("operationalStatus")),
+      roomId: val("roomId"),
+      operationalStatus: val("operationalStatus"),
       isActive: form.get("isActive") === "on",
       notes: String(form.get("notes") ?? "").trim() || null,
     };
+
+    if (!payload.blockId || payload.blockId === "null" || !payload.roomId || payload.roomId === "null")
+      return toast.error("Form values not captured correctly. Please try again.");
 
     setSaving(id);
     try {
@@ -453,16 +454,8 @@ export function RoomUnitsManager({
 
                     {/* Column 4: Status pills */}
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-none ${recordStatusColors[String(unit.isActive)]}`}
-                      >
-                        {unit.isActive ? "Active" : "Inactive"}
-                      </span>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize leading-none ${opStatusColors[unit.operationalStatus] ?? "bg-gray-100 text-gray-600"}`}
-                      >
-                        {unit.operationalStatus}
-                      </span>
+                      <StatusPill status={unit.isActive ? "active" : "inactive"} label={unit.isActive ? "Active" : "Inactive"} />
+                      <StatusPill status={unit.operationalStatus} />
                     </div>
 
                     {/* Column 5: Actions */}

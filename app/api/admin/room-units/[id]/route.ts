@@ -60,11 +60,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   try {
     await getDb().update(roomUnits).set(updates).where(eq(roomUnits.id, id));
-  } catch (error) {
+  } catch (error: unknown) {
     const msg = String(error);
-    if (msg.includes("foreign key constraint") && msg.includes("block_id"))
-      return NextResponse.json({ error: "Selected block does not exist" }, { status: 400 });
-    return NextResponse.json({ error: "Could not update room unit" }, { status: 500 });
+    if (msg.includes("foreign key constraint"))
+      return NextResponse.json({ error: "Referenced record does not exist" }, { status: 400 });
+    if (msg.includes("null value in column"))
+      return NextResponse.json({ error: "Required field cannot be empty" }, { status: 400 });
+    return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }
 
   await getDb().insert(activityLogs).values({

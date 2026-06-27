@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -130,39 +130,6 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
     }
   }
 
-  async function handleArchive(id: string, currentStatus: string) {
-    const newStatus = currentStatus === "active" ? "inactive" : "active";
-    const label = newStatus === "inactive" ? "Archive" : "Activate";
-    setSaving(id);
-    try {
-      const type = types.find((t) => t.id === id);
-      const response = await fetch(`/api/admin/room-types/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: type!.name,
-          slug: type!.slug,
-          description: type!.description ?? "",
-          bedConfiguration: type!.bedConfiguration ?? "",
-          pricePerNight: type!.pricePerNight,
-          maxGuests: type!.maxGuests,
-          breakfastIncluded: type!.breakfastIncluded,
-          sortOrder: type!.sortOrder,
-          status: newStatus,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) return toast.error(data.error ?? `Could not ${label.toLowerCase()} room type`);
-      toast.success(`${type!.name} ${label.toLowerCase()}d`);
-      setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t)));
-      router.refresh();
-    } catch (e) {
-      toast.error(`Could not ${label.toLowerCase()} room type`);
-    } finally {
-      setSaving(null);
-    }
-  }
-
   async function handleDelete(id: string) {
     setDeleteConfirm(null);
     setSaving(id);
@@ -267,9 +234,6 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
                   <div className="flex shrink-0 gap-1">
                     <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(type.id)} title="Edit">
                       <Edit3 className="size-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-amber-600" onClick={() => handleArchive(type.id, type.status)} title={type.status === "active" ? "Archive" : "Activate"} disabled={saving === type.id}>
-                      {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : type.status === "active" ? <Trash2 className="size-3.5" /> : <Check className="size-3.5 text-emerald-500" />}
                     </Button>
                     <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-red-600" onClick={() => setDeleteConfirm(type.id)} title="Delete" disabled={saving === type.id}>
                       {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}

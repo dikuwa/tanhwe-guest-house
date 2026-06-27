@@ -62,15 +62,17 @@ function SelectContent({
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
+  portal = true,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
-  return (
-    <SelectPrimitive.Portal>
-      <SelectPrimitive.Positioner
+  > & {
+    portal?: boolean;
+  }) {
+  const inner = (
+    <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
         align={align}
@@ -92,8 +94,8 @@ function SelectContent({
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
-    </SelectPrimitive.Portal>
   );
+  return portal ? <SelectPrimitive.Portal>{inner}</SelectPrimitive.Portal> : inner;
 }
 
 function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) {

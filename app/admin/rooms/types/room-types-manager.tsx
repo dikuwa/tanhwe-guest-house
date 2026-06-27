@@ -10,6 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type RoomType = {
   id: string;
@@ -141,7 +148,7 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
 
   return (
     <div className="space-y-4">
-      {types.length === 0 && !showCreate && (
+      {types.length === 0 ? (
         <div className="rounded-xl border border-dashed border-neutral-300 p-10 text-center">
           <p className="text-sm text-muted-foreground">No room types have been added yet.</p>
           <Button className="mt-4" onClick={() => setShowCreate(true)}>
@@ -149,135 +156,140 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
             Add room type
           </Button>
         </div>
-      )}
-
-      {types.map((type) => (
-        <div key={type.id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
-          {editing === type.id ? (
-            <form onSubmit={(e) => handleUpdate(type.id, e)} className="space-y-4">
-              <input type="hidden" name="sortOrder" value={type.sortOrder} />
-              <input type="hidden" name="status" value={type.status} />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor={`edit-name-${type.id}`}>Name</Label>
-                  <Input id={`edit-name-${type.id}`} name="name" defaultValue={type.name} className="mt-1" required />
-                </div>
-                <div>
-                  <Label htmlFor={`edit-slug-${type.id}`}>Slug</Label>
-                  <Input id={`edit-slug-${type.id}`} name="slug" defaultValue={type.slug} className="mt-1" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
-                </div>
-                <div>
-                  <Label htmlFor={`edit-price-${type.id}`}>Default price (N$)</Label>
-                  <Input id={`edit-price-${type.id}`} name="pricePerNight" type="number" min="0" defaultValue={type.pricePerNight} className="mt-1" required />
-                </div>
-                <div>
-                  <Label htmlFor={`edit-guests-${type.id}`}>Max guests</Label>
-                  <Input id={`edit-guests-${type.id}`} name="maxGuests" type="number" min="1" defaultValue={type.maxGuests} className="mt-1" required />
-                </div>
-                <div>
-                  <Label htmlFor={`edit-bed-${type.id}`}>Bed configuration</Label>
-                  <Input id={`edit-bed-${type.id}`} name="bedConfiguration" defaultValue={type.bedConfiguration ?? ""} className="mt-1" placeholder="e.g. 1 double bed" />
-                </div>
-                <div className="flex items-end pb-2">
-                  <label className="flex cursor-pointer items-center gap-2 text-sm">
-                    <Checkbox name="breakfastIncluded" defaultChecked={type.breakfastIncluded} />
-                    Breakfast included
-                  </label>
-                </div>
-                <div className="sm:col-span-2">
-                  <Label htmlFor={`edit-desc-${type.id}`}>Description</Label>
-                  <Textarea id={`edit-desc-${type.id}`} name="description" defaultValue={type.description ?? ""} className="mt-1" rows={2} />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit" disabled={saving === type.id}>
-                  {saving === type.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                  Save
-                </Button>
-                <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
-                  <X className="size-4" />
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-neutral-800">{type.name}</h3>
-                  {type.status !== "active" && (
-                    <Badge variant="outline" className="text-xs text-neutral-400">Archived</Badge>
-                  )}
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {type.bedConfiguration ?? "—"} &middot; N${type.pricePerNight}/night &middot; Up to {type.maxGuests} guest{type.maxGuests === 1 ? "" : "s"}
-                </p>
-                {type.description && (
-                  <p className="mt-1 text-sm text-neutral-600">{type.description}</p>
-                )}
-              </div>
-              <div className="flex shrink-0 gap-1">
-                <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(type.id)} title="Edit">
-                  <Edit3 className="size-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="size-8" onClick={() => handleArchive(type.id, type.status)} title={type.status === "active" ? "Archive" : "Activate"} disabled={saving === type.id}>
-                  {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : type.status === "active" ? <Trash2 className="size-3.5 text-neutral-400" /> : <Check className="size-3.5 text-emerald-500" />}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-
-      {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
-          <h3 className="font-semibold text-neutral-800">New room type</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="new-name">Name</Label>
-              <Input id="new-name" name="name" value={createName} onChange={(e) => setCreateName(e.target.value)} className="mt-1" placeholder="e.g. Standard Twin Room" required />
-            </div>
-            <div>
-              <Label htmlFor="new-price">Default price (N$)</Label>
-              <Input id="new-price" name="pricePerNight" type="number" min="0" defaultValue="0" className="mt-1" required />
-            </div>
-            <div>
-              <Label htmlFor="new-guests">Max guests</Label>
-              <Input id="new-guests" name="maxGuests" type="number" min="1" defaultValue="2" className="mt-1" required />
-            </div>
-            <div>
-              <Label htmlFor="new-bed">Bed configuration</Label>
-              <Input id="new-bed" name="bedConfiguration" className="mt-1" placeholder="e.g. 1 double bed" />
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="new-desc">Description</Label>
-              <Textarea id="new-desc" name="description" className="mt-1" rows={2} />
-            </div>
-            <div className="flex items-end pb-2">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
-                <Checkbox name="breakfastIncluded" />
-                Breakfast included by default
-              </label>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <Button type="submit" disabled={saving === "new"}>
-              {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-              Create room type
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => { setShowCreate(false); setCreateName(""); }}>
-              Cancel
+      ) : (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{types.length} room type{types.length === 1 ? "" : "s"}</p>
+            <Button size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="size-4" />
+              Add room type
             </Button>
           </div>
-        </form>
+          {types.map((type) => (
+            <div key={type.id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+              {editing === type.id ? (
+                <form onSubmit={(e) => handleUpdate(type.id, e)} className="space-y-4">
+                  <input type="hidden" name="sortOrder" value={type.sortOrder} />
+                  <input type="hidden" name="status" value={type.status} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor={`edit-name-${type.id}`}>Name</Label>
+                      <Input id={`edit-name-${type.id}`} name="name" defaultValue={type.name} className="mt-1" required />
+                    </div>
+                    <div>
+                      <Label htmlFor={`edit-slug-${type.id}`}>Slug</Label>
+                      <Input id={`edit-slug-${type.id}`} name="slug" defaultValue={type.slug} className="mt-1" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
+                    </div>
+                    <div>
+                      <Label htmlFor={`edit-price-${type.id}`}>Default price (N$)</Label>
+                      <Input id={`edit-price-${type.id}`} name="pricePerNight" type="number" min="0" defaultValue={type.pricePerNight} className="mt-1" required />
+                    </div>
+                    <div>
+                      <Label htmlFor={`edit-guests-${type.id}`}>Max guests</Label>
+                      <Input id={`edit-guests-${type.id}`} name="maxGuests" type="number" min="1" defaultValue={type.maxGuests} className="mt-1" required />
+                    </div>
+                    <div>
+                      <Label htmlFor={`edit-bed-${type.id}`}>Bed configuration</Label>
+                      <Input id={`edit-bed-${type.id}`} name="bedConfiguration" defaultValue={type.bedConfiguration ?? ""} className="mt-1" placeholder="e.g. 1 double bed" />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <Checkbox name="breakfastIncluded" defaultChecked={type.breakfastIncluded} />
+                        Breakfast included
+                      </label>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor={`edit-desc-${type.id}`}>Description</Label>
+                      <Textarea id={`edit-desc-${type.id}`} name="description" defaultValue={type.description ?? ""} className="mt-1" rows={2} />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={saving === type.id}>
+                      {saving === type.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                      Save
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                      <X className="size-4" />
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-neutral-800">{type.name}</h3>
+                      {type.status !== "active" && (
+                        <Badge variant="outline" className="text-xs text-neutral-400">Archived</Badge>
+                      )}
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {type.bedConfiguration ?? "—"} &middot; N${type.pricePerNight}/night &middot; Up to {type.maxGuests} guest{type.maxGuests === 1 ? "" : "s"}
+                    </p>
+                    {type.description && (
+                      <p className="mt-1 text-sm text-neutral-600">{type.description}</p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(type.id)} title="Edit">
+                      <Edit3 className="size-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-amber-600" onClick={() => handleArchive(type.id, type.status)} title={type.status === "active" ? "Archive" : "Activate"} disabled={saving === type.id}>
+                      {saving === type.id ? <Loader2 className="size-3.5 animate-spin" /> : type.status === "active" ? <Trash2 className="size-3.5" /> : <Check className="size-3.5 text-emerald-500" />}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </>
       )}
 
-      {!showCreate && types.length > 0 && (
-        <Button variant="outline" onClick={() => setShowCreate(true)}>
-          <Plus className="size-4" />
-          Add room type
-        </Button>
-      )}
+      <Dialog open={showCreate} onOpenChange={(v) => { if (saving !== "new") { if (!v) setCreateName(""); setShowCreate(v); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New room type</DialogTitle>
+            <DialogDescription>Add a new room category.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div>
+              <Label htmlFor="dlg-name">Name</Label>
+              <Input id="dlg-name" name="name" value={createName} onChange={(e) => setCreateName(e.target.value)} className="mt-1.5" placeholder="e.g. Standard Twin Room" required />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="dlg-price">Default price (N$)</Label>
+                <Input id="dlg-price" name="pricePerNight" type="number" min="0" defaultValue="0" className="mt-1.5" required />
+              </div>
+              <div>
+                <Label htmlFor="dlg-guests">Max guests</Label>
+                <Input id="dlg-guests" name="maxGuests" type="number" min="1" defaultValue="2" className="mt-1.5" required />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="dlg-bed">Bed configuration</Label>
+              <Input id="dlg-bed" name="bedConfiguration" className="mt-1.5" placeholder="e.g. 1 double bed" />
+            </div>
+            <div>
+              <Label htmlFor="dlg-desc">Description</Label>
+              <Textarea id="dlg-desc" name="description" className="mt-1.5" rows={2} />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox name="breakfastIncluded" />
+              <span className="text-sm">Breakfast included by default</span>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setShowCreate(false); setCreateName(""); }} disabled={saving === "new"}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving === "new"}>
+                {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                Create room type
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

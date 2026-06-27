@@ -8,8 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type Block = {
   id: string;
@@ -20,6 +26,9 @@ type Block = {
   isActive: boolean;
   roomUnitCount: number;
 };
+
+const activePill = "bg-blue-100 text-blue-800";
+const inactivePill = "bg-gray-100 text-gray-600";
 
 export function BlocksManager() {
   const router = useRouter();
@@ -140,7 +149,7 @@ export function BlocksManager() {
         <div className="flex items-center justify-center py-16">
           <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </div>
-      ) : blocks.length === 0 && !showCreate ? (
+      ) : blocks.length === 0 ? (
         <div className="rounded-xl border border-dashed border-neutral-300 p-10 text-center">
           <p className="text-sm text-muted-foreground">No blocks have been added yet.</p>
           <Button className="mt-4" onClick={() => setShowCreate(true)}>
@@ -149,121 +158,124 @@ export function BlocksManager() {
           </Button>
         </div>
       ) : (
-        blocks.map((block) => (
-          <div key={block.id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
-            {editing === block.id ? (
-              <form onSubmit={(e) => handleUpdate(block.id, e)} className="space-y-4">
-                <input type="hidden" name="displayOrder" value={block.displayOrder} />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor={`edit-name-${block.id}`}>Block name</Label>
-                    <Input id={`edit-name-${block.id}`} name="name" defaultValue={block.name} className="mt-1" required />
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{blocks.length} block{blocks.length === 1 ? "" : "s"}</p>
+            <Button size="sm" onClick={() => setShowCreate(true)}>
+              <Plus className="size-4" />
+              Add block
+            </Button>
+          </div>
+          {blocks.map((block) => (
+            <div key={block.id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+              {editing === block.id ? (
+                <form onSubmit={(e) => handleUpdate(block.id, e)} className="space-y-4">
+                  <input type="hidden" name="displayOrder" value={block.displayOrder} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor={`edit-name-${block.id}`}>Block name</Label>
+                      <Input id={`edit-name-${block.id}`} name="name" defaultValue={block.name} className="mt-1" required />
+                    </div>
+                    <div>
+                      <Label htmlFor={`edit-code-${block.id}`}>Short code</Label>
+                      <Input id={`edit-code-${block.id}`} name="shortCode" defaultValue={block.shortCode} className="mt-1 uppercase" required maxLength={10} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor={`edit-desc-${block.id}`}>Description (optional)</Label>
+                      <Textarea id={`edit-desc-${block.id}`} name="description" defaultValue={block.description ?? ""} className="mt-1" rows={2} />
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <label className="flex cursor-pointer items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name="isActive"
+                          defaultChecked={block.isActive}
+                          className="size-4 rounded border-neutral-300"
+                        />
+                        Active
+                      </label>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor={`edit-code-${block.id}`}>Short code</Label>
-                    <Input id={`edit-code-${block.id}`} name="shortCode" defaultValue={block.shortCode} className="mt-1 uppercase" required maxLength={10} />
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={saving === block.id}>
+                      {saving === block.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                      Save
+                    </Button>
+                    <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                      <X className="size-4" />
+                      Cancel
+                    </Button>
                   </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor={`edit-desc-${block.id}`}>Description (optional)</Label>
-                    <Textarea id={`edit-desc-${block.id}`} name="description" defaultValue={block.description ?? ""} className="mt-1" rows={2} />
-                  </div>
-                  <div className="flex items-end pb-2">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="isActive"
-                        defaultChecked={block.isActive}
-                        className="size-4 rounded border-neutral-300"
-                      />
-                      Active
-                    </label>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={saving === block.id}>
-                    {saving === block.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                    Save
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
-                    <X className="size-4" />
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-neutral-800">{block.name}</h3>
-                    <Badge variant="outline" className="text-[10px] font-mono">{block.shortCode}</Badge>
-                    {block.isActive ? (
-                      <Badge variant="secondary" className="text-[10px]">Active</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] text-neutral-400">Inactive</Badge>
+                </form>
+              ) : (
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-semibold text-neutral-800">{block.name}</h3>
+                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium font-mono leading-none text-gray-600">{block.shortCode}</span>
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-none ${block.isActive ? activePill : inactivePill}`}>
+                        {block.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {block.roomUnitCount} room unit{block.roomUnitCount === 1 ? "" : "s"}
+                    </p>
+                    {block.description && (
+                      <p className="mt-1 text-sm text-neutral-600">{block.description}</p>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {block.roomUnitCount} room unit{block.roomUnitCount === 1 ? "" : "s"}
-                  </p>
-                  {block.description && (
-                    <p className="mt-1 text-sm text-neutral-600">{block.description}</p>
-                  )}
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(block.id)} title="Edit">
-                    <Edit3 className="size-3.5" />
-                  </Button>
-                  {block.isActive ? (
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => handleDeactivate(block.id, true)} title="Deactivate" disabled={saving === block.id}>
-                      {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-neutral-400" />}
+                  <div className="flex shrink-0 gap-1">
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(block.id)} title="Edit">
+                      <Edit3 className="size-3.5" />
                     </Button>
-                  ) : (
-                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setDeleteConfirm(block)} title="Delete" disabled={saving === block.id}>
-                      {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-destructive" />}
-                    </Button>
-                  )}
+                    {block.isActive ? (
+                      <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-red-600" onClick={() => handleDeactivate(block.id, true)} title="Deactivate" disabled={saving === block.id}>
+                        {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="icon" className="size-8 text-neutral-400 hover:text-red-600" onClick={() => setDeleteConfirm(block)} title="Delete" disabled={saving === block.id}>
+                        {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))
+              )}
+            </div>
+          ))}
+        </>
       )}
 
-      {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
-          <h3 className="font-semibold text-neutral-800">New block</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <Dialog open={showCreate} onOpenChange={(v) => { if (saving !== "new") setShowCreate(v); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New block</DialogTitle>
+            <DialogDescription>Add a new accommodation block or wing.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
             <div>
-              <Label htmlFor="new-name">Block name</Label>
-              <Input id="new-name" name="name" className="mt-1" placeholder="e.g. Garden Wing" required />
+              <Label htmlFor="dlg-name">Block name</Label>
+              <Input id="dlg-name" name="name" className="mt-1.5" placeholder="e.g. Garden Wing" required />
             </div>
             <div>
-              <Label htmlFor="new-code">Short code</Label>
-              <Input id="new-code" name="shortCode" className="mt-1 uppercase" placeholder="e.g. GW" required maxLength={10} />
+              <Label htmlFor="dlg-code">Short code</Label>
+              <Input id="dlg-code" name="shortCode" className="mt-1.5 uppercase" placeholder="e.g. GW" required maxLength={10} />
             </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="new-desc">Description (optional)</Label>
-              <Textarea id="new-desc" name="description" className="mt-1" rows={2} />
+            <div>
+              <Label htmlFor="dlg-desc">Description (optional)</Label>
+              <Textarea id="dlg-desc" name="description" className="mt-1.5" rows={2} />
             </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <Button type="submit" disabled={saving === "new"}>
-              {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-              Create block
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {!showCreate && blocks.length > 0 && (
-        <Button variant="outline" onClick={() => setShowCreate(true)}>
-          <Plus className="size-4" />
-          Add block
-        </Button>
-      )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setShowCreate(false)} disabled={saving === "new"}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving === "new"}>
+                {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                Create block
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {deleteConfirm && (
         <ConfirmDialog

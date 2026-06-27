@@ -16,6 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type Room = {
   id: string;
@@ -482,85 +489,90 @@ export function RoomUnitsManager({
         </div>
       )}
 
-      {/* Create form */}
-      {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
-          <h3 className="font-semibold text-neutral-800">New room unit</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="sm:col-span-2 lg:col-span-1">
-              <Label htmlFor="new-room">Room</Label>
-              <Select name="roomId" defaultValue="">
-                <SelectTrigger id="new-room" className="mt-1 h-10 w-full">
-                  <SelectValue placeholder="Select a room" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.filter((r) => r.status !== "archived").map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="new-block">Block</Label>
-              <Select value={newBlockId} onValueChange={handleBlockChange}>
-                <SelectTrigger id="new-block" className="mt-1 h-10 w-full">
-                  <SelectValue placeholder="Select block" />
-                </SelectTrigger>
-                <SelectContent>
-                  {blocks.filter((b) => b.isActive).map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <input type="hidden" name="blockId" value={newBlockId} />
-              <button
-                type="button"
-                className="mt-1 text-xs font-medium text-primary hover:underline"
-                onClick={() => setShowInlineBlockForm(!showInlineBlockForm)}
-              >
-                {showInlineBlockForm ? "Cancel" : "+ Add new block"}
-              </button>
-              {showInlineBlockForm && (
-                <div className="mt-2 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-                  <Input
-                    placeholder="Block name"
-                    value={newBlockName}
-                    onChange={(e) => setNewBlockName(e.target.value)}
-                    className="h-9 w-full text-sm"
-                  />
-                  <div className="flex gap-2">
+      {/* Create dialog */}
+      <Dialog open={showCreate} onOpenChange={(v) => { if (saving !== "new") { if (!v) { setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); } setShowCreate(v); } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New room unit</DialogTitle>
+            <DialogDescription>Add a new room unit to the inventory.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label htmlFor="dlg-room">Room</Label>
+                <Select name="roomId" defaultValue="">
+                  <SelectTrigger id="dlg-room" className="mt-1.5 h-10 w-full">
+                    <SelectValue placeholder="Select a room" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {rooms.filter((r) => r.status !== "archived").map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="dlg-block">Block</Label>
+                <Select value={newBlockId} onValueChange={handleBlockChange}>
+                  <SelectTrigger id="dlg-block" className="mt-1.5 h-10 w-full">
+                    <SelectValue placeholder="Select block" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {blocks.filter((b) => b.isActive).map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <input type="hidden" name="blockId" value={newBlockId} />
+                <button
+                  type="button"
+                  className="mt-1 text-xs font-medium text-primary hover:underline"
+                  onClick={() => setShowInlineBlockForm(!showInlineBlockForm)}
+                >
+                  {showInlineBlockForm ? "Cancel" : "+ Add new block"}
+                </button>
+                {showInlineBlockForm && (
+                  <div className="mt-2 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
                     <Input
-                      placeholder="Short code"
-                      value={newBlockShortCode}
-                      onChange={(e) => setNewBlockShortCode(e.target.value)}
-                      className="h-9 flex-1 text-sm uppercase"
-                      maxLength={10}
+                      placeholder="Block name"
+                      value={newBlockName}
+                      onChange={(e) => setNewBlockName(e.target.value)}
+                      className="h-9 w-full text-sm"
                     />
-                    <Button type="button" size="sm" className="h-9 shrink-0" onClick={handleInlineCreateBlock}>
-                      <Plus className="size-3.5" />
-                      Add
-                    </Button>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Short code"
+                        value={newBlockShortCode}
+                        onChange={(e) => setNewBlockShortCode(e.target.value)}
+                        className="h-9 flex-1 text-sm uppercase"
+                        maxLength={10}
+                      />
+                      <Button type="button" size="sm" className="h-9 shrink-0" onClick={handleInlineCreateBlock}>
+                        <Plus className="size-3.5" />
+                        Add
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-            <div>
-              <Label htmlFor="new-number">Room number</Label>
-              <Input
-                id="new-number"
-                name="roomNumber"
-                type="number"
-                min="1"
-                max="99"
-                placeholder="e.g. 03"
-                className="mt-1 h-10 w-full"
-                value={newRoomNumber}
-                onChange={(e) => handleRoomNumberChange(e.target.value)}
-                required
-              />
+                )}
+              </div>
+              <div>
+                <Label htmlFor="dlg-number">Room number</Label>
+                <Input
+                  id="dlg-number"
+                  name="roomNumber"
+                  type="number"
+                  min="1"
+                  max="99"
+                  placeholder="e.g. 03"
+                  className="mt-1.5 h-10 w-full"
+                  value={newRoomNumber}
+                  onChange={(e) => handleRoomNumberChange(e.target.value)}
+                  required
+                />
+              </div>
             </div>
             {generatedCode && (
-              <div className="sm:col-span-2 lg:col-span-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+              <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                   <span className="text-neutral-500">Code: <strong className="text-neutral-800">{generatedCode}</strong></span>
                   <span className="text-neutral-300">|</span>
@@ -568,37 +580,39 @@ export function RoomUnitsManager({
                 </div>
               </div>
             )}
-            <div>
-              <Label>Status</Label>
-              <Select name="operationalStatus" defaultValue="available">
-                <SelectTrigger className="mt-1 h-10 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="cleaning">Cleaning</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="blocked">Blocked</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Status</Label>
+                <Select name="operationalStatus" defaultValue="available">
+                  <SelectTrigger className="mt-1.5 h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="cleaning">Cleaning</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="blocked">Blocked</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="dlg-notes">Notes (optional)</Label>
+                <Textarea id="dlg-notes" name="notes" className="mt-1.5 w-full" rows={2} />
+              </div>
             </div>
-            <div className="sm:col-span-2 lg:col-span-2">
-              <Label htmlFor="new-notes">Notes (optional)</Label>
-              <Textarea id="new-notes" name="notes" className="mt-1 w-full" rows={2} />
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setShowCreate(false); setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); }} disabled={saving === "new"}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving === "new" || !newBlockId}>
+                {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                Create room unit
+              </Button>
             </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <Button type="submit" disabled={saving === "new" || !newBlockId}>
-              {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-              Create room unit
-            </Button>
-            <Button type="button" variant="ghost" onClick={() => { setShowCreate(false); setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); }}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {deleteConfirm && (
         <ConfirmDialog

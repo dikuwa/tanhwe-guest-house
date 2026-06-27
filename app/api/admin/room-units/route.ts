@@ -111,6 +111,11 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json({ id, roomCode, displayName }, { status: 201 });
   } catch (error) {
-    throw error;
+    const msg = String(error);
+    if (msg.includes("foreign key constraint"))
+      return NextResponse.json({ error: "Referenced record does not exist" }, { status: 400 });
+    if (msg.includes("null value in column"))
+      return NextResponse.json({ error: "Required field cannot be empty" }, { status: 400 });
+    return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }
 }

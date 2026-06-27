@@ -63,11 +63,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (String(error).includes("blocks_name_unique"))
+    const msg = String(error);
+    if (msg.includes("blocks_name_unique"))
       return NextResponse.json({ error: "That block name is already in use" }, { status: 409 });
-    if (String(error).includes("blocks_short_code_unique"))
+    if (msg.includes("blocks_short_code_unique"))
       return NextResponse.json({ error: "That short code is already in use" }, { status: 409 });
-    throw error;
+    return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }
 }
 

@@ -57,33 +57,38 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
       status: "active",
     };
     setSaving("new");
-    const response = await fetch("/api/admin/room-types", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not create room type");
-    toast.success(`${name} is now available in room forms.`);
-    setTypes((prev) => [
-      ...prev,
-      {
-        id: data.id,
-        name: payload.name,
-        slug: payload.slug,
-        description: payload.description || null,
-        bedConfiguration: payload.bedConfiguration || null,
-        pricePerNight: payload.pricePerNight,
-        maxGuests: payload.maxGuests,
-        breakfastIncluded: payload.breakfastIncluded,
-        sortOrder: payload.sortOrder,
-        status: payload.status,
-      },
-    ]);
-    setShowCreate(false);
-    setCreateName("");
-    router.refresh();
+    try {
+      const response = await fetch("/api/admin/room-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not create room type");
+      toast.success(`${name} is now available in room forms.`);
+      setTypes((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          name: payload.name,
+          slug: payload.slug,
+          description: payload.description || null,
+          bedConfiguration: payload.bedConfiguration || null,
+          pricePerNight: payload.pricePerNight,
+          maxGuests: payload.maxGuests,
+          breakfastIncluded: payload.breakfastIncluded,
+          sortOrder: payload.sortOrder,
+          status: payload.status,
+        },
+      ]);
+      setShowCreate(false);
+      setCreateName("");
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not create room type");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleUpdate(id: string, event: FormEvent<HTMLFormElement>) {
@@ -104,46 +109,56 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
       status: String(form.get("status")),
     };
     setSaving(id);
-    const response = await fetch(`/api/admin/room-types/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not update room type");
-    toast.success(`${name} updated`);
-    setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } : t)));
-    setEditing(null);
-    router.refresh();
+    try {
+      const response = await fetch(`/api/admin/room-types/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not update room type");
+      toast.success(`${name} updated`);
+      setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } : t)));
+      setEditing(null);
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not update room type");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleArchive(id: string, currentStatus: string) {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     const label = newStatus === "inactive" ? "Archive" : "Activate";
     setSaving(id);
-    const type = types.find((t) => t.id === id);
-    const response = await fetch(`/api/admin/room-types/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: type!.name,
-        slug: type!.slug,
-        description: type!.description ?? "",
-        bedConfiguration: type!.bedConfiguration ?? "",
-        pricePerNight: type!.pricePerNight,
-        maxGuests: type!.maxGuests,
-        breakfastIncluded: type!.breakfastIncluded,
-        sortOrder: type!.sortOrder,
-        status: newStatus,
-      }),
-    });
-    setSaving(null);
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) return toast.error(data.error ?? `Could not ${label.toLowerCase()} room type`);
-    toast.success(`${type!.name} ${label.toLowerCase()}d`);
-    setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t)));
-    router.refresh();
+    try {
+      const type = types.find((t) => t.id === id);
+      const response = await fetch(`/api/admin/room-types/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: type!.name,
+          slug: type!.slug,
+          description: type!.description ?? "",
+          bedConfiguration: type!.bedConfiguration ?? "",
+          pricePerNight: type!.pricePerNight,
+          maxGuests: type!.maxGuests,
+          breakfastIncluded: type!.breakfastIncluded,
+          sortOrder: type!.sortOrder,
+          status: newStatus,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return toast.error(data.error ?? `Could not ${label.toLowerCase()} room type`);
+      toast.success(`${type!.name} ${label.toLowerCase()}d`);
+      setTypes((prev) => prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t)));
+      router.refresh();
+    } catch (e) {
+      toast.error(`Could not ${label.toLowerCase()} room type`);
+    } finally {
+      setSaving(null);
+    }
   }
 
   return (

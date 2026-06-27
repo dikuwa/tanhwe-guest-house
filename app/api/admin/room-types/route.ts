@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
     await getDb().insert(roomTypes).values({ id, ...parsed.data, amenities: parsed.data.amenities.length ? parsed.data.amenities : null });
     return NextResponse.json({ id }, { status: 201 });
   } catch (error) {
-    if (String(error).includes("room_types_slug_unique"))
+    const msg = String(error);
+    if (msg.includes("room_types_slug_unique"))
       return NextResponse.json({ error: "That room type slug is already in use" }, { status: 409 });
-    throw error;
+    return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }
 }

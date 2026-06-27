@@ -76,6 +76,7 @@ export function RoomUnitsManager({
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editBlockIds, setEditBlockIds] = useState<Record<string, string>>({});
   const [filterBlockId, setFilterBlockId] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterRoomTypeId, setFilterRoomTypeId] = useState("all");
@@ -366,7 +367,8 @@ export function RoomUnitsManager({
                       </div>
                       <div>
                         <Label htmlFor={`edit-block-${unit.id}`}>Block</Label>
-                        <Select name="blockId" defaultValue={unit.blockId ?? unit.block}>
+                        <input type="hidden" name="blockId" value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block ?? ""} />
+                        <Select value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block} onValueChange={(v) => setEditBlockIds((p) => ({ ...p, [unit.id]: v ?? "" }))}>
                           <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10 w-full">
                             <SelectValue />
                           </SelectTrigger>
@@ -427,7 +429,7 @@ export function RoomUnitsManager({
                         {saving === unit.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                         Save
                       </Button>
-                      <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                      <Button type="button" variant="ghost" onClick={() => { setEditing(null); setEditBlockIds((p) => { const { [unit.id]: _, ...rest } = p; return rest; }); }}>
                         <X className="size-4" />
                         Cancel
                       </Button>

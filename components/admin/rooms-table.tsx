@@ -29,19 +29,19 @@ export function RoomsTable({ initial }: { initial: Room[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="admin-page-header">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Accommodation</p>
-          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">Rooms</h1>
-          <p className="mt-1 text-sm text-neutral-500">Manage room details, rates, inventory, and images.</p>
+          <p className="admin-eyebrow">Accommodation</p>
+          <h1 className="admin-title">Rooms</h1>
+          <p className="admin-description">Manage room details, rates, inventory, and images.</p>
         </div>
         <Button render={<Link href="/admin/rooms/new" />}>
           <Plus className="size-4" /> Add room
         </Button>
       </div>
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
-        <table className="w-full min-w-200 text-left text-sm">
-          <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+      <div className="admin-panel overflow-x-auto">
+        <table className="admin-table min-w-200">
+          <thead className="admin-table-head">
             <tr>
               <th className="px-4 py-3 font-medium w-12">Photo</th>
               <th className="px-4 py-3 font-medium">Room</th>
@@ -56,7 +56,7 @@ export function RoomsTable({ initial }: { initial: Room[] }) {
             {rooms.map((room) => {
               const primaryImage = room.images.find((img) => img.isPrimary) ?? room.images[0];
               return (
-                <tr key={room.id} className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50">
+                <tr key={room.id} className="admin-table-row">
                   <td className="px-4 py-3">
                     {primaryImage ? (
                       <div className="relative size-10 overflow-hidden rounded-md bg-neutral-100">

@@ -34,13 +34,13 @@ export function AdminLayoutShell({
   const userAvatar = image ? (
     <Image src={image} alt={name} width={32} height={32} className="size-8 rounded-full object-cover" />
   ) : (
-    <div className="flex size-8 items-center justify-center rounded-full bg-neutral-100 text-sm font-medium text-neutral-600">
+    <div className="flex size-8 items-center justify-center rounded-full bg-primary-50 text-sm font-medium text-primary-700">
       {name.charAt(0).toUpperCase()}
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-background">
       <MobileDrawer
         role={String(role)}
         open={drawerOpen}
@@ -53,7 +53,7 @@ export function AdminLayoutShell({
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "hidden border-r border-neutral-200 bg-white md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:flex-col transition-all duration-200",
+          "hidden border-r border-sidebar-border bg-sidebar md:fixed md:inset-y-0 md:left-0 md:z-20 md:flex md:flex-col transition-all duration-200",
           sidebarCollapsed ? "md:w-16" : "md:w-60"
         )}
       >
@@ -65,7 +65,7 @@ export function AdminLayoutShell({
           <button
             type="button"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="inline-flex size-8 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+            className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-muted hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
             aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {sidebarCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
@@ -78,7 +78,7 @@ export function AdminLayoutShell({
 
       <div className={cn("transition-all duration-200", sidebarCollapsed ? "md:pl-16" : "md:pl-60")}>
         {/* Mobile top bar */}
-        <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-white px-4 md:hidden">
+        <header className="flex h-14 items-center justify-between border-b border-neutral-100 bg-card px-4 md:hidden">
           <div className="flex items-center gap-3">
             <button
               ref={hamburgerRef}
@@ -86,7 +86,7 @@ export function AdminLayoutShell({
               aria-label={drawerOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
               aria-expanded={drawerOpen}
               aria-controls="admin-nav-drawer"
-              className="inline-flex size-9 items-center justify-center rounded-md border border-neutral-200 text-neutral-600 hover:bg-neutral-100 transition-colors"
+              className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md border border-border text-neutral-600 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
               onClick={() => setDrawerOpen((v) => !v)}
             >
               {drawerOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
@@ -100,11 +100,11 @@ export function AdminLayoutShell({
         </header>
 
         {/* Desktop top bar */}
-        <header className="hidden h-14 items-center justify-end border-b border-neutral-100 bg-white px-6 md:flex">
+        <header className="hidden h-14 items-center justify-end border-b border-neutral-100 bg-card px-6 md:flex">
           <div className="flex items-center gap-3">
             <NotificationBell />
             <div className="text-right">
-              <p className="text-sm font-medium text-neutral-800">{name}</p>
+              <p className="text-sm font-medium text-foreground">{name}</p>
               <p className="text-xs capitalize text-neutral-500">{String(role)}</p>
             </div>
             {userAvatar}

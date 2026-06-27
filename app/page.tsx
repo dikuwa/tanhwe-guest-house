@@ -51,7 +51,7 @@ export default async function Home() {
             <div className="max-w-xl lg:pl-8">
               <Badge
                 variant="outline"
-                className="border-neutral-300 bg-white/80 text-neutral-600"
+                className="border-white/50 bg-white/90 text-neutral-700 backdrop-blur-sm"
               >
                 <MapPin className="size-3.5" /> Mukwe, Namibia
               </Badge>
@@ -101,7 +101,7 @@ export default async function Home() {
           )}
         </section>
 
-        <section className="bg-[color-mix(in_oklch,var(--primary)_10%,var(--background))]">
+        <section className="bg-primary-50">
           <div className="mx-auto grid max-w-[1180px] gap-14 px-4 py-24 sm:px-6 lg:grid-cols-[.9fr_1.1fr] lg:py-32">
             <div>
               <p className="font-heading text-4xl font-bold sm:text-5xl">
@@ -139,7 +139,7 @@ export default async function Home() {
         </section>
 
         <section className="mx-auto grid max-w-[1180px] gap-10 px-4 py-24 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:py-32">
-          <div className="min-h-[360px] rounded-xl bg-secondary p-8 text-secondary-foreground sm:p-12">
+          <div className="min-h-[360px] rounded-xl bg-secondary-700 p-8 text-secondary-foreground shadow-xs sm:p-12">
             <Presentation className="size-10 text-primary" />
             <h2 className="mt-10 max-w-xl font-heading text-4xl font-bold sm:text-5xl">
               Meet, plan, and gather in Mukwe.

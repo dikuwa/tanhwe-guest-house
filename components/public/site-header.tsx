@@ -11,7 +11,7 @@ export async function SiteHeader() {
   const phoneHref = `tel:${settings.phone.replace(/[^+\d]/g, "")}`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90">
       <div className="mx-auto flex h-14 max-w-[1180px] items-center justify-between gap-4 px-4 sm:px-6 lg:h-16">
         <TanhweLogo href="/" size="sm" />
         <SiteNavigation phone={settings.phone} whatsapp={settings.whatsapp} />
@@ -20,7 +20,7 @@ export async function SiteHeader() {
             href={phoneHref}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "bg-[color-mix(in_oklch,var(--secondary)_9%,var(--background))] text-secondary hover:bg-[color-mix(in_oklch,var(--secondary)_16%,var(--background))] hover:text-secondary active:bg-[color-mix(in_oklch,var(--secondary)_22%,var(--background))]"
+              "bg-secondary-50 text-secondary hover:bg-secondary-100 hover:text-secondary-700 active:bg-secondary-100"
             )}
             aria-label={`Call ${settings.phone}`}
           >
@@ -32,7 +32,7 @@ export async function SiteHeader() {
           </Link>
         </div>
       </div>
-      <div className="border-t bg-[color-mix(in_oklch,var(--secondary)_8%,var(--background))] px-4 py-1.5 text-center text-xs text-muted-foreground md:hidden">
+      <div className="border-t border-border bg-secondary-50 px-4 py-1.5 text-center text-xs text-muted-foreground md:hidden">
         <MapPin aria-hidden="true" className="mr-1 inline size-3 align-middle" />{" "}
         {settings.location}
       </div>

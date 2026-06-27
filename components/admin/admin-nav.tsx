@@ -77,9 +77,9 @@ function NavItem({
         onClick={onItemClick}
         title={collapsed ? item.label : undefined}
         className={cn(
-          "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:pl-4",
+          "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-muted hover:text-neutral-900 md:pl-4",
           collapsed && "md:justify-center md:px-2",
-          active && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+          active && "bg-primary-50 text-primary-700 hover:bg-primary-100 hover:text-primary-700"
         )}
       >
         {active && (
@@ -107,9 +107,9 @@ function NavItem({
         onClick={() => setOpen(!open)}
         title={collapsed ? item.label : undefined}
         className={cn(
-          "group relative flex w-full shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 md:pl-4",
+          "group relative flex w-full shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-muted hover:text-neutral-900 md:pl-4",
           collapsed && "md:justify-center md:px-2",
-          childActive && "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary"
+          childActive && "bg-primary-50 text-primary-700 hover:bg-primary-100 hover:text-primary-700"
         )}
       >
         {childActive && (
@@ -133,7 +133,7 @@ function NavItem({
         )}
       </button>
       {!collapsed && open && (
-        <div className="ml-2 mt-0.5 space-y-0.5 border-l border-neutral-200 pl-2">
+        <div className="ml-2 mt-0.5 space-y-0.5 border-l border-border pl-2">
           {item.children!.map((child) => {
             const active = isActive(pathname, child.href);
             return (
@@ -142,8 +142,8 @@ function NavItem({
                 href={child.href}
                 onClick={onItemClick}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900",
-                  active && "bg-primary/10 text-primary hover:bg-primary/15"
+                  "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm font-medium text-neutral-500 transition-colors hover:bg-muted hover:text-neutral-900",
+                  active && "bg-primary-50 text-primary-700 hover:bg-primary-100"
                 )}
               >
                 <span className="size-1 rounded-full bg-current" />
@@ -189,7 +189,7 @@ export function AdminNav({ role, collapsed, onItemClick }: { role: string; colla
           onClick={onItemClick}
           title={collapsed ? "Open website" : undefined}
           className={cn(
-            "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900",
+            "group relative flex shrink-0 items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-neutral-500 transition-colors hover:bg-muted hover:text-neutral-900",
             collapsed && "md:justify-center md:px-2"
           )}
         >

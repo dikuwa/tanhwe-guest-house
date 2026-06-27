@@ -37,13 +37,13 @@ export default async function AdminDashboard() {
     });
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="admin-page-header">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Dashboard</p>
-          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">
+          <p className="admin-eyebrow">Dashboard</p>
+          <h1 className="admin-title">
             Good day, {session.user.name.split(" ")[0]}
           </h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="admin-description">
             Here&rsquo;s what needs attention today.
           </p>
         </div>
@@ -51,12 +51,12 @@ export default async function AdminDashboard() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <div key={metric.label} className="admin-card">
             <div className="flex items-center justify-between">
               <p className="text-sm text-neutral-500">{metric.label}</p>
               <metric.icon className="size-4 text-neutral-400" />
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums text-neutral-800">{metric.value}</p>
+            <p className="mt-2 text-2xl font-semibold tabular-nums text-neutral-800">{metric.value}</p>
           </div>
         ))}
       </div>
@@ -70,9 +70,9 @@ export default async function AdminDashboard() {
             View all <ArrowRight className="size-3.5" />
           </Button>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+        <div className="admin-panel overflow-x-auto">
+          <table className="admin-table">
+            <thead className="admin-table-head">
               <tr>
                 <th className="px-4 py-3 font-medium">Booking</th>
                 <th className="px-4 py-3 font-medium">Guest</th>
@@ -85,7 +85,7 @@ export default async function AdminDashboard() {
               {data.recent.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-b border-neutral-100 last:border-0 hover:bg-neutral-50 cursor-pointer transition-colors"
+                  className="admin-table-row cursor-pointer"
                 >
                   <td className="px-4 py-3">
                     <Link

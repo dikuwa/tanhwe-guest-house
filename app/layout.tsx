@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Allura, Onest } from "next/font/google";
+import { Allura, Inter_Tight, Onest } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
@@ -7,6 +7,12 @@ import "./globals.css";
 
 const onest = Onest({
   variable: "--font-onest",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${onest.variable} ${allura.variable} h-full antialiased`}>
+    <html lang="en" className={`${onest.variable} ${interTight.variable} ${allura.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { PanelLeftClose, LogOut, Search, ChevronDown } from "lucide-react";
+import { PanelLeftClose, LogOut, Search } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { authClient } from "@/lib/auth-client";
@@ -11,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { items } from "./admin-nav";
 
 function flattenItems(items: typeof import("./admin-nav").items) {
-  const flat: { href: string; label: string; icon: any; roles: string[] }[] = [];
+  const flat: { href: string; label: string; icon: LucideIcon; roles: string[] }[] = [];
   for (const item of items) {
     if ("children" in item && item.children) {
       flat.push({
@@ -118,7 +119,7 @@ export function MobileDrawer({
             animate={{ x: 0 }}
             exit={{ x: "-100%" }}
             transition={anim}
-            className="fixed inset-y-0 left-0 z-50 flex w-[86vw] max-w-[320px] flex-col border-r border-neutral-200 bg-white shadow-lg md:hidden"
+            className="fixed inset-y-0 left-0 z-50 flex w-[86vw] max-w-[320px] flex-col border-r border-border bg-card shadow-lg md:hidden"
           >
             <div className="flex h-14 shrink-0 items-center justify-between border-b border-neutral-100 px-4">
               <TanhweLogo href="/admin" size="sm" className="max-w-[170px]" />
@@ -126,7 +127,7 @@ export function MobileDrawer({
                 ref={closeButtonRef}
                 type="button"
                 aria-label="Close dashboard navigation"
-                className="inline-flex size-8 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 transition-colors"
+                className="inline-flex size-8 cursor-pointer items-center justify-center rounded-md text-neutral-500 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/20"
                 onClick={onClose}
               >
                 <PanelLeftClose className="size-5" />
@@ -141,7 +142,7 @@ export function MobileDrawer({
                   placeholder="Search menu..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-9 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="h-10 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 transition-colors hover:border-neutral-300 focus:border-primary focus:outline-none focus:ring-3 focus:ring-primary/20"
                   aria-label="Search navigation items"
                 />
               </div>
@@ -163,8 +164,8 @@ export function MobileDrawer({
                       className={cn(
                         "flex min-h-[48px] items-center gap-3 rounded-xl px-4 text-sm font-medium transition-colors",
                         active
-                          ? "bg-primary/10 text-primary hover:bg-primary/15"
-                          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                          ? "bg-primary-50 text-primary-700 hover:bg-primary-100"
+                          : "text-neutral-600 hover:bg-muted hover:text-neutral-900"
                       )}
                     >
                       <item.icon className="size-5 shrink-0" />
@@ -188,8 +189,8 @@ export function MobileDrawer({
                         className={cn(
                           "flex min-h-[48px] items-center gap-3 rounded-xl px-4 text-sm font-medium transition-colors",
                           active
-                            ? "bg-primary/10 text-primary hover:bg-primary/15"
-                            : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                            ? "bg-primary-50 text-primary-700 hover:bg-primary-100"
+                            : "text-neutral-600 hover:bg-muted hover:text-neutral-900"
                         )}
                       >
                         <item.icon className="size-5 shrink-0" />
@@ -207,7 +208,7 @@ export function MobileDrawer({
                   router.replace("/login");
                   router.refresh();
                 }}
-                className="flex min-h-[48px] w-full items-center gap-3 rounded-xl px-4 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                className="flex min-h-[48px] w-full cursor-pointer items-center gap-3 rounded-xl px-4 text-sm font-medium text-neutral-600 transition-colors hover:bg-muted hover:text-neutral-900"
               >
                 <LogOut className="size-5 shrink-0" />
                 <span className="min-w-0">Sign out</span>

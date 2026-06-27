@@ -41,13 +41,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-neutral-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center flex flex-col items-center">
           <TanhweLogo size="md" showIcon />
           <p className="mt-4 text-sm text-neutral-500">Sign in to manage your property</p>
         </div>
-        <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs">
+        <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </Button>
           </form>
         </div>
-        <p className="mt-6 text-center text-xs text-neutral-400">
+        <p className="mt-6 text-center text-xs text-neutral-500">
           Tanhwe Guest House &mdash; Mukwe, Namibia
         </p>
       </div>

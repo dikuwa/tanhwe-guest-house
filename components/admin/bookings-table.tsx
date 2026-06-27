@@ -19,11 +19,6 @@ const money = new Intl.NumberFormat("en-NA", {
   style: "currency", currency: "NAD", maximumFractionDigits: 0,
 });
 
-const statusBadge: Record<string, "default" | "secondary" | "outline"> = {
-  pending: "outline", confirmed: "secondary", "checked-in": "default",
-  "checked-out": "default", cancelled: "outline", "no-show": "outline",
-};
-
 const paymentBadge: Record<string, "secondary" | "outline" | "default"> = {
   paid: "secondary", partial: "default", pending: "outline", overdue: "outline",
 };
@@ -37,11 +32,11 @@ export function BookingsTable({ initial, staffView }: { initial: Booking[]; staf
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="admin-page-header">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">Reservations</p>
-          <h1 className="mt-1 font-heading text-2xl font-bold text-neutral-800">Bookings</h1>
-          <p className="mt-1 text-sm text-neutral-500">Review requests and manage each guest stay.</p>
+          <p className="admin-eyebrow">Reservations</p>
+          <h1 className="admin-title">Bookings</h1>
+          <p className="admin-description">Review requests and manage each guest stay.</p>
         </div>
         {!staffView && (
           <Button render={<Link href="/admin/bookings/new" />}>
@@ -49,9 +44,9 @@ export function BookingsTable({ initial, staffView }: { initial: Booking[]; staf
           </Button>
         )}
       </div>
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
-        <table className="w-full min-w-240 text-left text-sm">
-          <thead className="border-b border-neutral-100 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+      <div className="admin-panel overflow-x-auto">
+        <table className="admin-table min-w-240">
+          <thead className="admin-table-head">
             <tr>
               <th className="px-4 py-3 font-medium">Booking</th>
               <th className="px-4 py-3 font-medium">Guest</th>
@@ -64,7 +59,7 @@ export function BookingsTable({ initial, staffView }: { initial: Booking[]; staf
           </thead>
           <tbody>
             {bookings.map((booking) => (
-              <tr key={booking.id} className="border-b border-neutral-100 align-top last:border-0 hover:bg-neutral-50">
+              <tr key={booking.id} className="admin-table-row align-top">
                 <td className="px-4 py-4">
                   <p className="font-medium text-neutral-800">{booking.bookingNumber}</p>
                   <p className="mt-1 text-xs font-normal capitalize text-neutral-400">{booking.source}</p>

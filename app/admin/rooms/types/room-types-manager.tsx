@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { StatusPill } from "@/components/ui/status-pill";
 import {
   Dialog,
   DialogContent,
@@ -220,7 +220,7 @@ export function RoomTypesManager({ initial }: { initial: RoomType[] }) {
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-neutral-800">{type.name}</h3>
                       {type.status !== "active" && (
-                        <Badge variant="outline" className="text-xs text-neutral-400">Archived</Badge>
+                        <StatusPill status="inactive" label="Archived" />
                       )}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">

@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { BedDouble, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
 import { DeleteRoomButton } from "@/app/admin/rooms/delete-room-button";
 
 type RoomImage = { id: string; roomId: string; imageUrl: string; isPrimary: boolean; sortOrder: number };
@@ -96,9 +96,7 @@ export function RoomsTable({ initial }: { initial: Room[] }) {
                     </p>
                   </td>
                   <td className="px-4 py-4">
-                    <Badge variant={room.status === "active" ? "secondary" : "outline"} className="capitalize">
-                      {room.status}
-                    </Badge>
+                    <StatusPill status={room.status} />
                   </td>
                   <td className="px-4 py-4 text-right">
                     <div className="flex justify-end gap-1">

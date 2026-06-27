@@ -1,0 +1,285 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+
+type Block = {
+  id: string;
+  name: string;
+  shortCode: string;
+  description: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  roomUnitCount: number;
+};
+
+export function BlocksManager() {
+  const router = useRouter();
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<Block | null>(null);
+
+  async function loadBlocks() {
+    setLoading(true);
+    const res = await fetch("/api/admin/blocks");
+    if (res.ok) {
+      const data = await res.json();
+      setBlocks(data);
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => { loadBlocks(); }, []);
+
+  async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const shortCode = String(form.get("shortCode") ?? "").trim();
+    const description = String(form.get("description") ?? "").trim();
+
+    if (!name) return toast.error("Block name is required");
+    if (!shortCode) return toast.error("Short code is required");
+
+    setSaving("new");
+    const response = await fetch("/api/admin/blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, shortCode, description: description || undefined, displayOrder: blocks.length + 1 }),
+    });
+    const data = await response.json();
+    setSaving(null);
+    if (!response.ok) return toast.error(data.error ?? "Could not create block");
+    toast.success(`${data.name} created`);
+    setShowCreate(false);
+    loadBlocks();
+    router.refresh();
+  }
+
+  async function handleUpdate(id: string, event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const name = String(form.get("name") ?? "").trim();
+    const shortCode = String(form.get("shortCode") ?? "").trim().toUpperCase();
+    const description = String(form.get("description") ?? "").trim() || null;
+    const displayOrder = Number(form.get("displayOrder"));
+    const isActive = form.get("isActive") === "on";
+
+    if (!name) return toast.error("Block name is required");
+    if (!shortCode) return toast.error("Short code is required");
+
+    setSaving(id);
+    const response = await fetch(`/api/admin/blocks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, shortCode, description, displayOrder, isActive }),
+    });
+    const data = await response.json();
+    setSaving(null);
+    if (!response.ok) return toast.error(data.error ?? "Could not update block");
+    toast.success(`${name} updated`);
+    setEditing(null);
+    loadBlocks();
+    router.refresh();
+  }
+
+  async function handleDeactivate(id: string, currentActive: boolean) {
+    if (!currentActive) return;
+    setSaving(id);
+    const block = blocks.find((b) => b.id === id)!;
+    const response = await fetch(`/api/admin/blocks/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: block.name,
+        shortCode: block.shortCode,
+        description: block.description ?? "",
+        displayOrder: block.displayOrder,
+        isActive: false,
+      }),
+    });
+    setSaving(null);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return toast.error(data.error ?? "Could not deactivate block");
+    toast.success(`${block.name} deactivated`);
+    loadBlocks();
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!deleteConfirm) return;
+    const block = deleteConfirm;
+    setDeleteConfirm(null);
+    setSaving(block.id);
+    const response = await fetch(`/api/admin/blocks/${block.id}`, { method: "DELETE" });
+    setSaving(null);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      toast.error(data.error ?? "Could not delete block");
+      return;
+    }
+    toast.success(`${block.name} deleted`);
+    loadBlocks();
+    router.refresh();
+  }
+
+  return (
+    <div className="space-y-4">
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : blocks.length === 0 && !showCreate ? (
+        <div className="rounded-xl border border-dashed border-neutral-300 p-10 text-center">
+          <p className="text-sm text-muted-foreground">No blocks have been added yet.</p>
+          <Button className="mt-4" onClick={() => setShowCreate(true)}>
+            <Plus className="size-4" />
+            Add block
+          </Button>
+        </div>
+      ) : (
+        blocks.map((block) => (
+          <div key={block.id} className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6">
+            {editing === block.id ? (
+              <form onSubmit={(e) => handleUpdate(block.id, e)} className="space-y-4">
+                <input type="hidden" name="displayOrder" value={block.displayOrder} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor={`edit-name-${block.id}`}>Block name</Label>
+                    <Input id={`edit-name-${block.id}`} name="name" defaultValue={block.name} className="mt-1" required />
+                  </div>
+                  <div>
+                    <Label htmlFor={`edit-code-${block.id}`}>Short code</Label>
+                    <Input id={`edit-code-${block.id}`} name="shortCode" defaultValue={block.shortCode} className="mt-1 uppercase" required maxLength={10} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor={`edit-desc-${block.id}`}>Description (optional)</Label>
+                    <Textarea id={`edit-desc-${block.id}`} name="description" defaultValue={block.description ?? ""} className="mt-1" rows={2} />
+                  </div>
+                  <div className="flex items-end pb-2">
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        name="isActive"
+                        defaultChecked={block.isActive}
+                        className="size-4 rounded border-neutral-300"
+                      />
+                      Active
+                    </label>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={saving === block.id}>
+                    {saving === block.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                    Save
+                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                    <X className="size-4" />
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-neutral-800">{block.name}</h3>
+                    <Badge variant="outline" className="text-[10px] font-mono">{block.shortCode}</Badge>
+                    {block.isActive ? (
+                      <Badge variant="secondary" className="text-[10px]">Active</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-neutral-400">Inactive</Badge>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {block.roomUnitCount} room unit{block.roomUnitCount === 1 ? "" : "s"}
+                  </p>
+                  {block.description && (
+                    <p className="mt-1 text-sm text-neutral-600">{block.description}</p>
+                  )}
+                </div>
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(block.id)} title="Edit">
+                    <Edit3 className="size-3.5" />
+                  </Button>
+                  {block.isActive ? (
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => handleDeactivate(block.id, true)} title="Deactivate" disabled={saving === block.id}>
+                      {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-neutral-400" />}
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="icon" className="size-8" onClick={() => setDeleteConfirm(block)} title="Delete" disabled={saving === block.id}>
+                      {saving === block.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5 text-destructive" />}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      )}
+
+      {showCreate && (
+        <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
+          <h3 className="font-semibold text-neutral-800">New block</h3>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="new-name">Block name</Label>
+              <Input id="new-name" name="name" className="mt-1" placeholder="e.g. Garden Wing" required />
+            </div>
+            <div>
+              <Label htmlFor="new-code">Short code</Label>
+              <Input id="new-code" name="shortCode" className="mt-1 uppercase" placeholder="e.g. GW" required maxLength={10} />
+            </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="new-desc">Description (optional)</Label>
+              <Textarea id="new-desc" name="description" className="mt-1" rows={2} />
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Button type="submit" disabled={saving === "new"}>
+              {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              Create block
+            </Button>
+            <Button type="button" variant="ghost" onClick={() => setShowCreate(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {!showCreate && blocks.length > 0 && (
+        <Button variant="outline" onClick={() => setShowCreate(true)}>
+          <Plus className="size-4" />
+          Add block
+        </Button>
+      )}
+
+      {deleteConfirm && (
+        <ConfirmDialog
+          open={!!deleteConfirm}
+          onOpenChange={() => setDeleteConfirm(null)}
+          onConfirm={handleDelete}
+          title={`Delete ${deleteConfirm.name}?`}
+          description={
+            deleteConfirm.roomUnitCount > 0
+              ? `"${deleteConfirm.name}" contains ${deleteConfirm.roomUnitCount} room unit(s). Reassign or deactivate these units before deleting.`
+              : `This will permanently delete "${deleteConfirm.name}". This action cannot be undone.`
+          }
+          confirmLabel={deleteConfirm.roomUnitCount > 0 ? "Deactivate instead" : "Delete"}
+          variant="destructive"
+        />
+      )}
+    </div>
+  );
+}

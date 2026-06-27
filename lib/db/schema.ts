@@ -162,6 +162,26 @@ export const rooms = pgTable(
   ]
 );
 
+export const blocks = pgTable(
+  "blocks",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull().unique(),
+    shortCode: text("short_code").notNull().unique(),
+    description: text("description"),
+    displayOrder: integer("display_order").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    ...timestamps,
+  },
+  (table) => [
+    index("blocks_display_order_idx").on(table.displayOrder),
+  ]
+);
+
+export const blockRelations = relations(blocks, ({ many }) => ({
+  roomUnits: many(roomUnits),
+}));
+
 export const roomImages = pgTable(
   "room_images",
   {
@@ -519,6 +539,7 @@ export const roomUnits = pgTable(
       .notNull()
       .references(() => rooms.id, { onDelete: "cascade" }),
     block: text("block").notNull(),
+    blockId: text("block_id").references(() => blocks.id, { onDelete: "set null" }),
     roomNumber: integer("room_number").notNull(),
     roomCode: text("room_code").notNull(),
     displayName: text("display_name").notNull(),
@@ -530,7 +551,7 @@ export const roomUnits = pgTable(
   (table) => [
     index("room_units_room_id_idx").on(table.roomId),
     index("room_units_block_room_number_idx").on(table.block, table.roomNumber),
-    check("room_units_block_check", sql`${table.block} in ('A', 'B', 'C')`),
+    index("room_units_block_id_idx").on(table.blockId),
     check(
       "room_units_status_check",
       sql`${table.operationalStatus} in ('available', 'cleaning', 'maintenance', 'blocked', 'inactive')`
@@ -578,6 +599,7 @@ export const roomAmenitiesRelations = relations(roomAmenities, ({ one }) => ({
 }));
 export const roomUnitsRelations = relations(roomUnits, ({ one }) => ({
   room: one(rooms, { fields: [roomUnits.roomId], references: [rooms.id] }),
+  block: one(blocks, { fields: [roomUnits.blockId], references: [blocks.id] }),
 }));
 export const bookingRoomUnitsRelations = relations(bookingRoomUnits, ({ one }) => ({
   booking: one(bookings, { fields: [bookingRoomUnits.bookingId], references: [bookings.id] }),

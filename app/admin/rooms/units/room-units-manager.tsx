@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit3, Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { Edit3, Loader2, Plus, Save, Trash2, X, DoorClosed } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,10 +31,18 @@ type RoomType = {
   name: string;
 };
 
+type Block = {
+  id: string;
+  name: string;
+  shortCode: string;
+  isActive: boolean;
+};
+
 type RoomUnit = {
   id: string;
   roomId: string;
   block: string;
+  blockId: string | null;
   roomNumber: number;
   roomCode: string;
   displayName: string;
@@ -46,7 +54,7 @@ type RoomUnit = {
   roomStatus: string;
 };
 
-const statusBadge: Record<string, "secondary" | "outline" | "destructive" | "default"> = {
+const statusVariant: Record<string, "secondary" | "outline" | "destructive" | "default"> = {
   available: "secondary",
   cleaning: "outline",
   maintenance: "destructive",
@@ -63,19 +71,32 @@ export function RoomUnitsManager({
 }) {
   const router = useRouter();
   const [units, setUnits] = useState<RoomUnit[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [filterBlock, setFilterBlock] = useState("all");
+  const [filterBlockId, setFilterBlockId] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterRoomTypeId, setFilterRoomTypeId] = useState("all");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Inline form state
+  const [newBlockId, setNewBlockId] = useState("");
+  const [newRoomNumber, setNewRoomNumber] = useState("");
+  const [generatedCode, setGeneratedCode] = useState("");
+  const [generatedName, setGeneratedName] = useState("");
+  const [showInlineBlockForm, setShowInlineBlockForm] = useState(false);
+  const [newBlockName, setNewBlockName] = useState("");
+  const [newBlockShortCode, setNewBlockShortCode] = useState("");
+
   async function loadUnits() {
     setLoading(true);
     const params = new URLSearchParams();
-    if (filterBlock !== "all") params.set("block", filterBlock);
+    if (filterBlockId !== "all") {
+      const block = blocks.find((b) => b.id === filterBlockId);
+      if (block) params.set("block", block.shortCode);
+    }
     if (filterStatus !== "all") params.set("operationalStatus", filterStatus);
     if (filterRoomTypeId !== "all") params.set("roomTypeId", filterRoomTypeId);
     const res = await fetch(`/api/admin/room-units?${params}`);
@@ -86,36 +107,98 @@ export function RoomUnitsManager({
     setLoading(false);
   }
 
+  async function loadBlocks() {
+    const res = await fetch("/api/admin/blocks");
+    if (res.ok) {
+      const data = await res.json();
+      setBlocks(data.filter((b: Block) => b.isActive));
+    }
+  }
+
+  useEffect(() => {
+    loadBlocks();
+  }, []);
+
   useEffect(() => {
     loadUnits();
-  }, [filterBlock, filterStatus, filterRoomTypeId]);
+  }, [filterBlockId, filterStatus, filterRoomTypeId, blocks]);
+
+  function updatePreview(blockId: string, num: string) {
+    const block = blocks.find((b) => b.id === blockId);
+    if (block && num) {
+      const padded = String(Number(num)).padStart(2, "0");
+      setGeneratedCode(`${block.shortCode}${padded}`);
+      setGeneratedName(`${block.name} – Room ${padded}`);
+    } else {
+      setGeneratedCode("");
+      setGeneratedName("");
+    }
+  }
+
+  function handleBlockChange(value: string | null, _details?: any) {
+    const v = value ?? "";
+    setNewBlockId(v);
+    updatePreview(v, newRoomNumber);
+    setShowInlineBlockForm(false);
+  }
+
+  function handleRoomNumberChange(value: string) {
+    setNewRoomNumber(value);
+    updatePreview(newBlockId, value);
+  }
+
+  async function handleInlineCreateBlock() {
+    if (!newBlockName.trim() || !newBlockShortCode.trim()) {
+      return toast.error("Block name and short code are required");
+    }
+    const res = await fetch("/api/admin/blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: newBlockName.trim(),
+        shortCode: newBlockShortCode.trim().toUpperCase(),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return toast.error(data.error ?? "Could not create block");
+    toast.success(`${data.name} created`);
+    await loadBlocks();
+    setNewBlockId(data.id);
+    updatePreview(data.id, newRoomNumber);
+    setNewBlockName("");
+    setNewBlockShortCode("");
+    setShowInlineBlockForm(false);
+  }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const roomId = String(form.get("roomId") ?? "");
-    const block = String(form.get("block") ?? "");
+    const blockId = String(form.get("blockId") ?? "");
     const roomNumber = Number(form.get("roomNumber"));
     const operationalStatus = String(form.get("operationalStatus") ?? "available");
     const notes = String(form.get("notes") ?? "").trim();
 
-    if (!roomId || !block || !roomNumber) {
+    if (!roomId || !blockId || !roomNumber) {
       return toast.error("Room, block and room number are required");
     }
 
-    const displayName = `Block ${block} – Room ${String(roomNumber).padStart(2, "0")}`;
+    const block = blocks.find((b) => b.id === blockId);
+    if (!block) return toast.error("Selected block not found");
 
     setSaving("new");
     const response = await fetch("/api/admin/room-units", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId, block, roomNumber, displayName, operationalStatus, notes: notes || undefined }),
+      body: JSON.stringify({ roomId, blockId, roomNumber, operationalStatus, notes: notes || undefined }),
     });
     const data = await response.json();
     setSaving(null);
     if (!response.ok) return toast.error(data.error ?? "Could not create room unit");
     toast.success(`${data.displayName} created`);
     setShowCreate(false);
+    setNewBlockId("");
+    setNewRoomNumber("");
     loadUnits();
     router.refresh();
   }
@@ -124,7 +207,7 @@ export function RoomUnitsManager({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const payload: Record<string, unknown> = {
-      block: String(form.get("block")),
+      blockId: String(form.get("blockId")),
       roomNumber: Number(form.get("roomNumber")),
       roomId: String(form.get("roomId")),
       operationalStatus: String(form.get("operationalStatus")),
@@ -166,19 +249,19 @@ export function RoomUnitsManager({
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 rounded-xl border border-neutral-200 bg-white p-4">
+      {/* Filters + Add button row */}
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
         <div className="min-w-32 flex-1">
           <Label className="text-xs text-muted-foreground">Block</Label>
-          <Select value={filterBlock} onValueChange={(v) => v && setFilterBlock(v)}>
+          <Select value={filterBlockId} onValueChange={(v) => v && setFilterBlockId(v)}>
             <SelectTrigger className="mt-1 h-10">
-              <SelectValue />
+              <SelectValue placeholder="All blocks" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All blocks</SelectItem>
-              <SelectItem value="A">Block A</SelectItem>
-              <SelectItem value="B">Block B</SelectItem>
-              <SelectItem value="C">Block C</SelectItem>
+              {blocks.filter((b) => b.isActive).map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -186,7 +269,7 @@ export function RoomUnitsManager({
           <Label className="text-xs text-muted-foreground">Status</Label>
           <Select value={filterStatus} onValueChange={(v) => v && setFilterStatus(v)}>
             <SelectTrigger className="mt-1 h-10">
-              <SelectValue />
+              <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All statuses</SelectItem>
@@ -202,7 +285,7 @@ export function RoomUnitsManager({
           <Label className="text-xs text-muted-foreground">Room type</Label>
           <Select value={filterRoomTypeId} onValueChange={(v) => v && setFilterRoomTypeId(v)}>
             <SelectTrigger className="mt-1 h-10">
-              <SelectValue />
+              <SelectValue placeholder="All room types" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All room types</SelectItem>
@@ -214,6 +297,12 @@ export function RoomUnitsManager({
             </SelectContent>
           </Select>
         </div>
+        {!showCreate && (
+          <Button className="h-10 shrink-0" onClick={() => setShowCreate(true)}>
+            <Plus className="size-4" />
+            Add room unit
+          </Button>
+        )}
       </div>
 
       {/* Units list */}
@@ -224,170 +313,157 @@ export function RoomUnitsManager({
       ) : filteredUnits.length === 0 && !showCreate ? (
         <div className="rounded-xl border border-dashed border-neutral-300 p-10 text-center">
           <p className="text-sm text-muted-foreground">No room units found.</p>
-          <Button className="mt-4" onClick={() => setShowCreate(true)}>
-            <Plus className="size-4" />
-            Add room unit
-          </Button>
         </div>
       ) : (
-        filteredUnits.map((unit) => (
-          <div
-            key={unit.id}
-            className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs sm:p-6"
-          >
-            {editing === unit.id ? (
-              <form onSubmit={(e) => handleUpdate(unit.id, e)} className="space-y-4">
-                <input type="hidden" name="isActive" value={unit.isActive ? "on" : "off"} />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label htmlFor={`edit-room-${unit.id}`}>Room</Label>
-                    <Select name="roomId" defaultValue={unit.roomId}>
-                      <SelectTrigger id={`edit-room-${unit.id}`} className="mt-1 h-10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rooms.filter((r) => r.status !== "archived").map((r) => (
-                          <SelectItem key={r.id} value={r.id}>
-                            {r.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+        <div className="space-y-2">
+          {filteredUnits.map((unit) => {
+            const block = blocks.find((b) => b.id === unit.blockId);
+            return (
+              <div
+                key={unit.id}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-neutral-300"
+              >
+                {editing === unit.id ? (
+                  <form onSubmit={(e) => handleUpdate(unit.id, e)} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <div>
+                        <Label htmlFor={`edit-room-${unit.id}`}>Room</Label>
+                        <Select name="roomId" defaultValue={unit.roomId}>
+                          <SelectTrigger id={`edit-room-${unit.id}`} className="mt-1 h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {rooms.filter((r) => r.status !== "archived").map((r) => (
+                              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor={`edit-block-${unit.id}`}>Block</Label>
+                        <Select name="blockId" defaultValue={unit.blockId ?? unit.block}>
+                          <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {blocks.filter((b) => b.isActive).map((b) => (
+                              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor={`edit-number-${unit.id}`}>Room number</Label>
+                        <Input
+                          id={`edit-number-${unit.id}`}
+                          name="roomNumber"
+                          type="number"
+                          min="1"
+                          max="99"
+                          defaultValue={unit.roomNumber}
+                          className="mt-1 h-10"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor={`edit-status-${unit.id}`}>Operational status</Label>
+                        <Select name="operationalStatus" defaultValue={unit.operationalStatus}>
+                          <SelectTrigger id={`edit-status-${unit.id}`} className="mt-1 h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="available">Available</SelectItem>
+                            <SelectItem value="cleaning">Cleaning</SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
+                            <SelectItem value="blocked">Blocked</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-end pb-2">
+                        <label className="flex cursor-pointer items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            name="isActive"
+                            defaultChecked={unit.isActive}
+                            className="size-4 rounded border-neutral-300"
+                          />
+                          Active
+                        </label>
+                      </div>
+                      <div className="lg:col-span-3">
+                        <Label htmlFor={`edit-notes-${unit.id}`}>Notes</Label>
+                        <Textarea
+                          id={`edit-notes-${unit.id}`}
+                          name="notes"
+                          defaultValue={unit.notes ?? ""}
+                          className="mt-1"
+                          rows={1}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="submit" disabled={saving === unit.id}>
+                        {saving === unit.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                        Save
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                        <X className="size-4" />
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50">
+                      <DoorClosed className="size-4 text-neutral-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="font-medium text-neutral-800">{unit.displayName}</span>
+                        <span className="font-mono text-xs text-neutral-400">{unit.roomCode}</span>
+                        <span className="hidden text-xs text-neutral-300 sm:inline">&middot;</span>
+                        <span className="text-xs text-neutral-500">{unit.roomName}</span>
+                        {block && (
+                          <>
+                            <span className="text-xs text-neutral-300">&middot;</span>
+                            <span className="text-xs text-neutral-500">{block.name}</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                        <Badge variant={unit.isActive ? "secondary" : "outline"} className="text-[10px]">
+                          {unit.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Badge variant={statusVariant[unit.operationalStatus] ?? "outline"} className="text-[10px] capitalize">
+                          {unit.operationalStatus}
+                        </Badge>
+                        {unit.notes && (
+                          <span className="truncate text-xs text-neutral-400">{unit.notes}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(unit.id)} title="Edit">
+                        <Edit3 className="size-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="size-8 text-destructive" onClick={() => setDeleteConfirm(unit.id)} title="Delete" disabled={saving === unit.id}>
+                        {saving === unit.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                      </Button>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor={`edit-block-${unit.id}`}>Block</Label>
-                    <Select name="block" defaultValue={unit.block}>
-                      <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A">Block A</SelectItem>
-                        <SelectItem value="B">Block B</SelectItem>
-                        <SelectItem value="C">Block C</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor={`edit-number-${unit.id}`}>Room number</Label>
-                    <Input
-                      id={`edit-number-${unit.id}`}
-                      name="roomNumber"
-                      type="number"
-                      min="1"
-                      max="99"
-                      defaultValue={unit.roomNumber}
-                      className="mt-1 h-10"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`edit-status-${unit.id}`}>Operational status</Label>
-                    <Select name="operationalStatus" defaultValue={unit.operationalStatus}>
-                      <SelectTrigger id={`edit-status-${unit.id}`} className="mt-1 h-10">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="available">Available</SelectItem>
-                        <SelectItem value="cleaning">Cleaning</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                        <SelectItem value="blocked">Blocked</SelectItem>
-                        <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-end pb-2">
-                    <label className="flex cursor-pointer items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        name="isActive"
-                        defaultChecked={unit.isActive}
-                        className="size-4 rounded border-neutral-300"
-                      />
-                      Active
-                    </label>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor={`edit-notes-${unit.id}`}>Notes</Label>
-                    <Textarea
-                      id={`edit-notes-${unit.id}`}
-                      name="notes"
-                      defaultValue={unit.notes ?? ""}
-                      className="mt-1"
-                      rows={2}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" disabled={saving === unit.id}>
-                    {saving === unit.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                    Save
-                  </Button>
-                  <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
-                    <X className="size-4" />
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-semibold text-neutral-800">{unit.displayName}</h3>
-                    <Badge variant={unit.isActive ? "secondary" : "outline"} className="text-[10px]">
-                      {unit.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Code: {unit.roomCode} &middot; {unit.roomName}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge variant={statusBadge[unit.operationalStatus] ?? "outline"} className="text-[10px] capitalize">
-                      {unit.operationalStatus}
-                    </Badge>
-                    {unit.notes && (
-                      <span className="text-xs text-neutral-400">{unit.notes}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex shrink-0 gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setEditing(unit.id)}
-                    title="Edit"
-                  >
-                    <Edit3 className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-destructive"
-                    onClick={() => setDeleteConfirm(unit.id)}
-                    title="Delete"
-                    disabled={saving === unit.id}
-                  >
-                    {saving === unit.id ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Trash2 className="size-3.5" />
-                    )}
-                  </Button>
-                </div>
+                )}
               </div>
-            )}
-          </div>
-        ))
+            );
+          })}
+        </div>
       )}
 
       {/* Create form */}
       {showCreate && (
-        <form
-          onSubmit={handleCreate}
-          className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6"
-        >
+        <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
           <h3 className="font-semibold text-neutral-800">New room unit</h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <Label htmlFor="new-room">Room</Label>
               <Select name="roomId" defaultValue="">
@@ -396,25 +472,54 @@ export function RoomUnitsManager({
                 </SelectTrigger>
                 <SelectContent>
                   {rooms.filter((r) => r.status !== "archived").map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.name}
-                    </SelectItem>
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label htmlFor="new-block">Block</Label>
-              <Select name="block" defaultValue="">
+              <Select value={newBlockId} onValueChange={handleBlockChange}>
                 <SelectTrigger id="new-block" className="mt-1 h-10">
                   <SelectValue placeholder="Select block" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="A">Block A</SelectItem>
-                  <SelectItem value="B">Block B</SelectItem>
-                  <SelectItem value="C">Block C</SelectItem>
+                  {blocks.filter((b) => b.isActive).map((b) => (
+                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <input type="hidden" name="blockId" value={newBlockId} />
+              <button
+                type="button"
+                className="mt-1 text-xs font-medium text-primary hover:underline"
+                onClick={() => setShowInlineBlockForm(!showInlineBlockForm)}
+              >
+                {showInlineBlockForm ? "Cancel" : "+ Add new block"}
+              </button>
+              {showInlineBlockForm && (
+                <div className="mt-2 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                  <Input
+                    placeholder="Block name"
+                    value={newBlockName}
+                    onChange={(e) => setNewBlockName(e.target.value)}
+                    className="h-9 text-sm"
+                  />
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Short code"
+                      value={newBlockShortCode}
+                      onChange={(e) => setNewBlockShortCode(e.target.value)}
+                      className="h-9 flex-1 text-sm uppercase"
+                      maxLength={10}
+                    />
+                    <Button type="button" size="sm" className="h-9" onClick={handleInlineCreateBlock}>
+                      <Plus className="size-3.5" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="new-number">Room number</Label>
@@ -424,15 +529,26 @@ export function RoomUnitsManager({
                 type="number"
                 min="1"
                 max="99"
-                placeholder="e.g. 01"
+                placeholder="e.g. 03"
                 className="mt-1 h-10"
+                value={newRoomNumber}
+                onChange={(e) => handleRoomNumberChange(e.target.value)}
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="new-status">Operational status</Label>
+            {generatedCode && (
+              <div className="sm:col-span-2 lg:col-span-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  <span className="text-neutral-500">Code: <strong className="text-neutral-800">{generatedCode}</strong></span>
+                  <span className="text-neutral-300">|</span>
+                  <span className="text-neutral-500">Name: <strong className="text-neutral-800">{generatedName}</strong></span>
+                </div>
+              </div>
+            )}
+            <div className="sm:col-span-2 lg:col-span-3">
+              <Label>Operational status</Label>
               <Select name="operationalStatus" defaultValue="available">
-                <SelectTrigger id="new-status" className="mt-1 h-10">
+                <SelectTrigger className="mt-1 h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -444,32 +560,21 @@ export function RoomUnitsManager({
                 </SelectContent>
               </Select>
             </div>
-            <div className="sm:col-span-2">
+            <div className="sm:col-span-2 lg:col-span-3">
               <Label htmlFor="new-notes">Notes (optional)</Label>
               <Textarea id="new-notes" name="notes" className="mt-1" rows={2} />
             </div>
           </div>
           <div className="mt-4 flex gap-2">
-            <Button type="submit" disabled={saving === "new"}>
+            <Button type="submit" disabled={saving === "new" || !newBlockId}>
               {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
               Create room unit
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setShowCreate(false)}
-            >
+            <Button type="button" variant="ghost" onClick={() => { setShowCreate(false); setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); }}>
               Cancel
             </Button>
           </div>
         </form>
-      )}
-
-      {!showCreate && filteredUnits.length > 0 && (
-        <Button variant="outline" onClick={() => setShowCreate(true)}>
-          <Plus className="size-4" />
-          Add room unit
-        </Button>
       )}
 
       {deleteConfirm && (

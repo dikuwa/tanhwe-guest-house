@@ -3,11 +3,11 @@ import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, roomUnits, rooms, roomTypes } from "@/lib/db/schema";
+import { activityLogs, blocks, roomUnits, rooms, roomTypes } from "@/lib/db/schema";
 
 export const roomUnitInput = z.object({
   roomId: z.string().min(1),
-  block: z.enum(["A", "B", "C"]),
+  blockId: z.string().min(1),
   roomNumber: z.coerce.number().int().min(1).max(99),
   displayName: z.string().trim().min(2).max(200).optional(),
   operationalStatus: z.enum(["available", "cleaning", "maintenance", "blocked", "inactive"]).default("available"),
@@ -73,23 +73,27 @@ export async function POST(request: NextRequest) {
   const room = await db.query.rooms.findFirst({ where: eq(rooms.id, parsed.data.roomId) });
   if (!room) return NextResponse.json({ error: "Room not found" }, { status: 404 });
 
-  const block = parsed.data.block;
+  const block = await db.query.blocks.findFirst({ where: eq(blocks.id, parsed.data.blockId) });
+  if (!block) return NextResponse.json({ error: "Block not found" }, { status: 404 });
+
   const roomNumber = parsed.data.roomNumber;
-  const roomCode = `${block}${String(roomNumber).padStart(2, "0")}`;
-  const displayName = parsed.data.displayName || `Block ${block} – Room ${String(roomNumber).padStart(2, "0")}`;
+  const blockCode = block.shortCode;
+  const roomCode = `${blockCode}${String(roomNumber).padStart(2, "0")}`;
+  const displayName = parsed.data.displayName || `${block.name} – Room ${String(roomNumber).padStart(2, "0")}`;
 
   const existing = await db.query.roomUnits.findFirst({
-    where: and(eq(roomUnits.block, block), eq(roomUnits.roomNumber, roomNumber)),
+    where: and(eq(roomUnits.roomCode, roomCode)),
   });
   if (existing)
-    return NextResponse.json({ error: `Block ${block} – Room ${String(roomNumber).padStart(2, "0")} already exists` }, { status: 409 });
+    return NextResponse.json({ error: `Room code "${roomCode}" already exists` }, { status: 409 });
 
   const id = crypto.randomUUID();
   try {
     await db.insert(roomUnits).values({
       id,
       roomId: parsed.data.roomId,
-      block,
+      block: blockCode,
+      blockId: parsed.data.blockId,
       roomNumber,
       roomCode,
       displayName,

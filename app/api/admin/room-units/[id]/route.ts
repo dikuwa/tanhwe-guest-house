@@ -3,11 +3,11 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, bookingRoomUnits, bookingRooms, roomUnits } from "@/lib/db/schema";
+import { activityLogs, blocks, bookingRoomUnits, bookingRooms, roomUnits } from "@/lib/db/schema";
 
 const updateInput = z.object({
   roomId: z.string().min(1).optional(),
-  block: z.enum(["A", "B", "C"]).optional(),
+  blockId: z.string().min(1).optional(),
   roomNumber: z.coerce.number().int().min(1).max(99).optional(),
   displayName: z.string().trim().min(2).max(200).optional(),
   operationalStatus: z.enum(["available", "cleaning", "maintenance", "blocked", "inactive"]).optional(),
@@ -29,18 +29,29 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (parsed.data.roomId !== undefined) updates.roomId = parsed.data.roomId;
-  if (parsed.data.block !== undefined) updates.block = parsed.data.block;
+  if (parsed.data.blockId !== undefined) {
+    updates.blockId = parsed.data.blockId;
+    const block = await getDb().query.blocks.findFirst({ where: eq(blocks.id, parsed.data.blockId) });
+    if (block) updates.block = block.shortCode;
+  }
   if (parsed.data.roomNumber !== undefined) updates.roomNumber = parsed.data.roomNumber;
   if (parsed.data.operationalStatus !== undefined) updates.operationalStatus = parsed.data.operationalStatus;
   if (parsed.data.isActive !== undefined) updates.isActive = parsed.data.isActive;
   if (parsed.data.notes !== undefined) updates.notes = parsed.data.notes;
 
-  if (updates.block || updates.roomNumber) {
-    const block = String(updates.block ?? existing.block);
+  if (updates.blockId || updates.roomNumber) {
+    let blockCode = existing.block;
+    if (parsed.data.blockId) {
+      const block = await getDb().query.blocks.findFirst({ where: eq(blocks.id, parsed.data.blockId) });
+      if (block) blockCode = block.shortCode;
+    }
     const roomNumber = Number(updates.roomNumber ?? existing.roomNumber);
-    updates.roomCode = `${block}${String(roomNumber).padStart(2, "0")}`;
+    updates.roomCode = `${blockCode}${String(roomNumber).padStart(2, "0")}` as string;
     if (!updates.displayName) {
-      updates.displayName = `Block ${block} – Room ${String(roomNumber).padStart(2, "0")}`;
+      const blockName = parsed.data.blockId
+        ? (await getDb().query.blocks.findFirst({ where: eq(blocks.id, parsed.data.blockId) }))?.name ?? `Block ${blockCode}`
+        : `Block ${blockCode}`;
+      updates.displayName = `${blockName} – Room ${String(roomNumber).padStart(2, "0")}` as string;
     }
   }
   if (parsed.data.displayName !== undefined) {

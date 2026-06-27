@@ -31,7 +31,7 @@ export const items = [
     roles: ["owner", "admin"],
     children: [
       { href: "/admin/rooms", label: "All rooms" },
-      { href: "/admin/rooms/manage", label: "Room types & units" },
+      { href: "/admin/rooms/manage", label: "Inventory" },
     ],
   },
   { href: "/admin/bookings", label: "Bookings", icon: BookOpen, roles: ["owner", "admin", "staff"] },
@@ -65,9 +65,9 @@ function NavItem({
   collapsed?: boolean;
   onItemClick?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const hasChildren = "children" in item && item.children && item.children.length > 0;
-  const expanded = open || (hasChildren && item.children!.some((c) => pathname.startsWith(c.href)));
+  const childActive = hasChildren && item.children!.some((c) => pathname.startsWith(c.href));
+  const [open, setOpen] = useState(childActive);
 
   if (!hasChildren) {
     const active = isActive(pathname, (item as { href: string }).href);
@@ -99,7 +99,6 @@ function NavItem({
   }
 
   // Parent with children
-  const childActive = item.children!.some((c) => pathname.startsWith(c.href));
 
   return (
     <div>
@@ -127,13 +126,13 @@ function NavItem({
             <ChevronDown
               className={cn(
                 "size-3.5 text-neutral-400 transition-transform",
-                expanded && "rotate-180"
+                open && "rotate-180"
               )}
             />
           </>
         )}
       </button>
-      {!collapsed && expanded && (
+      {!collapsed && open && (
         <div className="ml-2 mt-0.5 space-y-0.5 border-l border-neutral-200 pl-2">
           {item.children!.map((child) => {
             const active = isActive(pathname, child.href);

@@ -3,6 +3,7 @@ import "server-only";
 import { and, asc, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
+  blocks,
   bookingRooms,
   bookings,
   customers,
@@ -139,6 +140,23 @@ export async function getAdminRoomUnits(roomId?: string) {
     .from(roomUnits)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(asc(roomUnits.block), asc(roomUnits.roomNumber));
+}
+
+export async function getAdminBlocks() {
+  return getDb()
+    .select({
+      id: blocks.id,
+      name: blocks.name,
+      shortCode: blocks.shortCode,
+      description: blocks.description,
+      displayOrder: blocks.displayOrder,
+      isActive: blocks.isActive,
+      roomUnitCount: sql<number>`coalesce(count(${roomUnits.id}) filter (where ${roomUnits.isActive} = true), 0)::int`,
+    })
+    .from(blocks)
+    .leftJoin(roomUnits, eq(roomUnits.blockId, blocks.id))
+    .groupBy(blocks.id)
+    .orderBy(asc(blocks.displayOrder), asc(blocks.name));
 }
 
 export async function getActiveRoomOptions() {

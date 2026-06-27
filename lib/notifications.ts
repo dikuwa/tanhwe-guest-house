@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { notifications, users } from "./db/schema";
 
@@ -89,4 +89,11 @@ export async function markAllAsRead(userId: string) {
     .update(notifications)
     .set({ readAt: new Date() })
     .where(and(eq(notifications.userId, userId), isNull(notifications.readAt)));
+}
+
+/** Delete all notifications for a user */
+export async function clearAll(userId: string) {
+  await getDb()
+    .delete(notifications)
+    .where(eq(notifications.userId, userId));
 }

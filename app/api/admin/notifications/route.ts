@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeRequest } from "@/lib/auth-middleware";
-import { getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/lib/notifications";
+import { clearAll, getNotifications, getUnreadCount, markAsRead, markAllAsRead } from "@/lib/notifications";
 
 export async function GET(request: NextRequest) {
   const session = await authorizeRequest(request.headers, ["owner", "admin", "staff"]);
@@ -34,4 +34,12 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+}
+
+export async function DELETE(request: NextRequest) {
+  const session = await authorizeRequest(request.headers, ["owner", "admin", "staff"]);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await clearAll(session.user.id);
+  return NextResponse.json({ success: true });
 }

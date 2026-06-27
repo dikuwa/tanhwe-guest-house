@@ -121,7 +121,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
         <div className="space-y-1.5">
           <Label htmlFor="roomId">Room</Label>
           <Select value={roomId} onValueChange={(v) => v && setRoomId(v)}>
-            <SelectTrigger id="roomId" className="w-full">
+            <SelectTrigger id="roomId" className="w-full h-11">
               <SelectValue placeholder="Select a room" />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +176,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             id="fullName"
             name="fullName"
             required
-            className={cn("mt-2", fieldErrors.fullName && "border-destructive")}
+            className={cn("mt-2 h-11", fieldErrors.fullName && "border-destructive")}
           />
           <FieldError>{fieldErrors.fullName}</FieldError>
         </div>
@@ -186,7 +186,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             id="phone"
             name="phone"
             required
-            className={cn("mt-2", fieldErrors.phone && "border-destructive")}
+            className={cn("mt-2 h-11", fieldErrors.phone && "border-destructive")}
           />
           <FieldError>{fieldErrors.phone}</FieldError>
         </div>
@@ -196,7 +196,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             id="whatsapp"
             name="whatsapp"
             placeholder="Same as phone if left empty"
-            className={cn("mt-2", fieldErrors.whatsapp && "border-destructive")}
+            className={cn("mt-2 h-11", fieldErrors.whatsapp && "border-destructive")}
           />
           <FieldError>{fieldErrors.whatsapp}</FieldError>
         </div>
@@ -206,7 +206,7 @@ export function BookingForm({ rooms }: { rooms: Option[] }) {
             id="email"
             name="email"
             type="email"
-            className={cn("mt-2", fieldErrors.email && "border-destructive")}
+            className={cn("mt-2 h-11", fieldErrors.email && "border-destructive")}
           />
           <FieldError>{fieldErrors.email}</FieldError>
         </div>
@@ -230,7 +230,7 @@ function Field(props: React.ComponentProps<typeof Input> & { label: string }) {
   return (
     <div>
       <Label htmlFor={String(input.name)}>{label}</Label>
-      <Input id={String(input.name)} className="mt-2" {...input} />
+      <Input id={String(input.name)} className="mt-2 h-11" {...input} />
     </div>
   );
 }

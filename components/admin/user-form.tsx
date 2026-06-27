@@ -176,21 +176,21 @@ export function UserForm({ onCreated }: UserFormProps) {
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <Label htmlFor="uf-name">Name</Label>
-                    <Input id="uf-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5" />
+                    <Input id="uf-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5 h-11" />
                     {nameErr && <p className="mt-1 text-sm text-red-500">{nameErr}</p>}
                   </div>
                   <div>
                     <Label htmlFor="uf-email">Email</Label>
-                    <Input id="uf-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
+                    <Input id="uf-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5 h-11" />
                     {emailErr && <p className="mt-1 text-sm text-red-500">{emailErr}</p>}
                   </div>
                   <div>
                     <Label htmlFor="uf-phone">Phone</Label>
-                    <Input id="uf-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1.5" />
+                    <Input id="uf-phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-1.5 h-11" />
                   </div>
                   <div>
                     <Label htmlFor="uf-jobTitle">Job title</Label>
-                    <Input id="uf-jobTitle" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="mt-1.5" />
+                    <Input id="uf-jobTitle" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className="mt-1.5 h-11" />
                   </div>
                   <div>
                     <Label htmlFor="uf-password">Password</Label>
@@ -201,7 +201,7 @@ export function UserForm({ onCreated }: UserFormProps) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Min 12 characters"
-                        className="pr-9"
+                        className="pr-9 h-11"
                       />
                       <button
                         type="button"
@@ -218,7 +218,7 @@ export function UserForm({ onCreated }: UserFormProps) {
                     <Label>Send login details via</Label>
                     <div className="mt-1.5">
                       <Select value={sendMethod} onValueChange={(v) => setSendMethod(v as "none" | "email")}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">Manually copy later</SelectItem>
                           <SelectItem value="email">Email</SelectItem>

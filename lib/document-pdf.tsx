@@ -194,7 +194,9 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
         <View style={styles.row}>
           <View>
             <BrandLogo />
-            <Text style={styles.muted}>{location}</Text>
+            <Text style={[styles.muted, { textAlign: "right" }]}>
+              {[town, region, country].filter(Boolean).join(", ")}
+            </Text>
           </View>
           <View>
             <Text style={styles.title}>{data.type}</Text>

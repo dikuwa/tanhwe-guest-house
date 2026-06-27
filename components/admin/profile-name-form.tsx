@@ -35,7 +35,7 @@ export function ProfileNameForm({ userName }: { userName: string }) {
     <form onSubmit={submit} className="flex items-end gap-3">
       <div className="flex-1">
         <Label htmlFor="profile-name">Display name</Label>
-        <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1" required />
+        <Input id="profile-name" value={name} onChange={(e) => setName(e.target.value)} className="mt-1 h-11" required />
       </div>
       <Button type="submit" variant="outline" disabled={saving || name.trim() === userName}>
         {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Save className="size-3.5" />}

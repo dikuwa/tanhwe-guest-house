@@ -92,7 +92,7 @@ export function FollowUpForm({ options, onCreated }: { options: Options; onCreat
             }
           }}
         >
-          <SelectTrigger id="follow-booking" className="w-full">
+          <SelectTrigger id="follow-booking" className="w-full h-11">
             <SelectValue placeholder="No booking" />
           </SelectTrigger>
           <SelectContent>
@@ -116,7 +116,7 @@ export function FollowUpForm({ options, onCreated }: { options: Options; onCreat
       <div className="lg:col-span-2 space-y-1.5">
         <Label htmlFor="follow-customer">Customer</Label>
         <Select value={customerId} onValueChange={(v) => v !== null && setCustomerId(v)}>
-          <SelectTrigger id="follow-customer" className="w-full">
+          <SelectTrigger id="follow-customer" className="w-full h-11">
             <SelectValue placeholder="Select a customer" />
           </SelectTrigger>
           <SelectContent>
@@ -135,14 +135,14 @@ export function FollowUpForm({ options, onCreated }: { options: Options; onCreat
           id="follow-title"
           name="title"
           required
-          className="mt-2"
+          className="mt-2 h-11"
           placeholder="e.g. Confirm deposit with guest"
         />
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="follow-type">Type</Label>
         <Select value={type} onValueChange={(v) => v !== null && setType(v)}>
-          <SelectTrigger id="follow-type" className="w-full">
+          <SelectTrigger id="follow-type" className="w-full h-11">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -185,7 +185,7 @@ export function FollowUpForm({ options, onCreated }: { options: Options; onCreat
       <div className="space-y-1.5">
         <Label htmlFor="follow-assignee">Assign to</Label>
         <Select value={assignedTo} onValueChange={(v) => v !== null && setAssignedTo(v)}>
-          <SelectTrigger id="follow-assignee" className="w-full">
+          <SelectTrigger id="follow-assignee" className="w-full h-11">
             <SelectValue placeholder="Unassigned" />
           </SelectTrigger>
           <SelectContent>

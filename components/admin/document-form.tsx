@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { FormRow } from "@/components/forms/form-row";
 
 type BookingOption = {
   id: string;
@@ -61,68 +62,70 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
   return (
     <form
       onSubmit={submit}
-      className="grid gap-4 rounded-xl border bg-card p-5 shadow-xs lg:grid-cols-[1.6fr_1.1fr_1fr_auto] lg:items-end md:grid-cols-2"
+      className="rounded-xl border bg-card p-5 shadow-xs"
     >
-      <div className="space-y-1.5 min-w-0">
-        <Label htmlFor="document-booking">Booking</Label>
-        <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
-          <SelectTrigger id="document-booking" className="w-full">
-            <SelectValue placeholder="Select booking" />
-          </SelectTrigger>
-          <SelectContent>
-            {bookings.map((booking) => (
-              <SelectItem key={booking.id} value={booking.id}>
-                {booking.bookingNumber} &middot; {booking.customerName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5 min-w-0">
-        <Label htmlFor="document-type">Document type</Label>
-        <Select value={type} onValueChange={(v) => v && setType(v)}>
-          <SelectTrigger id="document-type" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="quote">Quote</SelectItem>
-            <SelectItem value="invoice">Invoice</SelectItem>
-            <SelectItem value="receipt">Receipt</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5 min-w-0">
-        <Label htmlFor="expiresAt">
-          Valid until <span className="text-muted-foreground font-normal">(optional)</span>
-        </Label>
-        <Popover>
-          <PopoverTrigger
-            id="expiresAt"
-            className={cn(
-              "flex h-11 w-full items-center rounded-lg border border-input bg-transparent px-3 text-sm transition-colors",
-              "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-              expiresAt ? "text-foreground" : "text-muted-foreground"
-            )}
-          >
-            {expiresAt ? format(expiresAt, "d MMM yyyy") : "Pick a date"}
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={expiresAt}
-              onSelect={setExpiresAt}
-              fromDate={new Date()}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <Button type="submit" disabled={saving || !bookings.length}>
-        {saving ? <Loader2 className="size-4 animate-spin" /> : <FilePlus2 className="size-4" />}
-        {saving ? "Creating..." : "Create"}
-      </Button>
+      <FormRow>
+        <div className="space-y-1.5 min-w-0">
+          <Label htmlFor="document-booking">Booking</Label>
+          <Select value={bookingId} onValueChange={(v) => v && setBookingId(v)}>
+            <SelectTrigger id="document-booking" className="h-11 w-full">
+              <SelectValue placeholder="Select booking" />
+            </SelectTrigger>
+            <SelectContent>
+              {bookings.map((booking) => (
+                <SelectItem key={booking.id} value={booking.id}>
+                  {booking.bookingNumber} &middot; {booking.customerName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5 min-w-0">
+          <Label htmlFor="document-type">Document type</Label>
+          <Select value={type} onValueChange={(v) => v && setType(v)}>
+            <SelectTrigger id="document-type" className="h-11 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="quote">Quote</SelectItem>
+              <SelectItem value="invoice">Invoice</SelectItem>
+              <SelectItem value="receipt">Receipt</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5 min-w-0">
+          <Label htmlFor="expiresAt">
+            Valid until <span className="text-muted-foreground font-normal">(optional)</span>
+          </Label>
+          <Popover>
+            <PopoverTrigger
+              id="expiresAt"
+              className={cn(
+                "flex h-11 w-full items-center rounded-lg border border-input bg-transparent px-3 text-sm transition-colors",
+                "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                expiresAt ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              {expiresAt ? format(expiresAt, "d MMM yyyy") : "Pick a date"}
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={expiresAt}
+                onSelect={setExpiresAt}
+                fromDate={new Date()}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <Button type="submit" disabled={saving || !bookings.length}>
+          {saving ? <Loader2 className="size-4 animate-spin" /> : <FilePlus2 className="size-4" />}
+          {saving ? "Creating..." : "Create"}
+        </Button>
+      </FormRow>
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 md:col-span-2 lg:col-span-4">
+        <p role="alert" className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           {error}
         </p>
       )}

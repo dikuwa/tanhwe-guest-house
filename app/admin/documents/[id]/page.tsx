@@ -15,6 +15,7 @@ import {
 import { requireRole } from "@/lib/auth-middleware";
 import { createDocumentShareToken } from "@/lib/document-share";
 import { getDb } from "@/lib/db";
+import { buildLocation } from "@/lib/utils";
 
 type Snapshot = {
   bookingNumber: string;
@@ -98,7 +99,9 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
         <header className="flex flex-wrap justify-between gap-8 border-b pb-8">
           <div>
             <TanhweLogo size="md" showIcon />
-            <p className="mt-2 text-sm text-muted-foreground">{settings.location}</p>
+            <p className="mt-1 text-right text-xs text-muted-foreground">
+              {buildLocation(settings.town, settings.region, settings.country)}
+            </p>
           </div>
           <div className="sm:text-right">
             <p className="text-sm uppercase tracking-wider text-muted-foreground">

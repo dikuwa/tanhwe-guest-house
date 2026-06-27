@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type NotificationItem = {
   id: string;
@@ -23,6 +24,8 @@ export function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -85,6 +88,23 @@ export function NotificationBell() {
     }
   };
 
+  const clearAllNotifications = async () => {
+    setClearing(true);
+    try {
+      const response = await fetch("/api/admin/notifications", {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setNotifications([]);
+        setUnread(0);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setClearing(false);
+    }
+  };
+
   const markRead = async (id: string) => {
     try {
       await fetch("/api/admin/notifications", {
@@ -135,21 +155,38 @@ export function NotificationBell() {
                 </span>
               )}
             </p>
-            {unreadItems.length > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                disabled={markingAll}
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                {markingAll ? (
-                  <Loader2 className="size-3 animate-spin" />
-                ) : (
-                  <CheckCheck className="size-3" />
-                )}
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  disabled={markingAll}
+                  className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                >
+                  {markingAll ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <CheckCheck className="size-3" />
+                  )}
+                  Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setConfirmClearOpen(true)}
+                  disabled={clearing}
+                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  {clearing ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="size-3" />
+                  )}
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-[400px] overflow-y-auto">
@@ -246,6 +283,16 @@ export function NotificationBell() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmClearOpen}
+        onOpenChange={setConfirmClearOpen}
+        title="Clear all notifications"
+        description="This will permanently remove all notifications. This action cannot be undone."
+        confirmLabel="Clear all"
+        variant="destructive"
+        onConfirm={clearAllNotifications}
+      />
     </div>
   );
 }

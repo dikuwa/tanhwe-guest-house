@@ -61,6 +61,7 @@ type Props = {
 
 type BookingLine = {
   id: string;
+  roomId: string;
   roomTypeId: string;
   roomName: string;
   pricePerNight: number;
@@ -130,25 +131,23 @@ export function BookingRequestForm(props: Props) {
       const key = room.roomTypeId ?? room.id;
       if (!byType.has(key)) byType.set(key, room);
     }
-    if (!byType.has(firstRoomTypeId)) {
-      byType.set(firstRoomTypeId, {
-        id: props.roomId,
-        roomTypeId: props.roomTypeId,
-        name: props.roomName,
-        slug: "",
-        type: "",
-        description: null,
-        pricePerNight: props.pricePerNight,
-        availableUnits: props.availableUnits,
-        maxGuests: props.maxGuests,
-        breakfastIncluded: false,
-        featured: false,
-        imageUrl: null,
-        images: [],
-        amenities: [],
-        bedConfiguration: null,
-      });
-    }
+    byType.set(firstRoomTypeId, {
+      id: props.roomId,
+      roomTypeId: props.roomTypeId,
+      name: props.roomName,
+      slug: "",
+      type: "",
+      description: null,
+      pricePerNight: props.pricePerNight,
+      availableUnits: props.availableUnits,
+      maxGuests: props.maxGuests,
+      breakfastIncluded: false,
+      featured: false,
+      imageUrl: null,
+      images: [],
+      amenities: [],
+      bedConfiguration: null,
+    });
     return Array.from(byType.values());
   }, [firstRoomTypeId, props]);
 
@@ -239,6 +238,7 @@ export function BookingRequestForm(props: Props) {
           ...current,
           {
             id: crypto.randomUUID(),
+            roomId: selectedRoom.id,
             roomTypeId,
             roomName: selectedRoom.name,
             pricePerNight: selectedRoom.pricePerNight,
@@ -349,6 +349,7 @@ export function BookingRequestForm(props: Props) {
         body: JSON.stringify({
           lines: lines.map((line) => ({
             roomTypeId: line.roomTypeId,
+            roomId: line.roomId,
             quantity: line.quantity,
             guestsCount: line.guestsCount,
             checkIn: line.checkIn,
@@ -580,9 +581,14 @@ export function BookingRequestForm(props: Props) {
                     </p>
                   )}
 
-                  <Button type="button" className="w-full" onClick={addRoomLine}>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={addRoomLine}
+                    disabled={selectedRoom.availableUnits < 1}
+                  >
                     <Plus className="size-4" />
-                    Add to booking
+                    {selectedRoom.availableUnits < 1 ? "No units available" : "Add to booking"}
                   </Button>
                 </div>
               )}
@@ -614,14 +620,14 @@ export function BookingRequestForm(props: Props) {
                 {error}
               </p>
             )}
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
               <Button type="button" variant="outline" onClick={() => setStep(step === "review" ? "details" : "rooms")}>
                 {step === "review" ? <Pencil className="size-4" /> : <BedDouble className="size-4" />}
                 {step === "review" ? "Edit guest details" : "Edit rooms"}
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
-                {step === "review" ? (submitting ? "Sending..." : "Submit booking request") : "Review booking"}
+                {step === "review" ? (submitting ? "Sending..." : "Submit request") : "Review booking"}
               </Button>
             </div>
           </>
@@ -802,7 +808,7 @@ function GuestFields({
   };
 
   return (
-    <fieldset className="space-y-4" disabled={disabled}>
+    <fieldset className="space-y-4">
       <legend className="text-sm font-semibold">Primary guest</legend>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
@@ -810,7 +816,7 @@ function GuestFields({
             <User className="size-4 text-muted-foreground" aria-hidden="true" />
             Full name
           </Label>
-          <Input id="fullName" name="fullName" autoComplete="name" required className={cn(fieldErrors.fullName && "border-destructive")} />
+          <Input id="fullName" name="fullName" autoComplete="name" required readOnly={disabled} className={cn(fieldErrors.fullName && "border-destructive")} />
           {fieldErrors.fullName && <InlineError>{fieldErrors.fullName}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -818,7 +824,7 @@ function GuestFields({
             <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
             Phone
           </Label>
-          <Input id="phone" name="phone" type="tel" autoComplete="tel" required placeholder="+264 81 234 5678" className={cn(fieldErrors.phone && "border-destructive")} />
+          <Input id="phone" name="phone" type="tel" autoComplete="tel" required readOnly={disabled} placeholder="+264 81 234 5678" className={cn(fieldErrors.phone && "border-destructive")} />
           {fieldErrors.phone && <InlineError>{fieldErrors.phone}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -826,7 +832,7 @@ function GuestFields({
             <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
             WhatsApp <span className="font-normal text-muted-foreground">(optional)</span>
           </Label>
-          <Input id="whatsapp" name="whatsapp" type="tel" placeholder="Same as phone if left empty" className={cn(fieldErrors.whatsapp && "border-destructive")} />
+          <Input id="whatsapp" name="whatsapp" type="tel" readOnly={disabled} placeholder="Same as phone if left empty" className={cn(fieldErrors.whatsapp && "border-destructive")} />
           {fieldErrors.whatsapp && <InlineError>{fieldErrors.whatsapp}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -834,7 +840,7 @@ function GuestFields({
             <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
             Email
           </Label>
-          <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className={cn(fieldErrors.email && "border-destructive")} />
+          <Input id="email" name="email" type="email" autoComplete="email" readOnly={disabled} placeholder="optional" className={cn(fieldErrors.email && "border-destructive")} />
           {fieldErrors.email && <InlineError>{fieldErrors.email}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -866,7 +872,7 @@ function GuestFields({
           <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
           Special requests
         </Label>
-        <Textarea id="notes" name="notes" rows={3} placeholder="Arrival time, accessibility needs, or anything else we should know" />
+        <Textarea id="notes" name="notes" rows={3} readOnly={disabled} placeholder="Arrival time, accessibility needs, or anything else we should know" />
       </div>
     </fieldset>
   );

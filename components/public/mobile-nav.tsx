@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { X, Phone } from "lucide-react";
@@ -28,35 +27,11 @@ export function MobileNav({
   whatsapp: string;
 }) {
   const pathname = usePathname();
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  const [mounted, setMounted] = useState(false);
-  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    // Use a stable portal container at the end of <body>
-    let el = document.getElementById("tanhwe-mobile-portal");
-    if (!el) {
-      el = document.createElement("div");
-      el.id = "tanhwe-mobile-portal";
-      document.body.appendChild(el);
-    }
-    setPortalRoot(el);
-    return () => {
-      const existing = document.getElementById("tanhwe-mobile-portal");
-      if (existing && existing.children.length === 0) {
-        existing.remove();
-      }
-    };
-  }, []);
 
   // Close on route change
   useEffect(() => {
-    if (open) onCloseRef.current();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    if (open) onClose();
+  }, [onClose, open, pathname]);
 
   // Lock body scroll when open — save/restore original overflow
   useEffect(() => {
@@ -72,18 +47,18 @@ export function MobileNav({
   useEffect(() => {
     if (!open) return;
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onCloseRef.current();
+      if (e.key === "Escape") onClose();
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open]);
+  }, [onClose, open]);
 
   const phoneHref = `tel:${phone.replace(/[^+\d]/g, "")}`;
   const whatsappHref = `https://wa.me/${whatsapp.replace(/\D/g, "")}`;
 
-  if (!mounted || !portalRoot) return null;
+  if (!open) return null;
 
-  return createPortal(
+  return (
     <div
       data-tanhwe-mobile-nav-overlay
       style={{
@@ -96,7 +71,7 @@ export function MobileNav({
         overflow: "hidden",
         zIndex: 9999,
         pointerEvents: "auto",
-        visibility: open ? "visible" : "hidden",
+        visibility: "visible",
       }}
       className="md:hidden"
     >
@@ -117,7 +92,7 @@ export function MobileNav({
           transition: "opacity 200ms ease",
           padding: 0,
         }}
-        onClick={() => onCloseRef.current()}
+        onClick={onClose}
       />
 
       {/* Drawer panel */}
@@ -175,7 +150,7 @@ export function MobileNav({
               border: "none",
               cursor: "pointer",
             }}
-            onClick={() => onCloseRef.current()}
+            onClick={onClose}
           >
             <X className="size-4" />
           </button>
@@ -197,7 +172,7 @@ export function MobileNav({
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => onCloseRef.current()}
+                onClick={onClose}
                 aria-current={pathname === link.href ? "page" : undefined}
                 className={cn(
                   "rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-muted",
@@ -237,14 +212,13 @@ export function MobileNav({
           </a>
           <a
             href={phoneHref}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-secondary/20 bg-[color-mix(in_oklch,var(--secondary)_9%,var(--background))] px-4 py-2.5 text-sm font-medium text-secondary transition-colors hover:bg-[color-mix(in_oklch,var(--secondary)_16%,var(--background))] active:bg-[color-mix(in_oklch,var(--secondary)_22%,var(--background))]"
           >
             <Phone className="size-4" />
             {phone}
           </a>
         </div>
       </aside>
-    </div>,
-    portalRoot
+    </div>
   );
 }

@@ -25,7 +25,13 @@ export function ContactActions({
       >
         <MessageCircle className="size-4" /> WhatsApp
       </a>
-      <a href={phoneHref} className={buttonVariants({ variant: "outline", size: "default" })}>
+      <a
+        href={phoneHref}
+        className={cn(
+          buttonVariants({ variant: "outline", size: "default" }),
+          "border-secondary/20 bg-[color-mix(in_oklch,var(--secondary)_9%,var(--background))] text-secondary hover:bg-[color-mix(in_oklch,var(--secondary)_16%,var(--background))] hover:text-secondary active:bg-[color-mix(in_oklch,var(--secondary)_22%,var(--background))]"
+        )}
+      >
         <Phone className="size-4" /> {phone}
       </a>
     </div>

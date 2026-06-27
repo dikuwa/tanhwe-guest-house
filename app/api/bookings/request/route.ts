@@ -26,6 +26,7 @@ const legacySchema = z.object({
 
 const lineSchema = z.object({
   roomTypeId: z.string().min(1).max(128),
+  roomId: z.string().min(1).max(128).optional(),
   quantity: z.coerce.number().int().min(1).max(10),
   guestsCount: z.coerce.number().int().min(1).max(30),
   checkIn: date,
@@ -108,6 +109,44 @@ export async function POST(request: NextRequest) {
       });
 
       if (!availability.available || !("roomType" in availability)) {
+        if (line.roomId && availability.reason === "Room type is unavailable") {
+          const roomAvailability = await checkRoomAvailability({
+            roomId: line.roomId,
+            checkIn,
+            checkOut,
+            roomsCount: line.quantity,
+          });
+
+          if (!roomAvailability.available || !("room" in roomAvailability)) {
+            return NextResponse.json(
+              { error: roomAvailability.reason ?? "Room is unavailable for those dates" },
+              { status: 409 }
+            );
+          }
+
+          if (line.guestsCount > roomAvailability.room.maxGuests * line.quantity) {
+            return NextResponse.json(
+              { error: `${roomAvailability.room.name} allows up to ${roomAvailability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+              { status: 400 }
+            );
+          }
+
+          lineResults.push({
+            roomType: null,
+            roomName: roomAvailability.room.name,
+            roomTypeId: roomAvailability.room.roomTypeId,
+            checkIn,
+            checkOut,
+            nights: roomAvailability.nights,
+            pricePerNight: roomAvailability.pricePerNight,
+            subtotal: roomAvailability.subtotal,
+            quantity: line.quantity,
+            guestsCount: line.guestsCount,
+            roomIds: [roomAvailability.room.id],
+          });
+          continue;
+        }
+
         return NextResponse.json(
           { error: `${availability.reason ?? "Room type is unavailable for those dates"}` },
           { status: 409 }
@@ -197,63 +236,68 @@ export async function POST(request: NextRequest) {
   const totalGuests = lineResults.reduce((sum, line) => sum + line.guestsCount, 0);
   const subtotal = lineResults.reduce((sum, line) => sum + line.subtotal, 0);
 
-  await getDb().transaction(async (tx) => {
-    if (!matchedCustomer)
-      await tx.insert(customers).values({
-        id: customerId,
-        fullName: body.data.fullName,
-        phone: body.data.phone,
-        whatsapp: waNumber,
-        email: body.data.email || null,
-      });
-    await tx.insert(bookings).values({
-      id: bookingId,
-      bookingNumber,
-      customerId,
-      checkIn,
-      checkOut,
-      nights: totalNights,
-      guestsCount: totalGuests,
-      status: "pending",
-      source: "website",
-      subtotal,
-      total: subtotal,
-      balanceDue: subtotal,
-      notes,
-    });
-
-    for (const line of lineResults) {
-      const bookingRoomId = crypto.randomUUID();
-      await tx.insert(bookingRooms).values({
-        id: bookingRoomId,
-        bookingId,
-        roomId: line.roomIds[0],
-        roomTypeId: line.roomTypeId,
-        roomNameSnapshot: line.roomName,
-        pricePerNight: line.pricePerNight,
-        roomsCount: line.quantity,
-        nights: line.nights,
-        subtotal: line.subtotal,
-        checkIn: line.checkIn,
-        checkOut: line.checkOut,
-        guestsCount: line.guestsCount,
+  try {
+    await getDb().transaction(async (tx) => {
+      if (!matchedCustomer)
+        await tx.insert(customers).values({
+          id: customerId,
+          fullName: body.data.fullName,
+          phone: body.data.phone,
+          whatsapp: waNumber,
+          email: body.data.email || null,
+        });
+      await tx.insert(bookings).values({
+        id: bookingId,
+        bookingNumber,
+        customerId,
+        checkIn,
+        checkOut,
+        nights: totalNights,
+        guestsCount: totalGuests,
+        status: "pending",
+        source: "website",
+        subtotal,
+        total: subtotal,
+        balanceDue: subtotal,
+        notes,
       });
 
-      try {
-        await assignRoomUnitsForBooking(
-          tx,
+      for (const line of lineResults) {
+        const bookingRoomId = crypto.randomUUID();
+        await tx.insert(bookingRooms).values({
+          id: bookingRoomId,
           bookingId,
-          bookingRoomId,
-          line.roomIds,
-          line.checkIn,
-          line.checkOut,
-          line.quantity
-        );
-      } catch {
-        throw new Error(`${line.roomName} has fewer available units for the selected dates. Please reduce the quantity, select another room type, or change the dates.`);
+          roomId: line.roomIds[0],
+          roomTypeId: line.roomTypeId,
+          roomNameSnapshot: line.roomName,
+          pricePerNight: line.pricePerNight,
+          roomsCount: line.quantity,
+          nights: line.nights,
+          subtotal: line.subtotal,
+          checkIn: line.checkIn,
+          checkOut: line.checkOut,
+          guestsCount: line.guestsCount,
+        });
+
+        try {
+          await assignRoomUnitsForBooking(
+            tx,
+            bookingId,
+            bookingRoomId,
+            line.roomIds,
+            line.checkIn,
+            line.checkOut,
+            line.quantity
+          );
+        } catch {
+          throw new Error(`${line.roomName} has fewer available units for the selected dates. Please reduce the quantity, select another room type, or change the dates.`);
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "This room is no longer available for the selected dates.";
+    return NextResponse.json({ error: message }, { status: 409 });
+  }
 
   const totalRooms = lineResults.reduce((sum, line) => sum + line.quantity, 0);
   const roomTypeNames = [...new Set(lineResults.map((line) => line.roomName))];

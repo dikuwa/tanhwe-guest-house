@@ -70,7 +70,7 @@ export async function checkRoomAvailability(input: {
       )
     );
 
-  const totalUnits = Math.max(1, unitCount?.count ?? room.availableUnits);
+  const totalUnits = unitCount?.count ?? room.availableUnits;
   const reservedUnits = (assignedCount?.count ?? 0) + (oldReserved?.count ?? 0);
   const remainingUnits = Math.max(0, totalUnits - reservedUnits);
   const nights = calculateNights(input.checkIn, input.checkOut);
@@ -162,7 +162,7 @@ export async function checkRoomTypeAvailability(input: {
       )
     );
 
-  const totalUnits = Math.max(1, unitCount?.count ?? typeRooms.reduce((s, r) => s + r.availableUnits, 0));
+  const totalUnits = unitCount?.count ?? typeRooms.reduce((s, r) => s + r.availableUnits, 0);
   const reservedUnits = (assignedCount?.count ?? 0) + (oldReserved?.count ?? 0);
   const remainingUnits = Math.max(0, totalUnits - reservedUnits);
   const nights = calculateNights(input.checkIn, input.checkOut);

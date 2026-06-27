@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { faqs, roomAmenities, roomImages, roomTypes, rooms, roomUnits, settings, testimonials } from "./db/schema";
 
@@ -55,7 +55,7 @@ export async function getPublicRooms(): Promise<PublicRoom[]> {
       .where(
         and(
           eq(roomUnits.isActive, true),
-          eq(roomUnits.operationalStatus, "available")
+          inArray(roomUnits.operationalStatus, ["available", "cleaning"])
         )
       )
       .groupBy(roomUnits.roomId),
@@ -63,6 +63,9 @@ export async function getPublicRooms(): Promise<PublicRoom[]> {
   ]);
 
   const unitCountMap = new Map<string, number>();
+  for (const room of roomRows) {
+    unitCountMap.set(room.id, 0);
+  }
   for (const uc of unitCounts) {
     unitCountMap.set(uc.roomId, uc.count);
   }
@@ -117,7 +120,7 @@ export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
         and(
           eq(roomUnits.roomId, room.id),
           eq(roomUnits.isActive, true),
-          eq(roomUnits.operationalStatus, "available")
+          inArray(roomUnits.operationalStatus, ["available", "cleaning"])
         )
       ),
     room.roomTypeId

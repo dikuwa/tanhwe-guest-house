@@ -1,6 +1,7 @@
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { getPublicSettings } from "@/lib/public-data";
+import { cn } from "@/lib/utils";
 import { MapPin, Phone } from "lucide-react";
 import Link from "next/link";
 import { SiteNavigation } from "./site-navigation";
@@ -17,7 +18,10 @@ export async function SiteHeader() {
         <div className="flex items-center gap-2">
           <a
             href={phoneHref}
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "bg-[color-mix(in_oklch,var(--secondary)_9%,var(--background))] text-secondary hover:bg-[color-mix(in_oklch,var(--secondary)_16%,var(--background))] hover:text-secondary active:bg-[color-mix(in_oklch,var(--secondary)_22%,var(--background))]"
+            )}
             aria-label={`Call ${settings.phone}`}
           >
             <Phone aria-hidden="true" className="size-4" />

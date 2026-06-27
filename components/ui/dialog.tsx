@@ -27,53 +27,80 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      onInteractOutside={(event) => {
-        const originalEvent = (event as CustomEvent).detail?.originalEvent;
-        const target = originalEvent?.target as HTMLElement | null;
-        if (target?.closest('[data-slot="select-content"], [role="listbox"]')) {
-          event.preventDefault();
-          return;
-        }
-        if (originalEvent instanceof FocusEvent) {
-          const relatedTarget = originalEvent.relatedTarget as HTMLElement | null;
-          if (
-            relatedTarget &&
-            (relatedTarget.closest?.('[data-slot="select-content"], [role="listbox"]') ||
-              relatedTarget.matches?.('[data-slot="select-item"], [role="option"]'))
-          ) {
-            event.preventDefault();
-          }
-        }
-      }}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-neutral-200 bg-white p-6 shadow-xl duration-200 ease-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-xl",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(
+  (
+    { className, children, onInteractOutside, onPointerDownOutside, onFocusOutside, ...props },
+    ref
+  ) => {
+    function isSelectEvent(event: Event & { detail?: { originalEvent?: Event } }) {
+      const originalEvent = event.detail?.originalEvent;
+      const target = originalEvent?.target as HTMLElement | null;
+      if (
+        target?.closest(
+          '[data-slot="select-content"], [data-slot="select-item"], [role="listbox"], [role="option"]'
+        )
+      ) {
+        return true;
+      }
+      if (originalEvent instanceof FocusEvent) {
+        const relatedTarget = originalEvent.relatedTarget as HTMLElement | null;
+        return Boolean(
+          relatedTarget &&
+          (relatedTarget.closest?.(
+            '[data-slot="select-content"], [data-slot="select-item"], [role="listbox"], [role="option"]'
+          ) ||
+            relatedTarget.matches?.('[data-slot="select-item"], [role="option"]'))
+        );
+      }
+      return false;
+    }
+
+    return (
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          ref={ref}
+          onInteractOutside={(event) => {
+            if (isSelectEvent(event as Event & { detail?: { originalEvent?: Event } })) {
+              event.preventDefault();
+              return;
+            }
+            onInteractOutside?.(event);
+          }}
+          onPointerDownOutside={(event) => {
+            if (isSelectEvent(event as Event & { detail?: { originalEvent?: Event } })) {
+              event.preventDefault();
+              return;
+            }
+            onPointerDownOutside?.(event);
+          }}
+          onFocusOutside={(event) => {
+            if (isSelectEvent(event as Event & { detail?: { originalEvent?: Event } })) {
+              event.preventDefault();
+              return;
+            }
+            onFocusOutside?.(event);
+          }}
+          className={cn(
+            "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-neutral-200 bg-white p-6 shadow-xl duration-200 ease-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-xl",
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    );
+  }
+);
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-const DialogHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
 );
 DialogHeader.displayName = "DialogHeader";
 
-const DialogFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
     {...props}

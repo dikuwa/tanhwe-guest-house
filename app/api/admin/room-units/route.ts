@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, blocks, roomUnits, rooms, roomTypes } from "@/lib/db/schema";
+import { activityLogs, blocks, roomUnits, rooms } from "@/lib/db/schema";
 
 export const roomUnitInput = z.object({
   roomId: z.string().min(1),
   blockId: z.string().min(1),
   roomNumber: z.coerce.number().int().min(1).max(99),
   displayName: z.string().trim().min(2).max(200).optional(),
-  operationalStatus: z.enum(["available", "cleaning", "maintenance", "blocked", "inactive"]).default("available"),
+  operationalStatus: z
+    .enum(["available", "cleaning", "maintenance", "blocked", "inactive"])
+    .default("available"),
   isActive: z.boolean().default(true),
   notes: z.string().trim().max(1000).optional(),
 });
@@ -31,10 +33,7 @@ export async function GET(request: NextRequest) {
   if (block) conditions.push(eq(roomUnits.block, block));
   if (operationalStatus) conditions.push(eq(roomUnits.operationalStatus, operationalStatus));
   if (roomTypeId) {
-    const roomIds = db
-      .select({ id: rooms.id })
-      .from(rooms)
-      .where(eq(rooms.roomTypeId, roomTypeId));
+    const roomIds = db.select({ id: rooms.id }).from(rooms).where(eq(rooms.roomTypeId, roomTypeId));
     conditions.push(inArray(roomUnits.roomId, roomIds));
   }
 
@@ -43,6 +42,7 @@ export async function GET(request: NextRequest) {
       id: roomUnits.id,
       roomId: roomUnits.roomId,
       block: roomUnits.block,
+      blockId: roomUnits.blockId,
       roomNumber: roomUnits.roomNumber,
       roomCode: roomUnits.roomCode,
       displayName: roomUnits.displayName,
@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
   const roomNumber = parsed.data.roomNumber;
   const blockCode = block.shortCode;
   const roomCode = `${blockCode}${String(roomNumber).padStart(2, "0")}`;
-  const displayName = parsed.data.displayName || `${block.name} – Room ${String(roomNumber).padStart(2, "0")}`;
+  const displayName =
+    parsed.data.displayName || `${block.name} – Room ${String(roomNumber).padStart(2, "0")}`;
 
   const existing = await db.query.roomUnits.findFirst({
     where: and(eq(roomUnits.roomCode, roomCode)),
@@ -110,9 +111,12 @@ export async function POST(request: NextRequest) {
       details: displayName,
     });
     return NextResponse.json({ id, roomCode, displayName }, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     const msg = String(error);
-    const causeMsg = (error as any).cause ? String((error as any).cause) : "";
+    const causeMsg =
+      error && typeof error === "object" && "cause" in error
+        ? String((error as { cause?: unknown }).cause)
+        : "";
     if (msg.includes("foreign key constraint") || causeMsg.includes("foreign key constraint"))
       return NextResponse.json({ error: "Referenced record does not exist" }, { status: 400 });
     if (msg.includes("null value in column") || causeMsg.includes("null value in column"))

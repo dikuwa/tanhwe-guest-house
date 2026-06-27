@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Edit3, Loader2, Plus, Save, Trash2, X, DoorClosed } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -62,13 +62,7 @@ type RoomUnit = {
   roomStatus: string;
 };
 
-export function RoomUnitsManager({
-  rooms,
-  roomTypes,
-}: {
-  rooms: Room[];
-  roomTypes: RoomType[];
-}) {
+export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomTypes: RoomType[] }) {
   const router = useRouter();
   const [units, setUnits] = useState<RoomUnit[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -83,15 +77,17 @@ export function RoomUnitsManager({
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // Inline form state
+  const [newRoomId, setNewRoomId] = useState("");
   const [newBlockId, setNewBlockId] = useState("");
   const [newRoomNumber, setNewRoomNumber] = useState("");
+  const [newOperationalStatus, setNewOperationalStatus] = useState("available");
   const [generatedCode, setGeneratedCode] = useState("");
   const [generatedName, setGeneratedName] = useState("");
   const [showInlineBlockForm, setShowInlineBlockForm] = useState(false);
   const [newBlockName, setNewBlockName] = useState("");
   const [newBlockShortCode, setNewBlockShortCode] = useState("");
 
-  async function loadUnits() {
+  const loadUnits = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (filterBlockId !== "all") {
@@ -106,23 +102,29 @@ export function RoomUnitsManager({
       setUnits(data);
     }
     setLoading(false);
-  }
+  }, [blocks, filterBlockId, filterRoomTypeId, filterStatus]);
 
-  async function loadBlocks() {
+  const loadBlocks = useCallback(async () => {
     const res = await fetch("/api/admin/blocks");
     if (res.ok) {
       const data = await res.json();
       setBlocks(data.filter((b: Block) => b.isActive));
     }
-  }
-
-  useEffect(() => {
-    loadBlocks();
   }, []);
 
   useEffect(() => {
-    loadUnits();
-  }, [filterBlockId, filterStatus, filterRoomTypeId, blocks]);
+    const timeout = window.setTimeout(() => {
+      void loadBlocks();
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadBlocks]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      void loadUnits();
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [loadUnits]);
 
   function updatePreview(blockId: string, num: string) {
     const block = blocks.find((b) => b.id === blockId);
@@ -136,7 +138,19 @@ export function RoomUnitsManager({
     }
   }
 
-  function handleBlockChange(value: string | null, _details?: any) {
+  function resetCreateForm() {
+    setNewRoomId("");
+    setNewBlockId("");
+    setNewRoomNumber("");
+    setNewOperationalStatus("available");
+    setGeneratedCode("");
+    setGeneratedName("");
+    setShowInlineBlockForm(false);
+    setNewBlockName("");
+    setNewBlockShortCode("");
+  }
+
+  function handleBlockChange(value: string | null) {
     const v = value ?? "";
     setNewBlockId(v);
     updatePreview(v, newRoomNumber);
@@ -174,10 +188,11 @@ export function RoomUnitsManager({
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const roomId = String(form.get("roomId") ?? "");
-    const blockId = String(form.get("blockId") ?? "");
+    const roomId = newRoomId || String(form.get("roomId") ?? "");
+    const blockId = newBlockId || String(form.get("blockId") ?? "");
     const roomNumber = Number(form.get("roomNumber"));
-    const operationalStatus = String(form.get("operationalStatus") ?? "available");
+    const operationalStatus =
+      newOperationalStatus || String(form.get("operationalStatus") ?? "available");
     const notes = String(form.get("notes") ?? "").trim();
 
     if (!roomId || !blockId || !roomNumber) {
@@ -192,17 +207,22 @@ export function RoomUnitsManager({
       const response = await fetch("/api/admin/room-units", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomId, blockId, roomNumber, operationalStatus, notes: notes || undefined }),
+        body: JSON.stringify({
+          roomId,
+          blockId,
+          roomNumber,
+          operationalStatus,
+          notes: notes || undefined,
+        }),
       });
       const data = await response.json();
       if (!response.ok) return toast.error(data.error ?? "Could not create room unit");
       toast.success(`${data.displayName} created`);
       setShowCreate(false);
-      setNewBlockId("");
-      setNewRoomNumber("");
+      resetCreateForm();
       loadUnits();
       router.refresh();
-    } catch (e) {
+    } catch {
       toast.error("Could not create room unit");
     } finally {
       setSaving(null);
@@ -231,7 +251,12 @@ export function RoomUnitsManager({
       notes: String(form.get("notes") ?? "").trim() || null,
     };
 
-    if (!payload.blockId || payload.blockId === "null" || !payload.roomId || payload.roomId === "null")
+    if (
+      !payload.blockId ||
+      payload.blockId === "null" ||
+      !payload.roomId ||
+      payload.roomId === "null"
+    )
       return toast.error("Form values not captured correctly. Please try again.");
 
     setSaving(id);
@@ -247,7 +272,7 @@ export function RoomUnitsManager({
       setEditing(null);
       loadUnits();
       router.refresh();
-    } catch (e) {
+    } catch {
       toast.error("Could not update room unit");
     } finally {
       setSaving(null);
@@ -264,7 +289,7 @@ export function RoomUnitsManager({
       toast.success("Room unit deleted");
       loadUnits();
       router.refresh();
-    } catch (e) {
+    } catch {
       toast.error("Could not delete room unit");
     } finally {
       setSaving(null);
@@ -296,9 +321,13 @@ export function RoomUnitsManager({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All blocks</SelectItem>
-              {blocks.filter((b) => b.isActive).map((b) => (
-                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-              ))}
+              {blocks
+                .filter((b) => b.isActive)
+                .map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -348,7 +377,6 @@ export function RoomUnitsManager({
       ) : (
         <div className="space-y-2">
           {filteredUnits.map((unit) => {
-            const block = blocks.find((b) => b.id === unit.blockId);
             return (
               <div
                 key={unit.id}
@@ -364,23 +392,40 @@ export function RoomUnitsManager({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {rooms.filter((r) => r.status !== "archived").map((r) => (
-                              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                            ))}
+                            {rooms
+                              .filter((r) => r.status !== "archived")
+                              .map((r) => (
+                                <SelectItem key={r.id} value={r.id}>
+                                  {r.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label htmlFor={`edit-block-${unit.id}`}>Block</Label>
-                        <input type="hidden" name="blockId" value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block ?? ""} />
-                        <Select value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block} onValueChange={(v) => setEditBlockIds((p) => ({ ...p, [unit.id]: v ?? "" }))}>
+                        <input
+                          type="hidden"
+                          name="blockId"
+                          value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block ?? ""}
+                        />
+                        <Select
+                          value={editBlockIds[unit.id] ?? unit.blockId ?? unit.block}
+                          onValueChange={(v) =>
+                            setEditBlockIds((p) => ({ ...p, [unit.id]: v ?? "" }))
+                          }
+                        >
                           <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10 w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {blocks.filter((b) => b.isActive).map((b) => (
-                              <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                            ))}
+                            {blocks
+                              .filter((b) => b.isActive)
+                              .map((b) => (
+                                <SelectItem key={b.id} value={b.id}>
+                                  {b.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -431,10 +476,25 @@ export function RoomUnitsManager({
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit" disabled={saving === unit.id}>
-                        {saving === unit.id ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+                        {saving === unit.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Save className="size-4" />
+                        )}
                         Save
                       </Button>
-                      <Button type="button" variant="ghost" onClick={() => { setEditing(null); setEditBlockIds((p) => { const { [unit.id]: _, ...rest } = p; return rest; }); }}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditing(null);
+                          setEditBlockIds((p) => {
+                            const rest = { ...p };
+                            delete rest[unit.id];
+                            return rest;
+                          });
+                        }}
+                      >
                         <X className="size-4" />
                         Cancel
                       </Button>
@@ -461,7 +521,10 @@ export function RoomUnitsManager({
 
                     {/* Column 4: Status pills */}
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <StatusPill status={unit.isActive ? "active" : "inactive"} label={unit.isActive ? "Active" : "Inactive"} />
+                      <StatusPill
+                        status={unit.isActive ? "active" : "inactive"}
+                        label={unit.isActive ? "Active" : "Inactive"}
+                      />
                       <StatusPill status={unit.operationalStatus} />
                     </div>
 
@@ -498,7 +561,15 @@ export function RoomUnitsManager({
       )}
 
       {/* Create dialog */}
-      <Dialog open={showCreate} onOpenChange={(v) => { if (saving !== "new") { if (!v) { setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); } setShowCreate(v); } }}>
+      <Dialog
+        open={showCreate}
+        onOpenChange={(v) => {
+          if (saving !== "new") {
+            if (!v) resetCreateForm();
+            setShowCreate(v);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>New room unit</DialogTitle>
@@ -508,14 +579,19 @@ export function RoomUnitsManager({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label htmlFor="dlg-room">Room</Label>
-                <Select name="roomId" defaultValue="">
+                <input type="hidden" name="roomId" value={newRoomId} />
+                <Select value={newRoomId} onValueChange={(value) => setNewRoomId(value ?? "")}>
                   <SelectTrigger id="dlg-room" className="mt-1.5 h-10 w-full">
                     <SelectValue placeholder="Select a room" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rooms.filter((r) => r.status !== "archived").map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                    ))}
+                    {rooms
+                      .filter((r) => r.status !== "archived")
+                      .map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -526,9 +602,13 @@ export function RoomUnitsManager({
                     <SelectValue placeholder="Select block" />
                   </SelectTrigger>
                   <SelectContent>
-                    {blocks.filter((b) => b.isActive).map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                    ))}
+                    {blocks
+                      .filter((b) => b.isActive)
+                      .map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <input type="hidden" name="blockId" value={newBlockId} />
@@ -555,7 +635,12 @@ export function RoomUnitsManager({
                         className="h-9 flex-1 text-sm uppercase"
                         maxLength={10}
                       />
-                      <Button type="button" size="sm" className="h-9 shrink-0" onClick={handleInlineCreateBlock}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-9 shrink-0"
+                        onClick={handleInlineCreateBlock}
+                      >
                         <Plus className="size-3.5" />
                         Add
                       </Button>
@@ -582,16 +667,24 @@ export function RoomUnitsManager({
             {generatedCode && (
               <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                  <span className="text-neutral-500">Code: <strong className="text-neutral-800">{generatedCode}</strong></span>
+                  <span className="text-neutral-500">
+                    Code: <strong className="text-neutral-800">{generatedCode}</strong>
+                  </span>
                   <span className="text-neutral-300">|</span>
-                  <span className="text-neutral-500">Name: <strong className="text-neutral-800">{generatedName}</strong></span>
+                  <span className="text-neutral-500">
+                    Name: <strong className="text-neutral-800">{generatedName}</strong>
+                  </span>
                 </div>
               </div>
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Status</Label>
-                <Select name="operationalStatus" defaultValue="available">
+                <input type="hidden" name="operationalStatus" value={newOperationalStatus} />
+                <Select
+                  value={newOperationalStatus}
+                  onValueChange={(value) => setNewOperationalStatus(value ?? "available")}
+                >
                   <SelectTrigger className="mt-1.5 h-10 w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -610,11 +703,23 @@ export function RoomUnitsManager({
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setShowCreate(false); setNewBlockId(""); setNewRoomNumber(""); setGeneratedCode(""); setGeneratedName(""); }} disabled={saving === "new"}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreate(false);
+                  resetCreateForm();
+                }}
+                disabled={saving === "new"}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving === "new" || !newBlockId}>
-                {saving === "new" ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              <Button type="submit" disabled={saving === "new" || !newRoomId || !newBlockId}>
+                {saving === "new" ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Plus className="size-4" />
+                )}
                 Create room unit
               </Button>
             </div>

@@ -301,10 +301,18 @@ export function AvailabilitySearch({
               className="bg-background"
             />
           </div>
-          <Button type="submit" size="lg" className="self-end" disabled={!roomSlug || submitting}>
-            {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
-            {submitting ? "Checking availability\u2026" : "Check Availability"}
-          </Button>
+          <div className="space-y-1.5">
+            <Label htmlFor="search-availability-c">Availability</Label>
+            <Button
+              id="search-availability-c"
+              type="submit"
+              className="w-full"
+              disabled={!roomSlug || submitting}
+            >
+              {submitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Search className="mr-2 size-4" />}
+              {submitting ? "Checking availability\u2026" : "Check Availability"}
+            </Button>
+          </div>
         </div>
       </div>
     </form>

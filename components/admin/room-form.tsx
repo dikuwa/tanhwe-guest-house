@@ -137,19 +137,7 @@ export function RoomForm({
       setBreakfastIncluded(rt.breakfastIncluded);
       setDescription(rt.description ?? "");
     } else {
-      toast.warning("Existing values detected", {
-        description: `Applying the defaults from "${rt.name}" will replace the current room values.`,
-        action: {
-          label: "Apply defaults",
-          onClick: () => {
-            setPricePerNight(rt.pricePerNight);
-            setMaxGuests(rt.maxGuests);
-            setBreakfastIncluded(rt.breakfastIncluded);
-            setDescription(rt.description ?? "");
-            toast.success(`Defaults from "${rt.name}" applied`);
-          },
-        },
-      });
+      toast("Existing values detected — Applying the defaults from \"" + rt.name + "\" will replace the current room values.");
     }
   }
 
@@ -286,9 +274,7 @@ export function RoomForm({
         setSaving(false);
         return toast.error(data.error ?? "Could not save room");
       }
-      toast.success("Room saved", {
-        action: { label: "Back to rooms", onClick: () => router.push("/admin/rooms") },
-      });
+      toast.success("Room saved");
       router.refresh();
       setSaving(false);
     } else {
@@ -353,9 +339,7 @@ export function RoomForm({
           setImageUploading(false);
         }
 
-        toast.success("Room created", {
-          action: { label: "View room", onClick: () => router.push(`/admin/rooms/${newRoomId}/edit`) },
-        });
+        toast.success("Room created");
         router.push(`/admin/rooms/${newRoomId}/edit`);
         router.refresh();
       } catch (error) {

@@ -52,9 +52,7 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
     const data = await response.json();
     setSaving(false);
     if (!response.ok) return setError(data.error ?? "Could not create document");
-    toast.success(`${data.type} created`, {
-      action: { label: "View document", onClick: () => router.push(`/admin/documents/${data.id}`) },
-    });
+    toast.success(`${data.type} created`);
     router.push(`/admin/documents/${data.id}`);
     router.refresh();
   }

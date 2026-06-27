@@ -45,9 +45,7 @@ export function CreateCustomerForm() {
     setSaving(false);
 
     if (response.ok) {
-      toast.success("Customer created", {
-        action: { label: "View customer", onClick: () => router.push(`/admin/customers/${data.id}`) },
-      });
+      toast.success("Customer created");
       router.push(`/admin/customers/${data.id}`);
       router.refresh();
       return;

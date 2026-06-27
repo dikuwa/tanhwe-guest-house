@@ -204,9 +204,7 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
     const data = await response.json();
     setSaving(false);
     if (!response.ok) return toast.error(data.error ?? "Could not create booking");
-    toast.success(`Booking ${data.bookingNumber} created`, {
-      action: { label: "View booking", onClick: () => router.push(`/admin/bookings/${data.id}`) },
-    });
+    toast.success(`Booking ${data.bookingNumber} created`);
     router.push(`/admin/bookings/${data.id}`);
     router.refresh();
   }

@@ -7,7 +7,7 @@ import { ContactActions } from "@/components/public/contact-actions";
 import { RoomGallery } from "@/components/public/room-gallery";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
-import { getPublicRoom, getPublicSettings } from "@/lib/public-data";
+import { getPublicRoom, getPublicRooms, getPublicSettings } from "@/lib/public-data";
 import { getAmenityIcon, getAmenityLabel } from "@/lib/amenity-icons";
 
 type Props = {
@@ -21,8 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RoomDetailPage({ params, searchParams }: Props) {
-  const [room, settings, query] = await Promise.all([
+  const [room, rooms, settings, query] = await Promise.all([
     getPublicRoom((await params).slug),
+    getPublicRooms(),
     getPublicSettings(),
     searchParams,
   ]);
@@ -143,6 +144,7 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
             <div className="rounded-xl border bg-card p-6 shadow-[0_20px_60px_-48px_rgba(17,24,39,.55)]">
               <BookingRequestForm
                 roomId={room.id}
+                roomTypeId={room.roomTypeId}
                 roomName={room.name}
                 pricePerNight={room.pricePerNight}
                 maxGuests={room.maxGuests}
@@ -152,6 +154,7 @@ export default async function RoomDetailPage({ params, searchParams }: Props) {
                 initialCheckOut={query.checkOut}
                 initialGuests={query.guests}
                 showPayment={settings.paymentEnabled}
+                availableRooms={rooms}
               />
             </div>
           </aside>

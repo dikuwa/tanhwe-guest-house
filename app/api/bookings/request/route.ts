@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq, gt, inArray, lt, not, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { calculateNights, checkRoomAvailability, parseStayDate } from "@/lib/availability";
+import { calculateNights, checkRoomAvailability, checkRoomTypeAvailability, assignRoomUnitsForBooking, parseStayDate } from "@/lib/availability";
 import { allowPublicRequest } from "@/lib/public-rate-limit";
 import { getDb } from "@/lib/db";
-import { bookingRooms, bookingRoomUnits, bookings, customers, roomUnits } from "@/lib/db/schema";
+import { bookingRooms, bookings, customers, rooms as roomTable, roomTypes } from "@/lib/db/schema";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
 import { notifyOps } from "@/lib/notifications";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const schema = z.object({
+
+const legacySchema = z.object({
   roomId: z.string().min(1).max(128),
   checkIn: date,
   checkOut: date,
@@ -23,54 +24,25 @@ const schema = z.object({
   preferredContact: z.enum(["whatsapp", "phone", "email"]).default("whatsapp"),
 });
 
-async function assignRoomUnits(
-  tx: Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0],
-  bookingId: string,
-  bookingRoomId: string,
-  roomId: string,
-  checkIn: Date,
-  checkOut: Date,
-  roomsCount: number
-) {
-  const assigned = await tx
-    .select({ unitId: bookingRoomUnits.roomUnitId })
-    .from(bookingRoomUnits)
-    .innerJoin(bookings, eq(bookingRoomUnits.bookingId, bookings.id))
-    .where(
-      and(
-        inArray(bookings.status, ["confirmed", "checked-in"]),
-        lt(bookings.checkIn, checkOut),
-        gt(bookings.checkOut, checkIn)
-      )
-    );
-  const assignedIds = assigned.map((a) => a.unitId);
+const lineSchema = z.object({
+  roomTypeId: z.string().min(1).max(128),
+  quantity: z.coerce.number().int().min(1).max(10),
+  guestsCount: z.coerce.number().int().min(1).max(30),
+  checkIn: date,
+  checkOut: date,
+});
 
-  const availableUnits = await tx
-    .select({ id: roomUnits.id, displayName: roomUnits.displayName })
-    .from(roomUnits)
-    .where(
-      and(
-        eq(roomUnits.roomId, roomId),
-        eq(roomUnits.isActive, true),
-        inArray(roomUnits.operationalStatus, ["available", "cleaning"])
-      )
-    );
+const multiRoomSchema = z.object({
+  lines: z.array(lineSchema).min(1).max(10),
+  fullName: z.string().trim().min(2).max(100),
+  phone: z.string().trim().min(7).max(30),
+  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
+  email: z.union([z.string().trim().email(), z.literal("")]).optional(),
+  notes: z.string().trim().max(1000).optional(),
+  preferredContact: z.enum(["whatsapp", "phone", "email"]).default("whatsapp"),
+});
 
-  const free = availableUnits.filter((u) => !assignedIds.includes(u.id)).slice(0, roomsCount);
-
-  if (free.length < roomsCount) {
-    throw new Error("Not enough available room units");
-  }
-
-  for (const unit of free) {
-    await tx.insert(bookingRoomUnits).values({
-      id: crypto.randomUUID(),
-      bookingId,
-      bookingRoomId,
-      roomUnitId: unit.id,
-    });
-  }
-}
+const schema = z.union([multiRoomSchema, legacySchema]);
 
 export async function POST(request: NextRequest) {
   const contentLength = Number(request.headers.get("content-length") ?? 0);
@@ -89,18 +61,120 @@ export async function POST(request: NextRequest) {
   if (!body.success)
     return NextResponse.json({ error: "Please check the booking details" }, { status: 400 });
 
-  const checkIn = parseStayDate(body.data.checkIn);
-  const checkOut = parseStayDate(body.data.checkOut);
-  if (calculateNights(checkIn, checkOut) < 1) {
-    return NextResponse.json({ error: "Check-out must be after check-in" }, { status: 400 });
-  }
+  const rawLines = "lines" in body.data
+    ? body.data.lines
+    : [
+        {
+          roomId: body.data.roomId,
+          quantity: body.data.roomsCount,
+          guestsCount: body.data.guestsCount,
+          checkIn: body.data.checkIn,
+          checkOut: body.data.checkOut,
+        },
+      ];
 
-  const availability = await checkRoomAvailability({ ...body.data, checkIn, checkOut });
-  if (!availability.available || !("room" in availability)) {
-    return NextResponse.json(
-      { error: availability.reason ?? "Room is unavailable for those dates" },
-      { status: 409 }
-    );
+  const lineResults: {
+    roomType: typeof roomTypes.$inferSelect | null;
+    roomName: string;
+    checkIn: Date;
+    checkOut: Date;
+    nights: number;
+    pricePerNight: number;
+    subtotal: number;
+    quantity: number;
+    guestsCount: number;
+    roomIds: string[];
+    roomTypeId: string | null;
+  }[] = [];
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    const checkIn = parseStayDate(line.checkIn);
+    const checkOut = parseStayDate(line.checkOut);
+    const nights = calculateNights(checkIn, checkOut);
+    if (nights < 1) {
+      return NextResponse.json(
+        { error: `Line ${i + 1}: Check-out must be after check-in` },
+        { status: 400 }
+      );
+    }
+
+    if ("roomTypeId" in line) {
+      const availability = await checkRoomTypeAvailability({
+        roomTypeId: line.roomTypeId,
+        checkIn,
+        checkOut,
+        quantity: line.quantity,
+      });
+
+      if (!availability.available || !("roomType" in availability)) {
+        return NextResponse.json(
+          { error: `${availability.reason ?? "Room type is unavailable for those dates"}` },
+          { status: 409 }
+        );
+      }
+
+      if (line.guestsCount > availability.roomType.maxGuests * line.quantity) {
+        return NextResponse.json(
+          { error: `${availability.roomType.name} allows up to ${availability.roomType.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+          { status: 400 }
+        );
+      }
+
+      lineResults.push({
+        roomType: availability.roomType,
+        roomName: availability.roomType.name,
+        roomTypeId: availability.roomType.id,
+        checkIn,
+        checkOut,
+        nights: availability.nights,
+        pricePerNight: availability.pricePerNight,
+        subtotal: availability.subtotal,
+        quantity: line.quantity,
+        guestsCount: line.guestsCount,
+        roomIds: availability.roomIds,
+      });
+    } else {
+      const availability = await checkRoomAvailability({
+        roomId: line.roomId,
+        checkIn,
+        checkOut,
+        roomsCount: line.quantity,
+      });
+
+      if (!availability.available || !("room" in availability)) {
+        return NextResponse.json(
+          { error: availability.reason ?? "Room is unavailable for those dates" },
+          { status: 409 }
+        );
+      }
+
+      const publicRoom = await getDb().query.rooms.findFirst({
+        where: eq(roomTable.id, line.roomId),
+        with: { roomType: true },
+      });
+
+      if (line.guestsCount > availability.room.maxGuests * line.quantity) {
+        return NextResponse.json(
+          { error: `${availability.room.name} allows up to ${availability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+          { status: 400 }
+        );
+      }
+
+      lineResults.push({
+        roomType: publicRoom?.roomType ?? null,
+        roomName: publicRoom?.roomType?.name ?? availability.room.name,
+        roomTypeId: publicRoom?.roomTypeId ?? null,
+        checkIn,
+        checkOut,
+        nights: availability.nights,
+        pricePerNight: availability.pricePerNight,
+        subtotal: availability.subtotal,
+        quantity: line.quantity,
+        guestsCount: line.guestsCount,
+        roomIds: [availability.room.id],
+      });
+    }
   }
 
   const waNumber = body.data.whatsapp || body.data.phone;
@@ -111,6 +185,17 @@ export async function POST(request: NextRequest) {
   const notes = [body.data.notes, `Preferred contact: ${body.data.preferredContact}`]
     .filter(Boolean)
     .join("\n");
+  const checkIn = lineResults.reduce(
+    (earliest, line) => (line.checkIn < earliest ? line.checkIn : earliest),
+    lineResults[0].checkIn
+  );
+  const checkOut = lineResults.reduce(
+    (latest, line) => (line.checkOut > latest ? line.checkOut : latest),
+    lineResults[0].checkOut
+  );
+  const totalNights = calculateNights(checkIn, checkOut);
+  const totalGuests = lineResults.reduce((sum, line) => sum + line.guestsCount, 0);
+  const subtotal = lineResults.reduce((sum, line) => sum + line.subtotal, 0);
 
   await getDb().transaction(async (tx) => {
     if (!matchedCustomer)
@@ -127,46 +212,55 @@ export async function POST(request: NextRequest) {
       customerId,
       checkIn,
       checkOut,
-      nights: availability.nights,
-      guestsCount: body.data.guestsCount,
+      nights: totalNights,
+      guestsCount: totalGuests,
       status: "pending",
       source: "website",
-      subtotal: availability.subtotal,
-      total: availability.subtotal,
-      balanceDue: availability.subtotal,
+      subtotal,
+      total: subtotal,
+      balanceDue: subtotal,
       notes,
     });
-    const bookingRoomId = crypto.randomUUID();
-    await tx.insert(bookingRooms).values({
-      id: bookingRoomId,
-      bookingId,
-      roomId: availability.room.id,
-      roomNameSnapshot: availability.room.name,
-      pricePerNight: availability.pricePerNight,
-      roomsCount: body.data.roomsCount,
-      nights: availability.nights,
-      subtotal: availability.subtotal,
-    });
 
-    try {
-      await assignRoomUnits(
-        tx,
+    for (const line of lineResults) {
+      const bookingRoomId = crypto.randomUUID();
+      await tx.insert(bookingRooms).values({
+        id: bookingRoomId,
         bookingId,
-        bookingRoomId,
-        availability.room.id,
-        checkIn,
-        checkOut,
-        body.data.roomsCount
-      );
-    } catch {
-      throw new Error("This room type is no longer fully available for the selected dates. Please choose another room type or adjust the dates.");
+        roomId: line.roomIds[0],
+        roomTypeId: line.roomTypeId,
+        roomNameSnapshot: line.roomName,
+        pricePerNight: line.pricePerNight,
+        roomsCount: line.quantity,
+        nights: line.nights,
+        subtotal: line.subtotal,
+        checkIn: line.checkIn,
+        checkOut: line.checkOut,
+        guestsCount: line.guestsCount,
+      });
+
+      try {
+        await assignRoomUnitsForBooking(
+          tx,
+          bookingId,
+          bookingRoomId,
+          line.roomIds,
+          line.checkIn,
+          line.checkOut,
+          line.quantity
+        );
+      } catch {
+        throw new Error(`${line.roomName} has fewer available units for the selected dates. Please reduce the quantity, select another room type, or change the dates.`);
+      }
     }
   });
 
+  const totalRooms = lineResults.reduce((sum, line) => sum + line.quantity, 0);
+  const roomTypeNames = [...new Set(lineResults.map((line) => line.roomName))];
   await notifyOps({
     type: "booking_requested",
     title: `New booking request: ${bookingNumber}`,
-    description: `${body.data.fullName} — ${availability.room.name}`,
+    description: `${body.data.fullName} · ${totalRooms} room${totalRooms === 1 ? "" : "s"} · ${roomTypeNames.join(", ")}`,
     bookingId,
     link: `/admin/bookings/${bookingId}`,
   });
@@ -175,6 +269,10 @@ export async function POST(request: NextRequest) {
     {
       success: true,
       bookingNumber,
+      fullName: body.data.fullName,
+      totalRooms,
+      roomTypes: roomTypeNames,
+      total: subtotal,
       message: "Your request has been received. We will confirm availability with you shortly.",
     },
     { status: 201 }

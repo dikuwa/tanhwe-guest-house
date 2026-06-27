@@ -6,6 +6,7 @@ import { faqs, roomAmenities, roomImages, roomTypes, rooms, roomUnits, settings,
 
 export type PublicRoom = {
   id: string;
+  roomTypeId: string | null;
   name: string;
   slug: string;
   type: string;

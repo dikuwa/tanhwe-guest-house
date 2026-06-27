@@ -188,6 +188,11 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     signatureImage: "",
   };
   const fmt = (value: number) => `${currency} ${value.toFixed(2)}`;
+  const hasMixedRoomDates = snapshot.rooms.some((room) => {
+    const roomCheckIn = room.checkIn ?? snapshot.stay.checkIn;
+    const roomCheckOut = room.checkOut ?? snapshot.stay.checkOut;
+    return roomCheckIn !== snapshot.stay.checkIn || roomCheckOut !== snapshot.stay.checkOut;
+  });
 
   return renderToBuffer(
     <Document title={`${data.type} ${data.number}`}>
@@ -222,14 +227,27 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text>STAY</Text>
-            <Text style={{ marginTop: 7 }}>
-              {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-              {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
-            </Text>
-            <Text style={styles.muted}>
-              {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
-              {snapshot.bookingNumber}
-            </Text>
+            {hasMixedRoomDates ? (
+              <>
+                <Text style={{ marginTop: 7 }}>Multiple room stays</Text>
+                <Text style={styles.muted}>
+                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
+                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")} &middot;{" "}
+                  {snapshot.bookingNumber}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Text style={{ marginTop: 7 }}>
+                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
+                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
+                </Text>
+                <Text style={styles.muted}>
+                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
+                  {snapshot.bookingNumber}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 

@@ -49,6 +49,11 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
     getOwnerProfile(),
   ]);
   const snapshot = JSON.parse(document.snapshot) as Snapshot;
+  const hasMixedRoomDates = snapshot.rooms.some((room) => {
+    const roomCheckIn = room.checkIn ?? snapshot.stay.checkIn;
+    const roomCheckOut = room.checkOut ?? snapshot.stay.checkOut;
+    return roomCheckIn !== snapshot.stay.checkIn || roomCheckOut !== snapshot.stay.checkOut;
+  });
 
   let existingShare = await getPublicShareCode(document.id);
   if (!existingShare) {
@@ -129,14 +134,27 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           </div>
           <div className="text-right" style={{ justifySelf: "end" }}>
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stay</p>
-            <p className="mt-2">
-              {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-              {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
-              {snapshot.bookingNumber}
-            </p>
+            {hasMixedRoomDates ? (
+              <>
+                <p className="mt-2">Multiple room stays</p>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
+                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")} &middot;{" "}
+                  {snapshot.bookingNumber}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-2">
+                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
+                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
+                  {snapshot.bookingNumber}
+                </p>
+              </>
+            )}
           </div>
         </div>
 

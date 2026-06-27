@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -198,20 +199,25 @@ export function RoomUnitsManager({
     if (!block) return toast.error("Selected block not found");
 
     setSaving("new");
-    const response = await fetch("/api/admin/room-units", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomId, blockId, roomNumber, operationalStatus, notes: notes || undefined }),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not create room unit");
-    toast.success(`${data.displayName} created`);
-    setShowCreate(false);
-    setNewBlockId("");
-    setNewRoomNumber("");
-    loadUnits();
-    router.refresh();
+    try {
+      const response = await fetch("/api/admin/room-units", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId, blockId, roomNumber, operationalStatus, notes: notes || undefined }),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not create room unit");
+      toast.success(`${data.displayName} created`);
+      setShowCreate(false);
+      setNewBlockId("");
+      setNewRoomNumber("");
+      loadUnits();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not create room unit");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleUpdate(id: string, event: FormEvent<HTMLFormElement>) {
@@ -227,33 +233,40 @@ export function RoomUnitsManager({
     };
 
     setSaving(id);
-    const response = await fetch(`/api/admin/room-units/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not update room unit");
-    toast.success("Room unit updated");
-    setEditing(null);
-    loadUnits();
-    router.refresh();
+    try {
+      const response = await fetch(`/api/admin/room-units/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not update room unit");
+      toast.success("Room unit updated");
+      setEditing(null);
+      loadUnits();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not update room unit");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleDelete(id: string): Promise<void> {
     setDeleteConfirm(null);
     setSaving(id);
-    const response = await fetch(`/api/admin/room-units/${id}`, { method: "DELETE" });
-    setSaving(null);
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      toast.error(data.error ?? "Could not delete room unit");
-      return;
+    try {
+      const response = await fetch(`/api/admin/room-units/${id}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return void toast.error(data.error ?? "Could not delete room unit");
+      toast.success("Room unit deleted");
+      loadUnits();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not delete room unit");
+    } finally {
+      setSaving(null);
     }
-    toast.success("Room unit deleted");
-    loadUnits();
-    router.refresh();
   }
 
   const filteredUnits = units;
@@ -393,12 +406,7 @@ export function RoomUnitsManager({
                       </div>
                       <div className="flex items-end pb-2">
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            name="isActive"
-                            defaultChecked={unit.isActive}
-                            className="size-4 rounded border-neutral-300"
-                          />
+                          <Checkbox name="isActive" defaultChecked={unit.isActive} />
                           Active
                         </label>
                       </div>

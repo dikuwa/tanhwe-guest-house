@@ -58,7 +58,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     updates.displayName = parsed.data.displayName;
   }
 
-  await getDb().update(roomUnits).set(updates).where(eq(roomUnits.id, id));
+  try {
+    await getDb().update(roomUnits).set(updates).where(eq(roomUnits.id, id));
+  } catch (error) {
+    const msg = String(error);
+    if (msg.includes("foreign key constraint") && msg.includes("block_id"))
+      return NextResponse.json({ error: "Selected block does not exist" }, { status: 400 });
+    return NextResponse.json({ error: "Could not update room unit" }, { status: 500 });
+  }
+
   await getDb().insert(activityLogs).values({
     id: crypto.randomUUID(),
     userId: session.user.id,

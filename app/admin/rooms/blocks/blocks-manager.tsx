@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   Dialog,
@@ -62,18 +63,23 @@ export function BlocksManager() {
     if (!shortCode) return toast.error("Short code is required");
 
     setSaving("new");
-    const response = await fetch("/api/admin/blocks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, shortCode, description: description || undefined, displayOrder: blocks.length + 1 }),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not create block");
-    toast.success(`${data.name} created`);
-    setShowCreate(false);
-    loadBlocks();
-    router.refresh();
+    try {
+      const response = await fetch("/api/admin/blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, shortCode, description: description || undefined, displayOrder: blocks.length + 1 }),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not create block");
+      toast.success(`${data.name} created`);
+      setShowCreate(false);
+      loadBlocks();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not create block");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleUpdate(id: string, event: React.FormEvent<HTMLFormElement>) {
@@ -89,41 +95,52 @@ export function BlocksManager() {
     if (!shortCode) return toast.error("Short code is required");
 
     setSaving(id);
-    const response = await fetch(`/api/admin/blocks/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, shortCode, description, displayOrder, isActive }),
-    });
-    const data = await response.json();
-    setSaving(null);
-    if (!response.ok) return toast.error(data.error ?? "Could not update block");
-    toast.success(`${name} updated`);
-    setEditing(null);
-    loadBlocks();
-    router.refresh();
+    try {
+      const response = await fetch(`/api/admin/blocks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, shortCode, description, displayOrder, isActive }),
+      });
+      const data = await response.json();
+      if (!response.ok) return toast.error(data.error ?? "Could not update block");
+      toast.success(`${name} updated`);
+      setEditing(null);
+      loadBlocks();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not update block");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleDeactivate(id: string, currentActive: boolean) {
     if (!currentActive) return;
+    const block = blocks.find((b) => b.id === id);
+    if (!block) return;
     setSaving(id);
-    const block = blocks.find((b) => b.id === id)!;
-    const response = await fetch(`/api/admin/blocks/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: block.name,
-        shortCode: block.shortCode,
-        description: block.description ?? "",
-        displayOrder: block.displayOrder,
-        isActive: false,
-      }),
-    });
-    setSaving(null);
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) return toast.error(data.error ?? "Could not deactivate block");
-    toast.success(`${block.name} deactivated`);
-    loadBlocks();
-    router.refresh();
+    try {
+      const response = await fetch(`/api/admin/blocks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: block.name,
+          shortCode: block.shortCode,
+          description: block.description ?? "",
+          displayOrder: block.displayOrder,
+          isActive: false,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return toast.error(data.error ?? "Could not deactivate block");
+      toast.success(`${block.name} deactivated`);
+      loadBlocks();
+      router.refresh();
+    } catch (e) {
+      toast.error("Could not deactivate block");
+    } finally {
+      setSaving(null);
+    }
   }
 
   async function handleDelete() {
@@ -186,12 +203,7 @@ export function BlocksManager() {
                     </div>
                     <div className="flex items-end pb-2">
                       <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          defaultChecked={block.isActive}
-                          className="size-4 rounded border-neutral-300"
-                        />
+                        <Checkbox name="isActive" defaultChecked={block.isActive} />
                         Active
                       </label>
                     </div>

@@ -20,7 +20,7 @@ export default async function Home() {
     getPublicFaqs(),
     getPublicTestimonials(),
   ]);
-  const featured = rooms.filter((room) => room.featured).slice(0, 3);
+  const featured = rooms.filter((room) => room.featured);
   const shownRooms = featured.length ? featured : rooms.slice(0, 3);
 
   return (

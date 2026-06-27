@@ -507,7 +507,7 @@ export function RoomUnitsManager({
                   <SelectTrigger id="dlg-room" className="mt-1.5 h-10 w-full">
                     <SelectValue placeholder="Select a room" />
                   </SelectTrigger>
-                  <SelectContent portal={false}>
+                  <SelectContent>
                     {rooms.filter((r) => r.status !== "archived").map((r) => (
                       <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                     ))}
@@ -520,7 +520,7 @@ export function RoomUnitsManager({
                   <SelectTrigger id="dlg-block" className="mt-1.5 h-10 w-full">
                     <SelectValue placeholder="Select block" />
                   </SelectTrigger>
-                  <SelectContent portal={false}>
+                  <SelectContent>
                     {blocks.filter((b) => b.isActive).map((b) => (
                       <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                     ))}
@@ -590,7 +590,7 @@ export function RoomUnitsManager({
                   <SelectTrigger className="mt-1.5 h-10 w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent portal={false}>
+                  <SelectContent>
                     <SelectItem value="available">Available</SelectItem>
                     <SelectItem value="cleaning">Cleaning</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>

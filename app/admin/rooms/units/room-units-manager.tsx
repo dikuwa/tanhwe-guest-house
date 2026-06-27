@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Room = {
@@ -54,12 +53,17 @@ type RoomUnit = {
   roomStatus: string;
 };
 
-const statusVariant: Record<string, "secondary" | "outline" | "destructive" | "default"> = {
-  available: "secondary",
-  cleaning: "outline",
-  maintenance: "destructive",
-  blocked: "destructive",
-  inactive: "outline",
+const recordStatusColors: Record<string, string> = {
+  true: "bg-blue-100 text-blue-800",
+  false: "bg-gray-100 text-gray-600",
+};
+
+const opStatusColors: Record<string, string> = {
+  available: "bg-blue-100 text-blue-800",
+  cleaning: "bg-yellow-100 text-yellow-800",
+  maintenance: "bg-orange-100 text-orange-800",
+  blocked: "bg-red-100 text-red-800",
+  inactive: "bg-gray-100 text-gray-600",
 };
 
 export function RoomUnitsManager({
@@ -251,10 +255,10 @@ export function RoomUnitsManager({
     <div className="space-y-4">
       {/* Filters + Add button row */}
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="min-w-32 flex-1">
+        <div className="min-w-36 flex-1">
           <Label className="text-xs text-muted-foreground">Block</Label>
           <Select value={filterBlockId} onValueChange={(v) => v && setFilterBlockId(v)}>
-            <SelectTrigger className="mt-1 h-10">
+            <SelectTrigger className="mt-1 h-10 w-full">
               <SelectValue placeholder="All blocks" />
             </SelectTrigger>
             <SelectContent>
@@ -265,10 +269,10 @@ export function RoomUnitsManager({
             </SelectContent>
           </Select>
         </div>
-        <div className="min-w-32 flex-1">
+        <div className="min-w-36 flex-1">
           <Label className="text-xs text-muted-foreground">Status</Label>
           <Select value={filterStatus} onValueChange={(v) => v && setFilterStatus(v)}>
-            <SelectTrigger className="mt-1 h-10">
+            <SelectTrigger className="mt-1 h-10 w-full">
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -281,10 +285,10 @@ export function RoomUnitsManager({
             </SelectContent>
           </Select>
         </div>
-        <div className="min-w-40 flex-1">
+        <div className="min-w-44 flex-1">
           <Label className="text-xs text-muted-foreground">Room type</Label>
           <Select value={filterRoomTypeId} onValueChange={(v) => v && setFilterRoomTypeId(v)}>
-            <SelectTrigger className="mt-1 h-10">
+            <SelectTrigger className="mt-1 h-10 w-full">
               <SelectValue placeholder="All room types" />
             </SelectTrigger>
             <SelectContent>
@@ -321,7 +325,7 @@ export function RoomUnitsManager({
             return (
               <div
                 key={unit.id}
-                className="rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-neutral-300"
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2.5 transition-colors hover:border-neutral-300"
               >
                 {editing === unit.id ? (
                   <form onSubmit={(e) => handleUpdate(unit.id, e)} className="space-y-4">
@@ -329,7 +333,7 @@ export function RoomUnitsManager({
                       <div>
                         <Label htmlFor={`edit-room-${unit.id}`}>Room</Label>
                         <Select name="roomId" defaultValue={unit.roomId}>
-                          <SelectTrigger id={`edit-room-${unit.id}`} className="mt-1 h-10">
+                          <SelectTrigger id={`edit-room-${unit.id}`} className="mt-1 h-10 w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -342,7 +346,7 @@ export function RoomUnitsManager({
                       <div>
                         <Label htmlFor={`edit-block-${unit.id}`}>Block</Label>
                         <Select name="blockId" defaultValue={unit.blockId ?? unit.block}>
-                          <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10">
+                          <SelectTrigger id={`edit-block-${unit.id}`} className="mt-1 h-10 w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -361,14 +365,14 @@ export function RoomUnitsManager({
                           min="1"
                           max="99"
                           defaultValue={unit.roomNumber}
-                          className="mt-1 h-10"
+                          className="mt-1 h-10 w-full"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor={`edit-status-${unit.id}`}>Operational status</Label>
+                        <Label htmlFor={`edit-status-${unit.id}`}>Status</Label>
                         <Select name="operationalStatus" defaultValue={unit.operationalStatus}>
-                          <SelectTrigger id={`edit-status-${unit.id}`} className="mt-1 h-10">
+                          <SelectTrigger id={`edit-status-${unit.id}`} className="mt-1 h-10 w-full">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -397,7 +401,7 @@ export function RoomUnitsManager({
                           id={`edit-notes-${unit.id}`}
                           name="notes"
                           defaultValue={unit.notes ?? ""}
-                          className="mt-1"
+                          className="mt-1 w-full"
                           rows={1}
                         />
                       </div>
@@ -414,42 +418,61 @@ export function RoomUnitsManager({
                     </div>
                   </form>
                 ) : (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {/* Column 1: Icon */}
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50">
                       <DoorClosed className="size-4 text-neutral-400" />
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="font-medium text-neutral-800">{unit.displayName}</span>
-                        <span className="font-mono text-xs text-neutral-400">{unit.roomCode}</span>
-                        <span className="hidden text-xs text-neutral-300 sm:inline">&middot;</span>
-                        <span className="text-xs text-neutral-500">{unit.roomName}</span>
-                        {block && (
-                          <>
-                            <span className="text-xs text-neutral-300">&middot;</span>
-                            <span className="text-xs text-neutral-500">{block.name}</span>
-                          </>
-                        )}
-                      </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                        <Badge variant={unit.isActive ? "secondary" : "outline"} className="text-[10px]">
-                          {unit.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        <Badge variant={statusVariant[unit.operationalStatus] ?? "outline"} className="text-[10px] capitalize">
-                          {unit.operationalStatus}
-                        </Badge>
-                        {unit.notes && (
-                          <span className="truncate text-xs text-neutral-400">{unit.notes}</span>
-                        )}
-                      </div>
+
+                    {/* Column 2: Display name */}
+                    <div className="min-w-0 flex-[2]">
+                      <span className="block truncate text-sm font-medium text-neutral-800">
+                        {unit.displayName}
+                      </span>
                     </div>
-                    <div className="flex shrink-0 gap-1">
-                      <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(unit.id)} title="Edit">
+
+                    {/* Column 3: Room code */}
+                    <div className="hidden w-20 shrink-0 md:block">
+                      <span className="font-mono text-xs text-neutral-400">{unit.roomCode}</span>
+                    </div>
+
+                    {/* Column 4: Status pills */}
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium leading-none ${recordStatusColors[String(unit.isActive)]}`}
+                      >
+                        {unit.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize leading-none ${opStatusColors[unit.operationalStatus] ?? "bg-gray-100 text-gray-600"}`}
+                      >
+                        {unit.operationalStatus}
+                      </span>
+                    </div>
+
+                    {/* Column 5: Actions */}
+                    <div className="flex shrink-0 items-center gap-0.5 pl-1">
+                      <button
+                        type="button"
+                        className="flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+                        onClick={() => setEditing(unit.id)}
+                        title="Edit room unit"
+                      >
                         <Edit3 className="size-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-8 text-destructive" onClick={() => setDeleteConfirm(unit.id)} title="Delete" disabled={saving === unit.id}>
-                        {saving === unit.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                      </Button>
+                      </button>
+                      <button
+                        type="button"
+                        className="flex size-7 items-center justify-center rounded-md text-neutral-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        onClick={() => setDeleteConfirm(unit.id)}
+                        title="Delete room unit"
+                        disabled={saving === unit.id}
+                      >
+                        {saving === unit.id ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-3.5" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 )}
@@ -464,10 +487,10 @@ export function RoomUnitsManager({
         <form onSubmit={handleCreate} className="rounded-xl border border-dashed border-primary/40 bg-primary/[0.02] p-5 shadow-xs sm:p-6">
           <h3 className="font-semibold text-neutral-800">New room unit</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <Label htmlFor="new-room">Room</Label>
               <Select name="roomId" defaultValue="">
-                <SelectTrigger id="new-room" className="mt-1 h-10">
+                <SelectTrigger id="new-room" className="mt-1 h-10 w-full">
                   <SelectValue placeholder="Select a room" />
                 </SelectTrigger>
                 <SelectContent>
@@ -480,7 +503,7 @@ export function RoomUnitsManager({
             <div>
               <Label htmlFor="new-block">Block</Label>
               <Select value={newBlockId} onValueChange={handleBlockChange}>
-                <SelectTrigger id="new-block" className="mt-1 h-10">
+                <SelectTrigger id="new-block" className="mt-1 h-10 w-full">
                   <SelectValue placeholder="Select block" />
                 </SelectTrigger>
                 <SelectContent>
@@ -503,7 +526,7 @@ export function RoomUnitsManager({
                     placeholder="Block name"
                     value={newBlockName}
                     onChange={(e) => setNewBlockName(e.target.value)}
-                    className="h-9 text-sm"
+                    className="h-9 w-full text-sm"
                   />
                   <div className="flex gap-2">
                     <Input
@@ -513,7 +536,7 @@ export function RoomUnitsManager({
                       className="h-9 flex-1 text-sm uppercase"
                       maxLength={10}
                     />
-                    <Button type="button" size="sm" className="h-9" onClick={handleInlineCreateBlock}>
+                    <Button type="button" size="sm" className="h-9 shrink-0" onClick={handleInlineCreateBlock}>
                       <Plus className="size-3.5" />
                       Add
                     </Button>
@@ -530,7 +553,7 @@ export function RoomUnitsManager({
                 min="1"
                 max="99"
                 placeholder="e.g. 03"
-                className="mt-1 h-10"
+                className="mt-1 h-10 w-full"
                 value={newRoomNumber}
                 onChange={(e) => handleRoomNumberChange(e.target.value)}
                 required
@@ -545,10 +568,10 @@ export function RoomUnitsManager({
                 </div>
               </div>
             )}
-            <div className="sm:col-span-2 lg:col-span-3">
-              <Label>Operational status</Label>
+            <div>
+              <Label>Status</Label>
               <Select name="operationalStatus" defaultValue="available">
-                <SelectTrigger className="mt-1 h-10">
+                <SelectTrigger className="mt-1 h-10 w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -560,9 +583,9 @@ export function RoomUnitsManager({
                 </SelectContent>
               </Select>
             </div>
-            <div className="sm:col-span-2 lg:col-span-3">
+            <div className="sm:col-span-2 lg:col-span-2">
               <Label htmlFor="new-notes">Notes (optional)</Label>
-              <Textarea id="new-notes" name="notes" className="mt-1" rows={2} />
+              <Textarea id="new-notes" name="notes" className="mt-1 w-full" rows={2} />
             </div>
           </div>
           <div className="mt-4 flex gap-2">

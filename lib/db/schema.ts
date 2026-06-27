@@ -282,16 +282,22 @@ export const bookingRooms = pgTable(
     roomId: text("room_id")
       .notNull()
       .references(() => rooms.id, { onDelete: "restrict" }),
+    roomTypeId: text("room_type_id").references(() => roomTypes.id, { onDelete: "set null" }),
     roomNameSnapshot: text("room_name_snapshot").notNull(),
     pricePerNight: integer("price_per_night").notNull(),
     roomsCount: integer("rooms_count").notNull().default(1),
     nights: integer("nights").notNull(),
     subtotal: integer("subtotal").notNull(),
+    checkIn: timestamp("check_in", { withTimezone: true }),
+    checkOut: timestamp("check_out", { withTimezone: true }),
+    guestsCount: integer("guests_count"),
+    lineNotes: text("line_notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index("booking_rooms_booking_id_idx").on(table.bookingId),
     index("booking_rooms_room_id_idx").on(table.roomId),
+    index("booking_rooms_room_type_id_idx").on(table.roomTypeId),
     check("booking_rooms_count_positive", sql`${table.roomsCount} >= 1`),
     check("booking_rooms_nights_positive", sql`${table.nights} >= 1`),
   ]
@@ -586,6 +592,7 @@ export const bookingsRelations = relations(bookings, ({ one, many }) => ({
 export const bookingRoomsRelations = relations(bookingRooms, ({ one, many }) => ({
   booking: one(bookings, { fields: [bookingRooms.bookingId], references: [bookings.id] }),
   room: one(rooms, { fields: [bookingRooms.roomId], references: [rooms.id] }),
+  roomType: one(roomTypes, { fields: [bookingRooms.roomTypeId], references: [roomTypes.id] }),
   roomUnits: many(bookingRoomUnits),
 }));
 export const customersRelations = relations(customers, ({ many }) => ({

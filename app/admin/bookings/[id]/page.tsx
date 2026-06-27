@@ -167,6 +167,10 @@ export default async function BookingDetailPage({
           <div className="mt-3 divide-y">
             {booking.rooms.map((room) => {
               const units = unitMap.get(room.id) ?? [];
+              const hasCustomDates = room.checkIn && room.checkOut && (
+                room.checkIn.getTime() !== booking.checkIn.getTime() ||
+                room.checkOut.getTime() !== booking.checkOut.getTime()
+              );
               return (
                 <div
                   key={room.id}
@@ -178,6 +182,13 @@ export default async function BookingDetailPage({
                       <p className="text-xs text-muted-foreground">
                         {room.roomsCount} room{room.roomsCount === 1 ? "" : "s"} · {room.nights} night
                         {room.nights === 1 ? "" : "s"}
+                        {hasCustomDates && (
+                          <> &middot; {room.checkIn!.toLocaleDateString("en-NA", { day: "numeric", month: "short" })} &ndash; {room.checkOut!.toLocaleDateString("en-NA", { day: "numeric", month: "short" })}
+                          </>
+                        )}
+                        {room.guestsCount && room.guestsCount > 0 && (
+                          <> &middot; {room.guestsCount} guest{room.guestsCount === 1 ? "" : "s"}</>
+                        )}
                       </p>
                     </div>
                     <p className="tabular-nums text-neutral-700">

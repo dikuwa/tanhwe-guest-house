@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       roomsCount: room.roomsCount,
       nights: room.nights,
       subtotal: room.subtotal,
+      checkIn: room.checkIn?.toISOString?.() ?? room.checkIn ?? booking.checkIn.toISOString(),
+      checkOut: room.checkOut?.toISOString?.() ?? room.checkOut ?? booking.checkOut.toISOString(),
     })),
     subtotal: booking.subtotal,
     extras: booking.extrasTotal,

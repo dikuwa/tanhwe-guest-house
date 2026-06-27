@@ -64,6 +64,13 @@
       "when": 1782600000000,
       "tag": "0008_graceful_room_units",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1782700000000,
+      "tag": "0009_peaceful_book",
+      "breakpoints": true
     }
   ]
 }

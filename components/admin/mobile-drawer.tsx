@@ -3,15 +3,36 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { PanelLeftClose, LogOut, Search } from "lucide-react";
+import { PanelLeftClose, LogOut, Search, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { items } from "./admin-nav";
 
-const primaryItems = items.filter((i) => i.href !== "/admin/settings");
-const secondaryItems = items.filter((i) => i.href === "/admin/settings");
+function flattenItems(items: typeof import("./admin-nav").items) {
+  const flat: { href: string; label: string; icon: any; roles: string[] }[] = [];
+  for (const item of items) {
+    if ("children" in item && item.children) {
+      flat.push({
+        href: item.children[0]?.href ?? "",
+        label: item.label,
+        icon: item.icon,
+        roles: item.roles,
+      });
+      for (const child of item.children) {
+        flat.push({ href: child.href, label: child.label, icon: item.icon, roles: item.roles });
+      }
+    } else if ("href" in item) {
+      flat.push(item);
+    }
+  }
+  return flat;
+}
+
+const allFlat = flattenItems(items);
+const primaryItems = allFlat.filter((i) => i.href !== "/admin/settings");
+const secondaryItems = allFlat.filter((i) => i.href === "/admin/settings");
 
 export function MobileDrawer({
   role,

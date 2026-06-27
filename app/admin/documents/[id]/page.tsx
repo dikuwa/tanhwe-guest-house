@@ -27,6 +27,8 @@ type Snapshot = {
     roomsCount: number;
     nights: number;
     subtotal: number;
+    checkIn?: string;
+    checkOut?: string;
   }[];
   subtotal: number;
   extras: number;
@@ -140,10 +142,11 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
 
         {/* ── Room Table ── */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-140 text-sm">
+          <table className="w-full min-w-160 text-sm">
             <thead className="border-y bg-muted/40 text-left">
               <tr>
                 <th className="px-3 py-3">Room</th>
+                <th className="px-3 py-3 text-right">Dates</th>
                 <th className="px-3 py-3 text-right">Rate</th>
                 <th className="px-3 py-3 text-right">Rooms</th>
                 <th className="px-3 py-3 text-right">Nights</th>
@@ -151,15 +154,21 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
               </tr>
             </thead>
             <tbody>
-              {snapshot.rooms.map((room, index) => (
-                <tr key={`${room.name}-${index}`} className="border-b">
-                  <td className="px-3 py-4 font-medium">{room.name}</td>
-                  <td className="px-3 py-4 text-right">{money.format(room.pricePerNight)}</td>
-                  <td className="px-3 py-4 text-right">{room.roomsCount}</td>
-                  <td className="px-3 py-4 text-right">{room.nights}</td>
-                  <td className="px-3 py-4 text-right">{money.format(room.subtotal)}</td>
-                </tr>
-              ))}
+              {snapshot.rooms.map((room, index) => {
+                const dates = room.checkIn && room.checkOut
+                  ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
+                  : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
+                return (
+                  <tr key={`${room.name}-${index}`} className="border-b">
+                    <td className="px-3 py-4 font-medium">{room.name}</td>
+                    <td className="px-3 py-4 text-right text-muted-foreground text-xs">{dates}</td>
+                    <td className="px-3 py-4 text-right">{money.format(room.pricePerNight)}</td>
+                    <td className="px-3 py-4 text-right">{room.roomsCount}</td>
+                    <td className="px-3 py-4 text-right">{room.nights}</td>
+                    <td className="px-3 py-4 text-right">{money.format(room.subtotal)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

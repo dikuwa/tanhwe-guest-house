@@ -2,11 +2,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { BookingForm } from "@/components/admin/booking-form";
 import { Button } from "@/components/ui/button";
-import { getActiveRoomOptions } from "@/lib/admin-data";
+import { getAdminRoomTypes } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
 export default async function NewBookingPage() {
   await requireRole(["owner", "admin"]);
-  const rooms = await getActiveRoomOptions();
+  const roomTypes = await getAdminRoomTypes();
   return (
     <div className="mx-auto max-w-4xl">
       <Button variant="ghost" size="sm" render={<Link href="/admin/bookings" />}>
@@ -19,7 +19,7 @@ export default async function NewBookingPage() {
         Availability is checked before the reservation is saved.
       </p>
       <div className="mt-6">
-        <BookingForm rooms={rooms} />
+        <BookingForm roomTypes={roomTypes} />
       </div>
     </div>
   );

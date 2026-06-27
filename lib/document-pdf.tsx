@@ -24,6 +24,8 @@ type Snapshot = {
     roomsCount: number;
     nights: number;
     subtotal: number;
+    checkIn?: string;
+    checkOut?: string;
   }[];
   subtotal: number;
   extras: number;
@@ -231,24 +233,31 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
           </View>
         </View>
 
-        {/* ── Room Table ── */}
+          {/* ── Room Table ── */}
         <View style={styles.section}>
           <View style={styles.tableHeader}>
-            <Text style={styles.grow}>Room</Text>
-            <Text style={styles.cell}>Rate</Text>
-            <Text style={styles.cell}>Rooms</Text>
-            <Text style={styles.cell}>Nights</Text>
-            <Text style={styles.cell}>Amount</Text>
+            <Text style={[styles.grow, { width: "28%" }]}>Room</Text>
+            <Text style={[styles.cell, { width: "18%" }]}>Dates</Text>
+            <Text style={[styles.cell, { width: "12%" }]}>Rate</Text>
+            <Text style={[styles.cell, { width: "12%" }]}>Rooms</Text>
+            <Text style={[styles.cell, { width: "12%" }]}>Nights</Text>
+            <Text style={[styles.cell, { width: "18%" }]}>Amount</Text>
           </View>
-          {snapshot.rooms.map((room, index) => (
-            <View key={`${room.name}-${index}`} style={styles.tableRow}>
-              <Text style={styles.grow}>{room.name}</Text>
-              <Text style={styles.cell}>{fmt(room.pricePerNight)}</Text>
-              <Text style={styles.cell}>{room.roomsCount}</Text>
-              <Text style={styles.cell}>{room.nights}</Text>
-              <Text style={styles.cell}>{fmt(room.subtotal)}</Text>
-            </View>
-          ))}
+          {snapshot.rooms.map((room, index) => {
+            const dates = room.checkIn && room.checkOut
+              ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
+              : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
+            return (
+              <View key={`${room.name}-${index}`} style={styles.tableRow}>
+                <Text style={[styles.grow, { width: "28%" }]}>{room.name}</Text>
+                <Text style={[styles.cell, { width: "18%", fontSize: 8 }]}>{dates}</Text>
+                <Text style={[styles.cell, { width: "12%" }]}>{fmt(room.pricePerNight)}</Text>
+                <Text style={[styles.cell, { width: "12%" }]}>{room.roomsCount}</Text>
+                <Text style={[styles.cell, { width: "12%" }]}>{room.nights}</Text>
+                <Text style={[styles.cell, { width: "18%" }]}>{fmt(room.subtotal)}</Text>
+              </View>
+            );
+          })}
         </View>
 
         {/* ── Totals ── */}

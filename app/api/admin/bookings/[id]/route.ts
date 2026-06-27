@@ -41,14 +41,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     );
   if (parsed.data.status === "confirmed") {
     const reservedRooms = await getDb()
-      .select({ roomId: bookingRooms.roomId, roomsCount: bookingRooms.roomsCount })
+      .select({
+        roomId: bookingRooms.roomId,
+        roomsCount: bookingRooms.roomsCount,
+        checkIn: bookingRooms.checkIn,
+        checkOut: bookingRooms.checkOut,
+      })
       .from(bookingRooms)
       .where(eq(bookingRooms.bookingId, id));
     for (const reservedRoom of reservedRooms) {
       const availability = await checkRoomAvailability({
         roomId: reservedRoom.roomId,
-        checkIn: current.checkIn,
-        checkOut: current.checkOut,
+        checkIn: reservedRoom.checkIn ?? current.checkIn,
+        checkOut: reservedRoom.checkOut ?? current.checkOut,
         roomsCount: reservedRoom.roomsCount,
       });
       if (!availability.available)

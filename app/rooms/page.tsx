@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AvailabilitySearch } from "@/components/public/availability-search";
+import { AvailabilityForm } from "@/components/public/availability-search";
 import { RoomCard } from "@/components/public/room-card";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
@@ -30,9 +30,7 @@ export default async function RoomsPage() {
           </div>
         </section>
         <section className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6">
-          <div className="rounded-xl border bg-card p-5">
-            <AvailabilitySearch compact rooms={rooms.map(({ slug, name }) => ({ slug, name }))} />
-          </div>
+          <AvailabilityForm context="rooms" rooms={rooms.map(({ slug, name }) => ({ slug, name }))} />
         </section>
         <section className="mx-auto max-w-[1180px] px-4 pb-24 pt-8 sm:px-6 lg:pb-32">
           <div className="flex items-end justify-between gap-4">

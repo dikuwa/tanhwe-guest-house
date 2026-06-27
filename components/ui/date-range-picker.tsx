@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarCheck, CalendarDays } from "lucide-react";
 import { format } from "date-fns";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -16,8 +16,6 @@ type DateRangePickerProps = {
   minDate?: string;
   checkInId?: string;
   checkOutId?: string;
-  checkInLabel?: string;
-  checkOutLabel?: string;
 };
 
 function toDate(value: string): Date | undefined {
@@ -39,8 +37,6 @@ export function DateRangePicker({
   minDate,
   checkInId = "date-range-check-in",
   checkOutId = "date-range-check-out",
-  checkInLabel = "Check-in",
-  checkOutLabel = "Check-out",
 }: DateRangePickerProps) {
   const today = minDate ? new Date(`${minDate}T00:00:00Z`) : new Date();
   const checkInDate = toDate(checkIn);
@@ -53,13 +49,11 @@ export function DateRangePicker({
     (date: Date | undefined) => {
       const val = toDateString(date);
       onCheckInChange(val);
-      // Auto-advance check-out if needed
       if (date && checkOutDate && date >= checkOutDate) {
         const next = new Date(date);
         next.setDate(next.getDate() + 1);
         onCheckOutChange(toDateString(next));
       }
-      // Keep popover open for continued interaction
     },
     [checkOutDate, onCheckInChange, onCheckOutChange]
   );
@@ -67,34 +61,40 @@ export function DateRangePicker({
   const handleCheckOutSelect = useCallback(
     (date: Date | undefined) => {
       onCheckOutChange(toDateString(date));
-      // Close popover after check-out selection completes the range
       setCheckOutOpen(false);
     },
     [onCheckOutChange, setCheckOutOpen]
   );
 
+  const triggerClass = cn(
+    "flex h-11 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-sm transition-colors",
+    "hover:border-neutral-300 hover:bg-neutral-50",
+    "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+  );
+
   return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        <CalendarDays className="mr-1 inline size-3 align-middle" />
-        Your stay
-      </Label>
-      <div className="grid grid-cols-2 gap-3">
-        {/* Check-in */}
+    <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-1.5">
+        <Label
+          htmlFor={checkInId}
+          className="flex items-center gap-1.5 text-sm font-medium"
+        >
+          <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+          From
+        </Label>
         <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
           <PopoverTrigger
             id={checkInId}
             className={cn(
-              "mt-1 flex h-11 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-              checkIn ? "text-neutral-800" : "text-neutral-400"
+              triggerClass,
+              checkIn ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
             {checkInDate
               ? format(checkInDate, "d MMM yyyy")
-              : checkInLabel}
+              : "Select date"}
           </PopoverTrigger>
-          <PopoverContent className="w-[320px] p-2" align="start">
+          <PopoverContent className="w-auto p-3" align="start">
             <Calendar
               mode="single"
               selected={checkInDate}
@@ -105,22 +105,29 @@ export function DateRangePicker({
             />
           </PopoverContent>
         </Popover>
+      </div>
 
-        {/* Check-out */}
+      <div className="space-y-1.5">
+        <Label
+          htmlFor={checkOutId}
+          className="flex items-center gap-1.5 text-sm font-medium"
+        >
+          <CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />
+          To
+        </Label>
         <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
           <PopoverTrigger
             id={checkOutId}
             className={cn(
-              "mt-1 flex h-11 w-full items-center rounded-md border bg-white px-3 text-sm shadow-xs transition-colors",
-              "focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none",
-              checkOut ? "text-neutral-800" : "text-neutral-400"
+              triggerClass,
+              checkOut ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
             {checkOutDate
               ? format(checkOutDate, "d MMM yyyy")
-              : checkOutLabel}
+              : "Select date"}
           </PopoverTrigger>
-          <PopoverContent className="w-[320px] p-2" align="start">
+          <PopoverContent className="w-auto p-3" align="start">
             <Calendar
               mode="single"
               selected={checkOutDate}

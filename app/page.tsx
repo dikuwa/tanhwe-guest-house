@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Coffee, MapPin, Presentation, ShieldCheck, Trees } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { AvailabilitySearch } from "@/components/public/availability-search";
+import { AvailabilityForm } from "@/components/public/availability-search";
 import { ContactActions } from "@/components/public/contact-actions";
 import { RoomCard } from "@/components/public/room-card";
 import { SiteFooter } from "@/components/public/site-footer";
@@ -73,9 +73,7 @@ export default async function Home() {
         </section>
 
         <section className="relative z-20 mx-auto -mt-1 max-w-[1180px] px-4 sm:px-6 lg:-mt-8">
-          <div className="rounded-xl border bg-card p-5 shadow-[0_18px_55px_-42px_rgba(17,24,39,.45)] sm:p-6">
-            <AvailabilitySearch rooms={rooms.map(({ slug, name }) => ({ slug, name }))} />
-          </div>
+          <AvailabilityForm context="home" rooms={rooms.map(({ slug, name }) => ({ slug, name }))} />
         </section>
 
         <section className="mx-auto max-w-[1180px] px-4 py-24 sm:px-6 lg:py-32">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { AlertCircle, BedDouble, CalendarDays, CheckCircle2, FileText, Loader2, Mail, MessageCircle, Phone, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,7 +180,10 @@ export function BookingRequestForm(props: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <Label htmlFor="rooms-count">Rooms</Label>
+          <Label htmlFor="rooms-count" className="flex items-center gap-1.5 text-sm font-medium">
+            <BedDouble className="size-4 text-muted-foreground" aria-hidden="true" />
+            Rooms
+          </Label>
           <Input
             id="rooms-count"
             type="number"
@@ -192,7 +195,10 @@ export function BookingRequestForm(props: Props) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="guests-count">Guests</Label>
+          <Label htmlFor="guests-count" className="flex items-center gap-1.5 text-sm font-medium">
+            <Users className="size-4 text-muted-foreground" aria-hidden="true" />
+            Guests
+          </Label>
           <Input
             id="guests-count"
             type="number"
@@ -208,7 +214,10 @@ export function BookingRequestForm(props: Props) {
         <legend className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact details</legend>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="fullName">Full name</Label>
+            <Label htmlFor="fullName" className="flex items-center gap-1.5 text-sm font-medium">
+              <User className="size-4 text-muted-foreground" aria-hidden="true" />
+              Full name
+            </Label>
             <Input id="fullName" name="fullName" autoComplete="name" required className={cn(fieldErrors.fullName && "border-destructive")} />
             {fieldErrors.fullName && (
               <p className="flex items-center gap-1 text-xs text-destructive">
@@ -217,7 +226,10 @@ export function BookingRequestForm(props: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone" className="flex items-center gap-1.5 text-sm font-medium">
+              <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
+              Phone
+            </Label>
             <Input
               id="phone"
               name="phone"
@@ -234,7 +246,10 @@ export function BookingRequestForm(props: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="whatsapp">WhatsApp <span className="text-muted-foreground">(optional)</span></Label>
+            <Label htmlFor="whatsapp" className="flex items-center gap-1.5 text-sm font-medium">
+              <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
+              WhatsApp <span className="text-muted-foreground font-normal">(optional)</span>
+            </Label>
             <Input id="whatsapp" name="whatsapp" type="tel" placeholder="Same as phone if left empty" className={cn(fieldErrors.whatsapp && "border-destructive")} />
             {fieldErrors.whatsapp && (
               <p className="flex items-center gap-1 text-xs text-destructive">
@@ -243,7 +258,10 @@ export function BookingRequestForm(props: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium">
+              <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
+              Email
+            </Label>
             <Input id="email" name="email" type="email" autoComplete="email" placeholder="optional" className={cn(fieldErrors.email && "border-destructive")} />
             {fieldErrors.email && (
               <p className="flex items-center gap-1 text-xs text-destructive">
@@ -252,7 +270,10 @@ export function BookingRequestForm(props: Props) {
             )}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="preferred-contact">Preferred contact</Label>
+            <Label htmlFor="preferred-contact" className="flex items-center gap-1.5 text-sm font-medium">
+              <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+              Preferred contact
+            </Label>
             <Select
               value={preferredContact}
               onValueChange={(value) => value && setPreferredContact(value)}
@@ -270,7 +291,10 @@ export function BookingRequestForm(props: Props) {
         </div>
       </fieldset>
       <div className="space-y-1.5">
-        <Label htmlFor="notes">Special requests</Label>
+        <Label htmlFor="notes" className="flex items-center gap-1.5 text-sm font-medium">
+          <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
+          Special requests
+        </Label>
         <Textarea
           id="notes"
           name="notes"

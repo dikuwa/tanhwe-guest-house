@@ -4,6 +4,7 @@ import { FieldError } from "@/components/forms/field-error";
 import { StatusSelect } from "@/components/forms/status-select";
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { calculateNights } from "@/lib/booking-calculations";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
@@ -335,28 +336,22 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               {/* Per-line date pickers (shown when sameDates is false) */}
               {!line.sameDates && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`line-ci-${line.id}`}>From</Label>
-                    <Input
-                      id={`line-ci-${line.id}`}
-                      type="date"
-                      value={line.checkIn}
-                      onChange={(e) => updateLine(line.id, { checkIn: e.target.value })}
-                      min={checkIn || undefined}
-                      className="h-11"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`line-co-${line.id}`}>To</Label>
-                    <Input
-                      id={`line-co-${line.id}`}
-                      type="date"
-                      value={line.checkOut}
-                      onChange={(e) => updateLine(line.id, { checkOut: e.target.value })}
-                      min={line.checkIn || checkIn || undefined}
-                      className="h-11"
-                    />
-                  </div>
+                  <DatePicker
+                    value={line.checkIn}
+                    onChange={(val) => updateLine(line.id, { checkIn: val })}
+                    minDate={checkIn || undefined}
+                    id={`line-ci-${line.id}`}
+                    label="From"
+                    icon={<CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />}
+                  />
+                  <DatePicker
+                    value={line.checkOut}
+                    onChange={(val) => updateLine(line.id, { checkOut: val })}
+                    minDate={line.checkIn || checkIn || undefined}
+                    id={`line-co-${line.id}`}
+                    label="To"
+                    icon={<CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />}
+                  />
                 </div>
               )}
 

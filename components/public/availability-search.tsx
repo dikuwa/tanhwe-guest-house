@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { BedDouble, CalendarCheck, CalendarDays, Loader2, Search, Users } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -73,15 +74,15 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
   return (
     <form id="booking" onSubmit={submit} className={cardClass}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.55fr_1fr_1fr_auto] lg:gap-5">
-        {/* Room */}
+        {/* Room type */}
         <div className="space-y-1.5">
           <Label htmlFor="search-room" className="flex items-center gap-1.5 text-sm font-medium">
             <BedDouble className="size-4 text-muted-foreground" aria-hidden="true" />
-            Room
+            Room type
           </Label>
           <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
             <SelectTrigger id="search-room" className="h-11 w-full bg-background">
-              <SelectValue placeholder="Select a room" />
+              <SelectValue placeholder="Select a room type" />
             </SelectTrigger>
             <SelectContent>
               {rooms.map((room) => (
@@ -216,6 +217,14 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
             {submitting ? "Checking availability\u2026" : "Check Availability"}
           </Button>
         </div>
+      </div>
+      <div className="mt-3 text-right">
+        <Link
+          href="/rooms"
+          className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+        >
+          View room types and amenities
+        </Link>
       </div>
     </form>
   );

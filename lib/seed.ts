@@ -1,7 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { asc, eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
-import { accounts, customers, faqs, roles, roomAmenities, roomTypes, rooms, settings, testimonials, users } from "./db/schema";
+import { accounts, customers, faqs, roles, roomAmenities, roomTypes, roomUnits, rooms, settings, testimonials, users } from "./db/schema";
 
 async function seed() {
   const db = getDb();
@@ -175,6 +175,31 @@ async function seed() {
       },
     ])
     .onConflictDoNothing();
+
+  // ── Room Units ───────────────────────────────────────────────────
+  const existingUnits = await db.select({ count: sql<number>`count(*)::int` }).from(roomUnits);
+  if (existingUnits[0]?.count === 0) {
+    const roomList = await db.select().from(rooms);
+    for (const room of roomList) {
+      for (let i = 1; i <= room.availableUnits; i++) {
+        const num = String(i).padStart(2, "0");
+        await db
+          .insert(roomUnits)
+          .values({
+            id: crypto.randomUUID(),
+            roomId: room.id,
+            block: "A",
+            roomNumber: i,
+            roomCode: `A${num}`,
+            displayName: `Block A – Room ${num}`,
+            operationalStatus: "available",
+            isActive: true,
+          })
+          .onConflictDoNothing();
+      }
+    }
+    console.log(`✓ Seeded room units for ${roomList.length} rooms`);
+  }
 
   await db
     .insert(roomAmenities)

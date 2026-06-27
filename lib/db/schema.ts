@@ -505,6 +505,55 @@ export const shareLinks = pgTable(
   ]
 );
 
+export const roomUnits = pgTable(
+  "room_units",
+  {
+    id: text("id").primaryKey(),
+    roomId: text("room_id")
+      .notNull()
+      .references(() => rooms.id, { onDelete: "cascade" }),
+    block: text("block").notNull(),
+    roomNumber: integer("room_number").notNull(),
+    roomCode: text("room_code").notNull(),
+    displayName: text("display_name").notNull(),
+    operationalStatus: text("operational_status").notNull().default("available"),
+    isActive: boolean("is_active").notNull().default(true),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (table) => [
+    index("room_units_room_id_idx").on(table.roomId),
+    index("room_units_block_room_number_idx").on(table.block, table.roomNumber),
+    check("room_units_block_check", sql`${table.block} in ('A', 'B', 'C')`),
+    check(
+      "room_units_status_check",
+      sql`${table.operationalStatus} in ('available', 'cleaning', 'maintenance', 'blocked', 'inactive')`
+    ),
+  ]
+);
+
+export const bookingRoomUnits = pgTable(
+  "booking_room_units",
+  {
+    id: text("id").primaryKey(),
+    bookingId: text("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+    bookingRoomId: text("booking_room_id")
+      .notNull()
+      .references(() => bookingRooms.id, { onDelete: "cascade" }),
+    roomUnitId: text("room_unit_id")
+      .notNull()
+      .references(() => roomUnits.id, { onDelete: "restrict" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("booking_room_units_booking_id_idx").on(table.bookingId),
+    index("booking_room_units_room_unit_id_idx").on(table.roomUnitId),
+    uniqueIndex("booking_room_units_unit_booking_unique").on(table.bookingId, table.roomUnitId),
+  ]
+);
+
 export const roomTypesRelations = relations(roomTypes, ({ many }) => ({
   rooms: many(rooms),
 }));
@@ -513,6 +562,7 @@ export const roomsRelations = relations(rooms, ({ one, many }) => ({
   images: many(roomImages),
   amenities: many(roomAmenities),
   roomType: one(roomTypes, { fields: [rooms.roomTypeId], references: [roomTypes.id] }),
+  units: many(roomUnits),
 }));
 export const roomImagesRelations = relations(roomImages, ({ one }) => ({
   room: one(rooms, { fields: [roomImages.roomId], references: [rooms.id] }),
@@ -520,13 +570,23 @@ export const roomImagesRelations = relations(roomImages, ({ one }) => ({
 export const roomAmenitiesRelations = relations(roomAmenities, ({ one }) => ({
   room: one(rooms, { fields: [roomAmenities.roomId], references: [rooms.id] }),
 }));
+export const roomUnitsRelations = relations(roomUnits, ({ one }) => ({
+  room: one(rooms, { fields: [roomUnits.roomId], references: [rooms.id] }),
+}));
+export const bookingRoomUnitsRelations = relations(bookingRoomUnits, ({ one }) => ({
+  booking: one(bookings, { fields: [bookingRoomUnits.bookingId], references: [bookings.id] }),
+  bookingRoom: one(bookingRooms, { fields: [bookingRoomUnits.bookingRoomId], references: [bookingRooms.id] }),
+  roomUnit: one(roomUnits, { fields: [bookingRoomUnits.roomUnitId], references: [roomUnits.id] }),
+}));
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
   rooms: many(bookingRooms),
+  roomUnits: many(bookingRoomUnits),
 }));
-export const bookingRoomsRelations = relations(bookingRooms, ({ one }) => ({
+export const bookingRoomsRelations = relations(bookingRooms, ({ one, many }) => ({
   booking: one(bookings, { fields: [bookingRooms.bookingId], references: [bookings.id] }),
   room: one(rooms, { fields: [bookingRooms.roomId], references: [rooms.id] }),
+  roomUnits: many(bookingRoomUnits),
 }));
 export const customersRelations = relations(customers, ({ many }) => ({
   bookings: many(bookings),

@@ -25,6 +25,7 @@ export const items = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard, roles: ["owner", "admin", "staff"] },
   { href: "/admin/rooms", label: "Rooms", icon: BedDouble, roles: ["owner", "admin"] },
   { href: "/admin/rooms/types", label: "Room Types", icon: BedDouble, roles: ["owner", "admin"] },
+  { href: "/admin/rooms/units", label: "Room Units", icon: BedDouble, roles: ["owner", "admin"] },
   { href: "/admin/bookings", label: "Bookings", icon: BookOpen, roles: ["owner", "admin", "staff"] },
   { href: "/admin/customers", label: "Customers", icon: Users, roles: ["owner", "admin", "staff"] },
   { href: "/admin/documents", label: "Documents", icon: FileText, roles: ["owner", "admin"] },

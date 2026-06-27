@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookingStatus } from "@/components/admin/booking-status";
 import { getDb } from "@/lib/db";
-import { bookingRooms, bookings, customers } from "@/lib/db/schema";
+import { bookingRoomUnits, bookings, roomUnits } from "@/lib/db/schema";
 import { requireRole } from "@/lib/auth-middleware";
 
 const money = new Intl.NumberFormat("en-NA", {
@@ -26,6 +26,25 @@ export default async function BookingDetailPage({
     where: eq(bookings.id, id),
     with: { customer: true, rooms: true },
   });
+
+  // Fetch assigned room units for this booking
+  const bookingUnitRows = await getDb()
+    .select({
+      bookingRoomId: bookingRoomUnits.bookingRoomId,
+      unitId: roomUnits.id,
+      displayName: roomUnits.displayName,
+      roomCode: roomUnits.roomCode,
+    })
+    .from(bookingRoomUnits)
+    .innerJoin(roomUnits, eq(bookingRoomUnits.roomUnitId, roomUnits.id))
+    .where(eq(bookingRoomUnits.bookingId, id));
+
+  const unitMap = new Map<string, typeof bookingUnitRows>();
+  for (const row of bookingUnitRows) {
+    const existing = unitMap.get(row.bookingRoomId) ?? [];
+    existing.push(row);
+    unitMap.set(row.bookingRoomId, existing);
+  }
   if (!booking) notFound();
 
   const phone = booking.customer.phone.replace(/[^+\d]/g, "");
@@ -146,23 +165,40 @@ export default async function BookingDetailPage({
             Rooms
           </p>
           <div className="mt-3 divide-y">
-            {booking.rooms.map((room) => (
-              <div
-                key={room.id}
-                className="flex items-center justify-between py-2 text-sm first:pt-0 last:pb-0"
-              >
-                <div>
-                  <p className="font-medium text-neutral-800">{room.roomNameSnapshot}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {room.roomsCount} room{room.roomsCount === 1 ? "" : "s"} · {room.nights} night
-                    {room.nights === 1 ? "" : "s"}
-                  </p>
+            {booking.rooms.map((room) => {
+              const units = unitMap.get(room.id) ?? [];
+              return (
+                <div
+                  key={room.id}
+                  className="py-2 text-sm first:pt-0 last:pb-0"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-neutral-800">{room.roomNameSnapshot}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {room.roomsCount} room{room.roomsCount === 1 ? "" : "s"} · {room.nights} night
+                        {room.nights === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <p className="tabular-nums text-neutral-700">
+                      {money.format(room.subtotal)}
+                    </p>
+                  </div>
+                  {units.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {units.map((unit) => (
+                        <span
+                          key={unit.unitId}
+                          className="inline-flex items-center rounded-md bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-600"
+                        >
+                          {unit.displayName}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <p className="tabular-nums text-neutral-700">
-                  {money.format(room.subtotal)}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

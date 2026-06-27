@@ -1,8 +1,8 @@
 import "server-only";
 
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import { getDb } from "./db";
-import { faqs, roomAmenities, roomImages, rooms, settings, testimonials } from "./db/schema";
+import { faqs, roomAmenities, roomImages, roomTypes, rooms, roomUnits, settings, testimonials } from "./db/schema";
 
 export type PublicRoom = {
   id: string;
@@ -18,38 +18,77 @@ export type PublicRoom = {
   imageUrl: string | null;
   images: { url: string; alt: string }[];
   amenities: string[];
+  bedConfiguration: string | null;
 };
 
 export async function getPublicRooms(): Promise<PublicRoom[]> {
   const db = getDb();
   const roomRows = await db
-    .select()
+    .select({
+      id: rooms.id,
+      name: rooms.name,
+      slug: rooms.slug,
+      type: rooms.type,
+      description: rooms.description,
+      pricePerNight: rooms.pricePerNight,
+      availableUnits: rooms.availableUnits,
+      maxGuests: rooms.maxGuests,
+      breakfastIncluded: rooms.breakfastIncluded,
+      featured: rooms.featured,
+      roomTypeId: rooms.roomTypeId,
+    })
     .from(rooms)
     .where(eq(rooms.status, "active"))
     .orderBy(asc(rooms.pricePerNight));
   if (!roomRows.length) return [];
 
-  const [images, amenities] = await Promise.all([
+  const [images, amenities, unitCounts, typeRows] = await Promise.all([
     db.select().from(roomImages).orderBy(asc(roomImages.sortOrder)),
     db.select().from(roomAmenities).orderBy(asc(roomAmenities.amenity)),
+    db
+      .select({
+        roomId: roomUnits.roomId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(roomUnits)
+      .where(
+        and(
+          eq(roomUnits.isActive, true),
+          eq(roomUnits.operationalStatus, "available")
+        )
+      )
+      .groupBy(roomUnits.roomId),
+    db.select().from(roomTypes),
   ]);
 
-  return roomRows.map((room) => ({
-    ...room,
-    imageUrl:
-      images.find((image) => image.roomId === room.id && image.isPrimary)?.imageUrl ??
-      images.find((image) => image.roomId === room.id)?.imageUrl ??
-      null,
-    images: images
-      .filter((image) => image.roomId === room.id)
-      .map((image) => ({
-        url: image.imageUrl,
-        alt: image.altText ?? `${room.name} at Tanhwe Guest House`,
-      })),
-    amenities: amenities
-      .filter((amenity) => amenity.roomId === room.id)
-      .map((amenity) => amenity.amenity),
-  }));
+  const unitCountMap = new Map<string, number>();
+  for (const uc of unitCounts) {
+    unitCountMap.set(uc.roomId, uc.count);
+  }
+
+  return roomRows.map((room) => {
+    const typeInfo = typeRows.find((t) => t.id === room.roomTypeId);
+    return {
+      ...room,
+      description: room.description ?? typeInfo?.description ?? null,
+      pricePerNight: room.pricePerNight,
+      bedConfiguration: typeInfo?.bedConfiguration ?? null,
+      availableUnits: unitCountMap.get(room.id) ?? room.availableUnits,
+      imageUrl:
+        images.find((image) => image.roomId === room.id && image.isPrimary)?.imageUrl ??
+        images.find((image) => image.roomId === room.id)?.imageUrl ??
+        null,
+      images: images
+        .filter((image) => image.roomId === room.id)
+        .map((image) => ({
+          url: image.imageUrl,
+          alt: image.altText ?? `${room.name} at Tanhwe Guest House`,
+        })),
+      amenities: amenities
+        .filter((amenity) => amenity.roomId === room.id)
+        .map((amenity) => amenity.amenity),
+    };
+  });
 }
 
 export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
@@ -59,7 +98,7 @@ export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
   });
   if (!room) return null;
 
-  const [images, amenities] = await Promise.all([
+  const [images, amenities, unitCount, typeRow] = await Promise.all([
     db
       .select()
       .from(roomImages)
@@ -70,10 +109,28 @@ export async function getPublicRoom(slug: string): Promise<PublicRoom | null> {
       .from(roomAmenities)
       .where(eq(roomAmenities.roomId, room.id))
       .orderBy(asc(roomAmenities.amenity)),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(roomUnits)
+      .where(
+        and(
+          eq(roomUnits.roomId, room.id),
+          eq(roomUnits.isActive, true),
+          eq(roomUnits.operationalStatus, "available")
+        )
+      ),
+    room.roomTypeId
+      ? db.query.roomTypes.findFirst({ where: eq(roomTypes.id, room.roomTypeId) })
+      : null,
   ]);
+
+  const typeInfo = typeRow ?? null;
 
   return {
     ...room,
+    description: room.description ?? typeInfo?.description ?? null,
+    bedConfiguration: typeInfo?.bedConfiguration ?? null,
+    availableUnits: unitCount[0]?.count ?? room.availableUnits,
     imageUrl: images.find((image) => image.isPrimary)?.imageUrl ?? images[0]?.imageUrl ?? null,
     images: images.map((image) => ({
       url: image.imageUrl,

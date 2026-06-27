@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import {
   bookingRooms,
@@ -10,6 +10,7 @@ import {
   followUps,
   roomTypes,
   rooms,
+  roomUnits,
   users,
   settings,
   shareLinks,
@@ -130,8 +131,18 @@ export async function getAdminRoomTypes() {
     .orderBy(asc(roomTypes.sortOrder), asc(roomTypes.name));
 }
 
-export async function getActiveRoomOptions() {
+export async function getAdminRoomUnits(roomId?: string) {
+  const conditions = [];
+  if (roomId) conditions.push(eq(roomUnits.roomId, roomId));
   return getDb()
+    .select()
+    .from(roomUnits)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(asc(roomUnits.block), asc(roomUnits.roomNumber));
+}
+
+export async function getActiveRoomOptions() {
+  const rows = await getDb()
     .select({
       id: rooms.id,
       name: rooms.name,
@@ -142,6 +153,31 @@ export async function getActiveRoomOptions() {
     .from(rooms)
     .where(eq(rooms.status, "active"))
     .orderBy(asc(rooms.name));
+
+  // Enrich with actual available room unit counts
+  const roomIds = rows.map((r) => r.id);
+  if (roomIds.length === 0) return rows;
+
+  const unitCounts = await getDb()
+    .select({
+      roomId: roomUnits.roomId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(roomUnits)
+    .where(
+      and(
+        inArray(roomUnits.roomId, roomIds),
+        eq(roomUnits.isActive, true),
+        inArray(roomUnits.operationalStatus, ["available", "cleaning"])
+      )
+    )
+    .groupBy(roomUnits.roomId);
+
+  const countMap = new Map(unitCounts.map((uc) => [uc.roomId, uc.count]));
+  return rows.map((row) => ({
+    ...row,
+    availableUnits: countMap.get(row.id) ?? row.availableUnits,
+  }));
 }
 
 export async function getCustomers(
@@ -355,9 +391,16 @@ export async function getReports(from: Date, to: Date) {
         .from(bookings)
         .where(dateWhere),
       db
-        .select({ units: sql<number>`coalesce(sum(${rooms.availableUnits}), 0)::int` })
-        .from(rooms)
-        .where(eq(rooms.status, "active")),
+        .select({ units: sql<number>`coalesce(count(*), 0)::int` })
+        .from(roomUnits)
+        .innerJoin(rooms, eq(roomUnits.roomId, rooms.id))
+        .where(
+          and(
+            eq(rooms.status, "active"),
+            eq(roomUnits.isActive, true),
+            inArray(roomUnits.operationalStatus, ["available", "cleaning"])
+          )
+        ),
       db
         .select({ label: bookings.status, value: sql<number>`count(*)::int` })
         .from(bookings)

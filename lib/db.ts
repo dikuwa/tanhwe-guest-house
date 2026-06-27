@@ -37,3 +37,7 @@ export type Booking = typeof schema.bookings.$inferSelect;
 export type NewBooking = typeof schema.bookings.$inferInsert;
 export type Customer = typeof schema.customers.$inferSelect;
 export type NewCustomer = typeof schema.customers.$inferInsert;
+export type RoomUnit = typeof schema.roomUnits.$inferSelect;
+export type NewRoomUnit = typeof schema.roomUnits.$inferInsert;
+export type BookingRoomUnit = typeof schema.bookingRoomUnits.$inferSelect;
+export type NewBookingRoomUnit = typeof schema.bookingRoomUnits.$inferInsert;

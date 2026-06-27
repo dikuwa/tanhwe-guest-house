@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { and, eq, gt, inArray, lt, not, sql } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomAvailability, parseStayDate } from "@/lib/availability";
 import { getDb } from "@/lib/db";
-import { activityLogs, bookingRooms, bookings, customers } from "@/lib/db/schema";
+import { activityLogs, bookingRooms, bookingRoomUnits, bookings, customers, roomUnits } from "@/lib/db/schema";
 import { notifyOps } from "@/lib/notifications";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
 
@@ -21,6 +22,57 @@ const input = z.object({
   notes: z.string().trim().max(2000).optional(),
   status: z.enum(["pending", "confirmed"]).default("confirmed"),
 });
+
+async function assignRoomUnits(
+  tx: Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0],
+  bookingId: string,
+  bookingRoomId: string,
+  roomId: string,
+  checkIn: Date,
+  checkOut: Date,
+  roomsCount: number
+) {
+  // Get IDs of already-assigned room units for overlapping bookings
+  const assigned = await tx
+    .select({ unitId: bookingRoomUnits.roomUnitId })
+    .from(bookingRoomUnits)
+    .innerJoin(bookings, eq(bookingRoomUnits.bookingId, bookings.id))
+    .where(
+      and(
+        inArray(bookings.status, ["confirmed", "checked-in"]),
+        lt(bookings.checkIn, checkOut),
+        gt(bookings.checkOut, checkIn)
+      )
+    );
+  const assignedIds = assigned.map((a) => a.unitId);
+
+  // Find available room units that are not already assigned
+  const availableUnits = await tx
+    .select({ id: roomUnits.id, displayName: roomUnits.displayName })
+    .from(roomUnits)
+    .where(
+      and(
+        eq(roomUnits.roomId, roomId),
+        eq(roomUnits.isActive, true),
+        inArray(roomUnits.operationalStatus, ["available", "cleaning"])
+      )
+    );
+
+  const free = availableUnits.filter((u) => !assignedIds.includes(u.id)).slice(0, roomsCount);
+
+  if (free.length < roomsCount) {
+    throw new Error("Not enough available room units");
+  }
+
+  for (const unit of free) {
+    await tx.insert(bookingRoomUnits).values({
+      id: crypto.randomUUID(),
+      bookingId,
+      bookingRoomId,
+      roomUnitId: unit.id,
+    });
+  }
+}
 
 export async function POST(request: NextRequest) {
   const session = await authorizeRequest(request.headers, ["owner", "admin"]);
@@ -73,8 +125,9 @@ export async function POST(request: NextRequest) {
       notes: parsed.data.notes || null,
       createdBy: session.user.id,
     });
+    const bookingRoomId = crypto.randomUUID();
     await tx.insert(bookingRooms).values({
-      id: crypto.randomUUID(),
+      id: bookingRoomId,
       bookingId,
       roomId: availability.room.id,
       roomNameSnapshot: availability.room.name,
@@ -83,6 +136,22 @@ export async function POST(request: NextRequest) {
       nights: availability.nights,
       subtotal: availability.subtotal,
     });
+
+    // Assign specific room units
+    try {
+      await assignRoomUnits(
+        tx,
+        bookingId,
+        bookingRoomId,
+        availability.room.id,
+        checkIn,
+        checkOut,
+        parsed.data.roomsCount
+      );
+    } catch {
+      throw new Error("This room type is no longer fully available for the selected dates. Please choose another room type or adjust the dates.");
+    }
+
     await tx.insert(activityLogs).values({
       id: crypto.randomUUID(),
       userId: session.user.id,
@@ -92,7 +161,6 @@ export async function POST(request: NextRequest) {
       details: bookingNumber,
     });
   });
-  // Notify ops users
   await notifyOps({
     type: "booking_created",
     title: `New booking: ${bookingNumber}`,

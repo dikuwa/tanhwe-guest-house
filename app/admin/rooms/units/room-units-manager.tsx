@@ -620,6 +620,9 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
                       <span className="block truncate text-sm font-medium text-neutral-800">
                         {unit.displayName}
                       </span>
+                      <span className="mt-0.5 block truncate text-xs font-medium text-neutral-400">
+                        {unit.roomName}
+                      </span>
                     </div>
 
                     {/* Column 3: Room code */}

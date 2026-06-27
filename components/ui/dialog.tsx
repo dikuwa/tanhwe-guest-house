@@ -37,6 +37,17 @@ const DialogContent = React.forwardRef<
         const target = originalEvent?.target as HTMLElement | null;
         if (target?.closest('[data-slot="select-content"], [role="listbox"]')) {
           event.preventDefault();
+          return;
+        }
+        if (originalEvent instanceof FocusEvent) {
+          const relatedTarget = originalEvent.relatedTarget as HTMLElement | null;
+          if (
+            relatedTarget &&
+            (relatedTarget.closest?.('[data-slot="select-content"], [role="listbox"]') ||
+              relatedTarget.matches?.('[data-slot="select-item"], [role="option"]'))
+          ) {
+            event.preventDefault();
+          }
         }
       }}
       className={cn(

@@ -35,7 +35,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ success: true });
   } catch (error) {
     const msg = String(error);
-    if (msg.includes("room_types_slug_unique"))
+    const causeMsg = (error as any).cause ? String((error as any).cause) : "";
+    if (msg.includes("room_types_slug_unique") || causeMsg.includes("room_types_slug_unique"))
       return NextResponse.json({ error: "That room type slug is already in use" }, { status: 409 });
     return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }

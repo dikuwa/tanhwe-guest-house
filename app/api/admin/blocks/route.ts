@@ -70,9 +70,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id, name: parsed.data.name, shortCode: parsed.data.shortCode }, { status: 201 });
   } catch (error) {
     const msg = String(error);
-    if (msg.includes("blocks_name_unique"))
+    const causeMsg = (error as any).cause ? String((error as any).cause) : "";
+    if (msg.includes("blocks_name_unique") || causeMsg.includes("blocks_name_unique"))
       return NextResponse.json({ error: "That block name is already in use" }, { status: 409 });
-    if (msg.includes("blocks_short_code_unique"))
+    if (msg.includes("blocks_short_code_unique") || causeMsg.includes("blocks_short_code_unique"))
       return NextResponse.json({ error: "That short code is already in use" }, { status: 409 });
     return NextResponse.json({ error: msg.slice(0, 200) }, { status: 500 });
   }

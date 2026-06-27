@@ -366,9 +366,7 @@ export function BookingRequestForm(props: Props) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to send booking request");
       setSuccess(data);
-      toast.success("Booking request submitted", {
-        description: `Reference: ${data.bookingNumber}. We will get back to you shortly.`,
-      });
+      toast.success("Booking request submitted — Reference: " + data.bookingNumber + ". We will get back to you shortly.");
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : "Unable to send booking request";
       setError(message);

@@ -579,39 +579,47 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label htmlFor="dlg-room">Room</Label>
-                <input type="hidden" name="roomId" value={newRoomId} />
-                <Select value={newRoomId} onValueChange={(value) => setNewRoomId(value ?? "")}>
-                  <SelectTrigger id="dlg-room" className="mt-1.5 h-10 w-full">
-                    <SelectValue placeholder="Select a room" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms
-                      .filter((r) => r.status !== "archived")
-                      .map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  id="dlg-room"
+                  name="roomId"
+                  value={newRoomId}
+                  onChange={(e) => setNewRoomId(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
+                  required
+                >
+                  <option value="" disabled>
+                    Select a room
+                  </option>
+                  {rooms
+                    .filter((r) => r.status !== "archived")
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="dlg-block">Block</Label>
-                <Select value={newBlockId} onValueChange={handleBlockChange}>
-                  <SelectTrigger id="dlg-block" className="mt-1.5 h-10 w-full">
-                    <SelectValue placeholder="Select block" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {blocks
-                      .filter((b) => b.isActive)
-                      .map((b) => (
-                        <SelectItem key={b.id} value={b.id}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <input type="hidden" name="blockId" value={newBlockId} />
+                <select
+                  id="dlg-block"
+                  name="blockId"
+                  value={newBlockId}
+                  onChange={(e) => handleBlockChange(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
+                  required
+                >
+                  <option value="" disabled>
+                    Select block
+                  </option>
+                  {blocks
+                    .filter((b) => b.isActive)
+                    .map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                </select>
                 <button
                   type="button"
                   className="mt-1 text-xs font-medium text-primary hover:underline"
@@ -680,22 +688,18 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Status</Label>
-                <input type="hidden" name="operationalStatus" value={newOperationalStatus} />
-                <Select
+                <select
+                  name="operationalStatus"
                   value={newOperationalStatus}
-                  onValueChange={(value) => setNewOperationalStatus(value ?? "available")}
+                  onChange={(e) => setNewOperationalStatus(e.target.value)}
+                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
                 >
-                  <SelectTrigger className="mt-1.5 h-10 w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="cleaning">Cleaning</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="blocked">Blocked</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="available">Available</option>
+                  <option value="cleaning">Cleaning</option>
+                  <option value="maintenance">Maintenance</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
               <div>
                 <Label htmlFor="dlg-notes">Notes (optional)</Label>

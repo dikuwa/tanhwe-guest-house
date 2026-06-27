@@ -1,4 +1,3 @@
-import { Toaster } from "sonner";
 import { AdminLayoutShell } from "@/components/admin/admin-layout-shell";
 import { requireAuth } from "@/lib/auth-middleware";
 
@@ -23,7 +22,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <>
       <AdminLayoutShell session={{ user }}>{children}</AdminLayoutShell>
-      <Toaster richColors position="top-right" />
     </>
   );
 }

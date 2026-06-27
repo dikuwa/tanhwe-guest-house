@@ -18,7 +18,7 @@ import { BedDouble, CalendarCheck, CalendarDays, Loader2, Search, Users } from "
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 type RoomOption = { slug: string; name: string };
 
@@ -42,15 +42,15 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
     event.preventDefault();
     if (submitting) return;
     if (!checkIn) {
-      toast.error("Missing check-in date", { description: "Please select your check-in date." });
+      toast.error("Missing check-in date — Please select your check-in date.");
       return;
     }
     if (!checkOut) {
-      toast.error("Missing check-out date", { description: "Please select your check-out date." });
+      toast.error("Missing check-out date — Please select your check-out date.");
       return;
     }
     if (checkOut <= checkIn) {
-      toast.error("Invalid date range", { description: "Check-out must be after check-in." });
+      toast.error("Invalid date range — Check-out must be after check-in.");
       return;
     }
     setSubmitting(true);

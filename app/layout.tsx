@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Allura, Onest } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Toaster } from "sonner";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const onest = Onest({
@@ -39,9 +39,12 @@ export default function RootLayout({
         {children}
         <Toaster
           position="top-right"
-          richColors
-          closeButton
-          duration={4000}
+          toastOptions={{
+            duration: 4000,
+            style: { fontSize: "0.875rem" },
+            success: { style: { background: "#059669", color: "#fff" } },
+            error: { style: { background: "#dc2626", color: "#fff" } },
+          }}
         />
         <Analytics />
         <SpeedInsights />

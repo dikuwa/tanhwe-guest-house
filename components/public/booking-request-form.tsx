@@ -19,7 +19,7 @@ import {
   User,
   Users,
 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -316,7 +316,7 @@ export function BookingRequestForm(props: Props) {
     const lineError = validateLines();
     if (lineError) {
       setFieldErrors({ line: lineError });
-      toast.error("Please check your selected rooms", { description: lineError });
+      toast.error("Please check your selected rooms — " + lineError);
       return;
     }
     setStep("details");
@@ -372,7 +372,7 @@ export function BookingRequestForm(props: Props) {
     } catch (requestError) {
       const message = requestError instanceof Error ? requestError.message : "Unable to send booking request";
       setError(message);
-      toast.error("Booking submission failed", { description: message });
+      toast.error("Booking submission failed — " + message);
     } finally {
       setSubmitting(false);
     }

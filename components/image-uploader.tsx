@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { GripVertical, Loader2, Star, Trash2, Upload } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface ImageUploaderProps {

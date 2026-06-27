@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Mail } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 
 export function DocumentEmailButton({ id, disabled }: { id: string; disabled?: boolean }) {

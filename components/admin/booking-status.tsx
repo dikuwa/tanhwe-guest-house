@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { bookingStatusOptions } from "@/components/forms/status-select";
 import { cn } from "@/lib/utils";
 

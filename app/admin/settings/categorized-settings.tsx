@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { Check, Loader2, Save } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

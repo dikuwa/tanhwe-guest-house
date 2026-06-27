@@ -21,7 +21,7 @@ import { calculateNights } from "@/lib/booking-calculations";
 import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 type RoomTypeOption = {
   id: string;

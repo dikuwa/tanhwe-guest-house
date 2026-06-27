@@ -62,7 +62,7 @@
   --color-ring: var(--ring);
   --font-sans: "Onest", "Onest Fallback", ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  --font-heading: "Inter Tight", "Inter Tight Fallback", "Onest", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Onest", "Onest Fallback", ui-sans-serif, system-ui, sans-serif;
   --color-neutral-50: #fdfcf9;
   --color-neutral-100: #f5f1e8;
   --color-neutral-200: #e6e0d3;

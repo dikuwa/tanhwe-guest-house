@@ -33,7 +33,8 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       onInteractOutside={(event) => {
-        const target = event.target as HTMLElement | null;
+        const originalEvent = (event as CustomEvent).detail?.originalEvent;
+        const target = originalEvent?.target as HTMLElement | null;
         if (target?.closest('[data-slot="select-content"], [role="listbox"]')) {
           event.preventDefault();
         }

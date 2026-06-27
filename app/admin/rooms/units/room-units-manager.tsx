@@ -275,7 +275,18 @@ export function RoomUnitsManager({
 
   return (
     <div className="space-y-4">
-      {/* Filters + Add button row */}
+      {/* Header row with count + Add button */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {units.length} room unit{units.length === 1 ? "" : "s"}
+        </p>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
+          <Plus className="size-4" />
+          Add room unit
+        </Button>
+      </div>
+
+      {/* Filters */}
       <div className="flex flex-wrap items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
         <div className="min-w-36 flex-1">
           <Label className="text-xs text-muted-foreground">Block</Label>
@@ -323,12 +334,6 @@ export function RoomUnitsManager({
             </SelectContent>
           </Select>
         </div>
-        {!showCreate && (
-          <Button className="h-10 shrink-0" onClick={() => setShowCreate(true)}>
-            <Plus className="size-4" />
-            Add room unit
-          </Button>
-        )}
       </div>
 
       {/* Units list */}

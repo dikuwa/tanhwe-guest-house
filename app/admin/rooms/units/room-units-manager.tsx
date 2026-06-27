@@ -2,7 +2,17 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit3, Loader2, Plus, Save, Trash2, X, DoorClosed } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Edit3,
+  Loader2,
+  Plus,
+  Save,
+  Trash2,
+  X,
+  DoorClosed,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +72,98 @@ type RoomUnit = {
   roomStatus: string;
 };
 
+const operationalStatusOptions = [
+  { value: "available", label: "Available" },
+  { value: "cleaning", label: "Cleaning" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "blocked", label: "Blocked" },
+  { value: "inactive", label: "Inactive" },
+];
+
+type CreateSelectName = "roomId" | "blockId" | "operationalStatus";
+type CreateSelectOption = { value: string; label: string };
+
+function CreateFormSelect({
+  id,
+  name,
+  value,
+  placeholder,
+  options,
+  open,
+  onOpenChange,
+  onChange,
+}: {
+  id: string;
+  name: CreateSelectName;
+  value: string;
+  placeholder: string;
+  options: CreateSelectOption[];
+  open: boolean;
+  onOpenChange: (name: CreateSelectName | null) => void;
+  onChange: (value: string) => void;
+}) {
+  const selected = options.find((option) => option.value === value);
+
+  return (
+    <div
+      className="relative"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          onOpenChange(null);
+        }
+      }}
+    >
+      <input type="hidden" name={name} value={value} />
+      <button
+        id={id}
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="mt-1.5 flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-card px-3 text-left text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
+        onClick={() => onOpenChange(open ? null : name)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") onOpenChange(null);
+        }}
+      >
+        <span className={selected ? "truncate text-neutral-800" : "truncate text-muted-foreground"}>
+          {selected?.label ?? placeholder}
+        </span>
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 z-[70] mt-1 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg">
+          <div role="listbox" aria-labelledby={id} className="max-h-56 overflow-y-auto p-1">
+            {options.length === 0 ? (
+              <div className="px-2 py-2 text-sm text-muted-foreground">No options available</div>
+            ) : (
+              options.map((option) => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    className="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-sm text-neutral-700 transition-colors hover:bg-primary/10 hover:text-neutral-900 focus:bg-primary/10 focus:text-neutral-900 focus:outline-none"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      onChange(option.value);
+                      onOpenChange(null);
+                    }}
+                  >
+                    <span className="truncate">{option.label}</span>
+                    {isSelected && <Check className="size-4 shrink-0 text-primary" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomTypes: RoomType[] }) {
   const router = useRouter();
   const [units, setUnits] = useState<RoomUnit[]>([]);
@@ -75,6 +177,7 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterRoomTypeId, setFilterRoomTypeId] = useState("all");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [openCreateSelect, setOpenCreateSelect] = useState<CreateSelectName | null>(null);
 
   // Inline form state
   const [newRoomId, setNewRoomId] = useState("");
@@ -148,6 +251,7 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
     setShowInlineBlockForm(false);
     setNewBlockName("");
     setNewBlockShortCode("");
+    setOpenCreateSelect(null);
   }
 
   function handleBlockChange(value: string | null) {
@@ -155,6 +259,7 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
     setNewBlockId(v);
     updatePreview(v, newRoomNumber);
     setShowInlineBlockForm(false);
+    setOpenCreateSelect(null);
   }
 
   function handleRoomNumberChange(value: string) {
@@ -183,6 +288,7 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
     setNewBlockName("");
     setNewBlockShortCode("");
     setShowInlineBlockForm(false);
+    setOpenCreateSelect(null);
   }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
@@ -297,6 +403,8 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
   }
 
   const filteredUnits = units;
+  const activeRooms = rooms.filter((r) => r.status !== "archived");
+  const activeBlocks = blocks.filter((b) => b.isActive);
 
   return (
     <div className="space-y-4">
@@ -579,47 +687,29 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label htmlFor="dlg-room">Room</Label>
-                <select
+                <CreateFormSelect
                   id="dlg-room"
                   name="roomId"
                   value={newRoomId}
-                  onChange={(e) => setNewRoomId(e.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
-                  required
-                >
-                  <option value="" disabled>
-                    Select a room
-                  </option>
-                  {rooms
-                    .filter((r) => r.status !== "archived")
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                </select>
+                  placeholder="Select a room"
+                  options={activeRooms.map((room) => ({ value: room.id, label: room.name }))}
+                  open={openCreateSelect === "roomId"}
+                  onOpenChange={setOpenCreateSelect}
+                  onChange={setNewRoomId}
+                />
               </div>
               <div>
                 <Label htmlFor="dlg-block">Block</Label>
-                <select
+                <CreateFormSelect
                   id="dlg-block"
                   name="blockId"
                   value={newBlockId}
-                  onChange={(e) => handleBlockChange(e.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
-                  required
-                >
-                  <option value="" disabled>
-                    Select block
-                  </option>
-                  {blocks
-                    .filter((b) => b.isActive)
-                    .map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                </select>
+                  placeholder="Select block"
+                  options={activeBlocks.map((block) => ({ value: block.id, label: block.name }))}
+                  open={openCreateSelect === "blockId"}
+                  onOpenChange={setOpenCreateSelect}
+                  onChange={handleBlockChange}
+                />
                 <button
                   type="button"
                   className="mt-1 text-xs font-medium text-primary hover:underline"
@@ -688,18 +778,16 @@ export function RoomUnitsManager({ rooms, roomTypes }: { rooms: Room[]; roomType
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Status</Label>
-                <select
+                <CreateFormSelect
+                  id="dlg-status"
                   name="operationalStatus"
                   value={newOperationalStatus}
-                  onChange={(e) => setNewOperationalStatus(e.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm outline-none transition-colors hover:border-neutral-300 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20"
-                >
-                  <option value="available">Available</option>
-                  <option value="cleaning">Cleaning</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="blocked">Blocked</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  placeholder="Select status"
+                  options={operationalStatusOptions}
+                  open={openCreateSelect === "operationalStatus"}
+                  onOpenChange={setOpenCreateSelect}
+                  onChange={setNewOperationalStatus}
+                />
               </div>
               <div>
                 <Label htmlFor="dlg-notes">Notes (optional)</Label>

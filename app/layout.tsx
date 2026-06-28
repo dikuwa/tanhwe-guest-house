@@ -22,9 +22,7 @@ export const metadata: Metadata = {
   title: "Tanhwe Guest House",
   description: "Comfortable accommodation and conference facilities in Mukwe, Namibia.",
   icons: {
-    icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
 };
 
@@ -39,11 +37,20 @@ export default function RootLayout({
         {children}
         <Toaster
           position="top-right"
+          gutter={8}
+          containerStyle={{
+            top: 16,
+            right: 16,
+            left: 16,
+          }}
           toastOptions={{
             duration: 4000,
-            style: { fontSize: "0.875rem" },
-            success: { style: { background: "#059669", color: "#fff" } },
-            error: { style: { background: "#dc2626", color: "#fff" } },
+            style: {
+              maxWidth: "min(420px, calc(100vw - 32px))",
+              fontSize: "0.875rem",
+            },
+            success: { duration: 3500, style: { background: "#059669", color: "#fff" } },
+            error: { duration: 5000, style: { background: "#dc2626", color: "#fff" } },
           }}
         />
         <Analytics />

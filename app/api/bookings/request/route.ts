@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { calculateNights, checkRoomAvailability, checkRoomTypeAvailability, assignRoomUnitsForBooking, parseStayDate } from "@/lib/availability";
+import {
+  calculateNights,
+  checkRoomAvailability,
+  checkRoomTypeAvailability,
+  assignRoomUnitsForBooking,
+  parseStayDate,
+} from "@/lib/availability";
 import { allowPublicRequest } from "@/lib/public-rate-limit";
 import { getDb } from "@/lib/db";
 import { bookingRooms, bookings, customers, rooms as roomTable, roomTypes } from "@/lib/db/schema";
@@ -62,17 +68,18 @@ export async function POST(request: NextRequest) {
   if (!body.success)
     return NextResponse.json({ error: "Please check the booking details" }, { status: 400 });
 
-  const rawLines = "lines" in body.data
-    ? body.data.lines
-    : [
-        {
-          roomId: body.data.roomId,
-          quantity: body.data.roomsCount,
-          guestsCount: body.data.guestsCount,
-          checkIn: body.data.checkIn,
-          checkOut: body.data.checkOut,
-        },
-      ];
+  const rawLines =
+    "lines" in body.data
+      ? body.data.lines
+      : [
+          {
+            roomId: body.data.roomId,
+            quantity: body.data.roomsCount,
+            guestsCount: body.data.guestsCount,
+            checkIn: body.data.checkIn,
+            checkOut: body.data.checkOut,
+          },
+        ];
 
   const lineResults: {
     roomType: typeof roomTypes.$inferSelect | null;
@@ -126,7 +133,9 @@ export async function POST(request: NextRequest) {
 
           if (line.guestsCount > roomAvailability.room.maxGuests * line.quantity) {
             return NextResponse.json(
-              { error: `${roomAvailability.room.name} allows up to ${roomAvailability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+              {
+                error: `${roomAvailability.room.name} allows up to ${roomAvailability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).`,
+              },
               { status: 400 }
             );
           }
@@ -155,7 +164,9 @@ export async function POST(request: NextRequest) {
 
       if (line.guestsCount > availability.roomType.maxGuests * line.quantity) {
         return NextResponse.json(
-          { error: `${availability.roomType.name} allows up to ${availability.roomType.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+          {
+            error: `${availability.roomType.name} allows up to ${availability.roomType.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).`,
+          },
           { status: 400 }
         );
       }
@@ -195,7 +206,9 @@ export async function POST(request: NextRequest) {
 
       if (line.guestsCount > availability.room.maxGuests * line.quantity) {
         return NextResponse.json(
-          { error: `${availability.room.name} allows up to ${availability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).` },
+          {
+            error: `${availability.room.name} allows up to ${availability.room.maxGuests * line.quantity} guest(s) for ${line.quantity} room(s).`,
+          },
           { status: 400 }
         );
       }
@@ -290,23 +303,30 @@ export async function POST(request: NextRequest) {
             line.quantity
           );
         } catch {
-          throw new Error(`${line.roomName} has fewer available units for the selected dates. Please reduce the quantity, select another room type, or change the dates.`);
+          throw new Error(
+            `${line.roomName} has fewer available units for the selected dates. Please reduce the quantity, select another room type, or change the dates.`
+          );
         }
       }
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "This room is no longer available for the selected dates.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "This room is no longer available for the selected dates.";
     return NextResponse.json({ error: message }, { status: 409 });
   }
 
   const totalRooms = lineResults.reduce((sum, line) => sum + line.quantity, 0);
   const roomTypeNames = [...new Set(lineResults.map((line) => line.roomName))];
-  await notifyOps({
+  void notifyOps({
     type: "booking_requested",
     title: `New booking request: ${bookingNumber}`,
     description: `${body.data.fullName} · ${totalRooms} room${totalRooms === 1 ? "" : "s"} · ${roomTypeNames.join(", ")}`,
     bookingId,
     link: `/admin/bookings/${bookingId}`,
+  }).catch((error) => {
+    console.error("Booking notification failed", error);
   });
 
   return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertCircle,
   BedDouble,
@@ -102,8 +102,7 @@ function nightsBetween(checkIn: string, checkOut: string) {
   return Math.max(
     0,
     Math.round(
-      (new Date(`${checkOut}T00:00:00Z`).getTime() -
-        new Date(`${checkIn}T00:00:00Z`).getTime()) /
+      (new Date(`${checkOut}T00:00:00Z`).getTime() - new Date(`${checkIn}T00:00:00Z`).getTime()) /
         86_400_000
     )
   );
@@ -124,6 +123,7 @@ function lineKey(roomTypeId: string, checkIn: string, checkOut: string) {
 
 export function BookingRequestForm(props: Props) {
   const today = new Date().toISOString().slice(0, 10);
+  const formRef = useRef<HTMLFormElement>(null);
   const firstRoomTypeId = props.roomTypeId ?? props.roomId;
   const roomOptions = useMemo(() => {
     const byType = new Map<string, PublicRoom>();
@@ -175,16 +175,25 @@ export function BookingRequestForm(props: Props) {
     total?: number;
   } | null>(null);
 
-  const selectedRoom = roomOptions.find((room) => (room.roomTypeId ?? room.id) === draftRoomTypeId) ?? roomOptions[0];
+  const selectedRoom =
+    roomOptions.find((room) => (room.roomTypeId ?? room.id) === draftRoomTypeId) ?? roomOptions[0];
   const draftLineCheckIn = draftSameDates ? mainCheckIn : draftCheckIn;
   const draftLineCheckOut = draftSameDates ? mainCheckOut : draftCheckOut;
   const draftNights = nightsBetween(draftLineCheckIn, draftLineCheckOut);
   const totalRooms = lines.reduce((sum, line) => sum + line.quantity, 0);
   const totalGuests = lines.reduce((sum, line) => sum + line.guestsCount, 0);
   const subtotal = lines.reduce(
-    (sum, line) => sum + line.pricePerNight * line.quantity * nightsBetween(line.checkIn, line.checkOut),
+    (sum, line) =>
+      sum + line.pricePerNight * line.quantity * nightsBetween(line.checkIn, line.checkOut),
     0
   );
+
+  useEffect(() => {
+    if (step !== "details") return;
+    window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }, [step]);
 
   function updateMainDates(nextCheckIn: string, nextCheckOut: string) {
     setMainCheckIn(nextCheckIn);
@@ -219,7 +228,9 @@ export function BookingRequestForm(props: Props) {
       return;
     }
     if (draftQuantity > selectedRoom.availableUnits) {
-      setFieldErrors({ line: `${selectedRoom.name} has ${selectedRoom.availableUnits} unit(s) available.` });
+      setFieldErrors({
+        line: `${selectedRoom.name} has ${selectedRoom.availableUnits} unit(s) available.`,
+      });
       return;
     }
     if (draftGuests > selectedRoom.maxGuests * draftQuantity) {
@@ -232,7 +243,9 @@ export function BookingRequestForm(props: Props) {
     const roomTypeId = selectedRoom.roomTypeId ?? selectedRoom.id;
     const key = lineKey(roomTypeId, draftLineCheckIn, draftLineCheckOut);
     setLines((current) => {
-      const existing = current.find((line) => lineKey(line.roomTypeId, line.checkIn, line.checkOut) === key);
+      const existing = current.find(
+        (line) => lineKey(line.roomTypeId, line.checkIn, line.checkOut) === key
+      );
       if (!existing) {
         return [
           ...current,
@@ -284,7 +297,8 @@ export function BookingRequestForm(props: Props) {
       const nights = nightsBetween(line.checkIn, line.checkOut);
       if (nights < 1) return `${line.roomName}: check-out must be after check-in.`;
       if (line.quantity < 1) return `${line.roomName}: choose at least one room.`;
-      if (line.quantity > line.availableUnits) return `${line.roomName} has only ${line.availableUnits} unit(s) available.`;
+      if (line.quantity > line.availableUnits)
+        return `${line.roomName} has only ${line.availableUnits} unit(s) available.`;
       if (line.guestsCount > line.maxGuests * line.quantity) {
         return `${line.roomName} allows up to ${line.maxGuests * line.quantity} guest(s).`;
       }
@@ -366,9 +380,14 @@ export function BookingRequestForm(props: Props) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to send booking request");
       setSuccess(data);
-      toast.success("Booking request submitted — Reference: " + data.bookingNumber + ". We will get back to you shortly.");
+      toast.success(
+        "Booking request submitted — Reference: " +
+          data.bookingNumber +
+          ". We will get back to you shortly."
+      );
     } catch (requestError) {
-      const message = requestError instanceof Error ? requestError.message : "Unable to send booking request";
+      const message =
+        requestError instanceof Error ? requestError.message : "Unable to send booking request";
       setError(message);
       toast.error("Booking submission failed — " + message);
     } finally {
@@ -411,7 +430,8 @@ export function BookingRequestForm(props: Props) {
             <div>
               <p className="text-xs text-muted-foreground">Amount</p>
               <p className="font-semibold tabular-nums">
-                {props.currency}{(success.total ?? subtotal).toLocaleString()}
+                {props.currency}
+                {(success.total ?? subtotal).toLocaleString()}
               </p>
             </div>
           </div>
@@ -425,7 +445,12 @@ export function BookingRequestForm(props: Props) {
 
   return (
     <>
-      <form onSubmit={submit} className="space-y-5" noValidate>
+      <form
+        ref={formRef}
+        onSubmit={submit}
+        className="scroll-mt-24 space-y-5 pb-20 lg:pb-0"
+        noValidate
+      >
         {step === "rooms" && (
           <>
             <DateRangePicker
@@ -440,7 +465,10 @@ export function BookingRequestForm(props: Props) {
 
             <div className="rounded-xl border bg-background p-4">
               <div className="space-y-1.5">
-                <Label htmlFor="room-type" className="flex items-center gap-1.5 text-sm font-medium">
+                <Label
+                  htmlFor="room-type"
+                  className="flex items-center gap-1.5 text-sm font-medium"
+                >
                   <BedDouble className="size-4 text-muted-foreground" aria-hidden="true" />
                   Room type
                 </Label>
@@ -472,10 +500,13 @@ export function BookingRequestForm(props: Props) {
                   <div className="rounded-lg bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
                     <div className="flex items-center justify-between gap-3">
                       <span>
-                        {props.currency}{selectedRoom.pricePerNight.toLocaleString()} per night · Up to {selectedRoom.maxGuests} guest{selectedRoom.maxGuests === 1 ? "" : "s"}
+                        {props.currency}
+                        {selectedRoom.pricePerNight.toLocaleString()} per night · Up to{" "}
+                        {selectedRoom.maxGuests} guest{selectedRoom.maxGuests === 1 ? "" : "s"}
                       </span>
                       <span className="font-medium text-foreground">
-                        {selectedRoom.availableUnits} unit{selectedRoom.availableUnits === 1 ? "" : "s"} available
+                        {selectedRoom.availableUnits} unit
+                        {selectedRoom.availableUnits === 1 ? "" : "s"} available
                       </span>
                     </div>
                   </div>
@@ -497,7 +528,9 @@ export function BookingRequestForm(props: Props) {
                         >
                           <Minus className="size-4" />
                         </Button>
-                        <span className="flex-1 text-center text-sm font-semibold tabular-nums">{draftQuantity}</span>
+                        <span className="flex-1 text-center text-sm font-semibold tabular-nums">
+                          {draftQuantity}
+                        </span>
                         <Button
                           type="button"
                           variant="ghost"
@@ -511,7 +544,10 @@ export function BookingRequestForm(props: Props) {
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="draft-guests" className="flex items-center gap-1.5 text-sm font-medium">
+                      <Label
+                        htmlFor="draft-guests"
+                        className="flex items-center gap-1.5 text-sm font-medium"
+                      >
                         <Users className="size-4 text-muted-foreground" aria-hidden="true" />
                         Guests
                       </Label>
@@ -521,7 +557,9 @@ export function BookingRequestForm(props: Props) {
                         min="1"
                         max={selectedRoom.maxGuests * draftQuantity}
                         value={draftGuests}
-                        onChange={(event) => setDraftGuests(Math.max(1, Number(event.target.value)))}
+                        onChange={(event) =>
+                          setDraftGuests(Math.max(1, Number(event.target.value)))
+                        }
                       />
                     </div>
                   </div>
@@ -548,7 +586,12 @@ export function BookingRequestForm(props: Props) {
                         minDate={today}
                         id="draft-check-in"
                         label="From"
-                        icon={<CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />}
+                        icon={
+                          <CalendarDays
+                            className="size-4 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                        }
                       />
                       <DatePicker
                         value={draftCheckOut}
@@ -556,7 +599,12 @@ export function BookingRequestForm(props: Props) {
                         minDate={draftCheckIn || today}
                         id="draft-check-out"
                         label="To"
-                        icon={<CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />}
+                        icon={
+                          <CalendarCheck
+                            className="size-4 text-muted-foreground"
+                            aria-hidden="true"
+                          />
+                        }
                       />
                     </div>
                   )}
@@ -564,16 +612,25 @@ export function BookingRequestForm(props: Props) {
                   {draftNights > 0 && (
                     <div className="flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 px-3 py-2 text-sm">
                       <span className="text-muted-foreground">
-                        {draftQuantity} room{draftQuantity === 1 ? "" : "s"} · {draftNights} night{draftNights === 1 ? "" : "s"}
+                        {draftQuantity} room{draftQuantity === 1 ? "" : "s"} · {draftNights} night
+                        {draftNights === 1 ? "" : "s"}
                       </span>
                       <span className="font-semibold tabular-nums">
-                        {props.currency}{(selectedRoom.pricePerNight * draftQuantity * draftNights).toLocaleString()}
+                        {props.currency}
+                        {(
+                          selectedRoom.pricePerNight *
+                          draftQuantity *
+                          draftNights
+                        ).toLocaleString()}
                       </span>
                     </div>
                   )}
 
                   {fieldErrors.line && (
-                    <p className="flex items-start gap-1.5 rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+                    <p
+                      className="flex items-start gap-1.5 rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+                      role="alert"
+                    >
                       <AlertCircle className="mt-0.5 size-4 shrink-0" />
                       {fieldErrors.line}
                     </p>
@@ -609,7 +666,9 @@ export function BookingRequestForm(props: Props) {
               <div className="rounded-xl border bg-primary-50 p-4">
                 <h3 className="font-heading text-lg font-bold">Your booking</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {totalRooms} room{totalRooms === 1 ? "" : "s"} · {totalGuests} guest{totalGuests === 1 ? "" : "s"} · {props.currency}{subtotal.toLocaleString()}
+                  {totalRooms} room{totalRooms === 1 ? "" : "s"} · {totalGuests} guest
+                  {totalGuests === 1 ? "" : "s"} · {props.currency}
+                  {subtotal.toLocaleString()}
                 </p>
               </div>
             )}
@@ -619,13 +678,29 @@ export function BookingRequestForm(props: Props) {
               </p>
             )}
             <div className="grid gap-2">
-              <Button type="button" variant="outline" onClick={() => setStep(step === "review" ? "details" : "rooms")}>
-                {step === "review" ? <Pencil className="size-4" /> : <BedDouble className="size-4" />}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(step === "review" ? "details" : "rooms")}
+              >
+                {step === "review" ? (
+                  <Pencil className="size-4" />
+                ) : (
+                  <BedDouble className="size-4" />
+                )}
                 {step === "review" ? "Edit guest details" : "Edit rooms"}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
-                {step === "review" ? (submitting ? "Sending..." : "Submit request") : "Review booking"}
+                {submitting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <MessageCircle className="size-4" />
+                )}
+                {step === "review"
+                  ? submitting
+                    ? "Sending..."
+                    : "Submit request"
+                  : "Review booking"}
               </Button>
             </div>
           </>
@@ -642,20 +717,31 @@ export function BookingRequestForm(props: Props) {
         </p>
       </form>
 
-      {lines.length > 0 && step === "rooms" && (
+      {lines.length > 0 && step === "rooms" && !summaryOpen && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 p-3 shadow-[0_-16px_44px_-36px_rgba(17,24,39,.7)] backdrop-blur lg:hidden">
-          <Button type="button" className="w-full justify-between" onClick={() => setSummaryOpen(true)}>
-            <span>Your booking · {totalRooms} room{totalRooms === 1 ? "" : "s"}</span>
-            <span>{props.currency}{subtotal.toLocaleString()}</span>
+          <Button
+            type="button"
+            className="w-full justify-between"
+            onClick={() => setSummaryOpen(true)}
+          >
+            <span>
+              Your booking · {totalRooms} room{totalRooms === 1 ? "" : "s"}
+            </span>
+            <span>
+              {props.currency}
+              {subtotal.toLocaleString()}
+            </span>
           </Button>
         </div>
       )}
 
       <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
-        <DialogContent className="max-h-[86vh] overflow-y-auto">
+        <DialogContent className="max-h-[86vh] w-[calc(100vw-24px)] overflow-y-auto rounded-xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle>Your booking</DialogTitle>
-            <DialogDescription>Review selected rooms before entering guest details.</DialogDescription>
+            <DialogDescription>
+              Review selected rooms before entering guest details.
+            </DialogDescription>
           </DialogHeader>
           {summary}
         </DialogContent>
@@ -696,8 +782,13 @@ function BookingSummary({
   return (
     <div className="rounded-xl border bg-background p-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-heading text-lg font-bold">Your booking · {totalRooms} room{totalRooms === 1 ? "" : "s"}</h3>
-        <span className="text-sm font-semibold tabular-nums">{currency}{subtotal.toLocaleString()}</span>
+        <h3 className="font-heading text-lg font-bold">
+          Your booking · {totalRooms} room{totalRooms === 1 ? "" : "s"}
+        </h3>
+        <span className="text-sm font-semibold tabular-nums">
+          {currency}
+          {subtotal.toLocaleString()}
+        </span>
       </div>
       <div className="mt-4 divide-y">
         {lines.map((line) => {
@@ -709,7 +800,8 @@ function BookingSummary({
                 <div>
                   <p className="font-medium">{line.roomName}</p>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {line.quantity} room{line.quantity === 1 ? "" : "s"} · {line.guestsCount} guest{line.guestsCount === 1 ? "" : "s"}
+                    {line.quantity} room{line.quantity === 1 ? "" : "s"} · {line.guestsCount} guest
+                    {line.guestsCount === 1 ? "" : "s"}
                     <br />
                     {formatDate(line.checkIn)} to {formatDate(line.checkOut)}
                     {line.sameDates ? " · Same dates as main stay" : ""}
@@ -735,7 +827,10 @@ function BookingSummary({
                     max={line.availableUnits}
                     value={line.quantity}
                     onChange={(event) => {
-                      const quantity = Math.min(line.availableUnits, Math.max(1, Number(event.target.value)));
+                      const quantity = Math.min(
+                        line.availableUnits,
+                        Math.max(1, Number(event.target.value))
+                      );
                       onUpdate(line.id, {
                         quantity,
                         guestsCount: Math.min(line.guestsCount, line.maxGuests * quantity),
@@ -753,7 +848,10 @@ function BookingSummary({
                     value={line.guestsCount}
                     onChange={(event) =>
                       onUpdate(line.id, {
-                        guestsCount: Math.min(line.maxGuests * line.quantity, Math.max(1, Number(event.target.value))),
+                        guestsCount: Math.min(
+                          line.maxGuests * line.quantity,
+                          Math.max(1, Number(event.target.value))
+                        ),
                       })
                     }
                   />
@@ -761,9 +859,13 @@ function BookingSummary({
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
-                  {currency}{line.pricePerNight.toLocaleString()} × {nights} night{nights === 1 ? "" : "s"}
+                  {currency}
+                  {line.pricePerNight.toLocaleString()} × {nights} night{nights === 1 ? "" : "s"}
                 </span>
-                <span className="font-semibold tabular-nums">{currency}{lineSubtotal.toLocaleString()}</span>
+                <span className="font-semibold tabular-nums">
+                  {currency}
+                  {lineSubtotal.toLocaleString()}
+                </span>
               </div>
             </div>
           );
@@ -776,7 +878,10 @@ function BookingSummary({
         </div>
         <div className="mt-2 flex justify-between font-semibold">
           <span>Accommodation subtotal</span>
-          <span className="tabular-nums">{currency}{subtotal.toLocaleString()}</span>
+          <span className="tabular-nums">
+            {currency}
+            {subtotal.toLocaleString()}
+          </span>
         </div>
       </div>
       {showContinue && (
@@ -814,7 +919,14 @@ function GuestFields({
             <User className="size-4 text-muted-foreground" aria-hidden="true" />
             Full name
           </Label>
-          <Input id="fullName" name="fullName" autoComplete="name" required readOnly={disabled} className={cn(fieldErrors.fullName && "border-destructive")} />
+          <Input
+            id="fullName"
+            name="fullName"
+            autoComplete="name"
+            required
+            readOnly={disabled}
+            className={cn(fieldErrors.fullName && "border-destructive")}
+          />
           {fieldErrors.fullName && <InlineError>{fieldErrors.fullName}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -822,7 +934,16 @@ function GuestFields({
             <Phone className="size-4 text-muted-foreground" aria-hidden="true" />
             Phone
           </Label>
-          <Input id="phone" name="phone" type="tel" autoComplete="tel" required readOnly={disabled} placeholder="+264 81 234 5678" className={cn(fieldErrors.phone && "border-destructive")} />
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            required
+            readOnly={disabled}
+            placeholder="+264 81 234 5678"
+            className={cn(fieldErrors.phone && "border-destructive")}
+          />
           {fieldErrors.phone && <InlineError>{fieldErrors.phone}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -830,7 +951,14 @@ function GuestFields({
             <MessageCircle className="size-4 text-muted-foreground" aria-hidden="true" />
             WhatsApp <span className="font-normal text-muted-foreground">(optional)</span>
           </Label>
-          <Input id="whatsapp" name="whatsapp" type="tel" readOnly={disabled} placeholder="Same as phone if left empty" className={cn(fieldErrors.whatsapp && "border-destructive")} />
+          <Input
+            id="whatsapp"
+            name="whatsapp"
+            type="tel"
+            readOnly={disabled}
+            placeholder="Same as phone if left empty"
+            className={cn(fieldErrors.whatsapp && "border-destructive")}
+          />
           {fieldErrors.whatsapp && <InlineError>{fieldErrors.whatsapp}</InlineError>}
         </div>
         <div className="space-y-1.5">
@@ -838,18 +966,31 @@ function GuestFields({
             <Mail className="size-4 text-muted-foreground" aria-hidden="true" />
             Email
           </Label>
-          <Input id="email" name="email" type="email" autoComplete="email" readOnly={disabled} placeholder="optional" className={cn(fieldErrors.email && "border-destructive")} />
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            readOnly={disabled}
+            placeholder="optional"
+            className={cn(fieldErrors.email && "border-destructive")}
+          />
           {fieldErrors.email && <InlineError>{fieldErrors.email}</InlineError>}
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="preferred-contact" className="flex items-center gap-1.5 text-sm font-medium">
+          <Label
+            htmlFor="preferred-contact"
+            className="flex items-center gap-1.5 text-sm font-medium"
+          >
             <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
             Preferred contact
           </Label>
           <Select
             value={preferredContactLabels[preferredContact] ?? "WhatsApp"}
             onValueChange={(value) => {
-              const next = Object.entries(preferredContactLabels).find(([, label]) => label === value)?.[0];
+              const next = Object.entries(preferredContactLabels).find(
+                ([, label]) => label === value
+              )?.[0];
               if (next) setPreferredContact(next);
             }}
             disabled={disabled}
@@ -870,7 +1011,13 @@ function GuestFields({
           <FileText className="size-4 text-muted-foreground" aria-hidden="true" />
           Special requests
         </Label>
-        <Textarea id="notes" name="notes" rows={3} readOnly={disabled} placeholder="Arrival time, accessibility needs, or anything else we should know" />
+        <Textarea
+          id="notes"
+          name="notes"
+          rows={3}
+          readOnly={disabled}
+          placeholder="Arrival time, accessibility needs, or anything else we should know"
+        />
       </div>
     </fieldset>
   );

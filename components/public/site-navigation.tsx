@@ -59,12 +59,7 @@ export function SiteNavigation({
       </button>
 
       {/* Mobile drawer rendered at document.body via portal */}
-      <MobileNav
-        open={open}
-        onClose={() => setOpen(false)}
-        phone={phone}
-        whatsapp={whatsapp}
-      />
+      <MobileNav open={open} onClose={() => setOpen(false)} phone={phone} whatsapp={whatsapp} />
     </>
   );
 }

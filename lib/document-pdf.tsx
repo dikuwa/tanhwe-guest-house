@@ -1,4 +1,13 @@
-import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from "@react-pdf/renderer";
+import {
+  Document,
+  Font,
+  Image,
+  Page,
+  StyleSheet,
+  Text,
+  View,
+  renderToBuffer,
+} from "@react-pdf/renderer";
 import path from "path";
 import fs from "fs";
 
@@ -6,6 +15,21 @@ const alluraFontPath = path.join(process.cwd(), "public", "fonts", "Allura-Regul
 if (fs.existsSync(alluraFontPath)) {
   Font.register({ family: "Allura", src: alluraFontPath });
 }
+const onestRegularPath = path.join(process.cwd(), "public", "fonts", "Onest-Regular.ttf");
+const onestSemiBoldPath = path.join(process.cwd(), "public", "fonts", "Onest-SemiBold.ttf");
+const onestBoldPath = path.join(process.cwd(), "public", "fonts", "Onest-Bold.ttf");
+if (fs.existsSync(onestRegularPath)) {
+  Font.register({
+    family: "Onest",
+    fonts: [
+      { src: onestRegularPath, fontWeight: 400 },
+      { src: onestSemiBoldPath, fontWeight: 500 },
+      { src: onestSemiBoldPath, fontWeight: 600 },
+      { src: onestBoldPath, fontWeight: 700 },
+    ],
+  });
+}
+const logoPath = path.join(process.cwd(), "public", "tanhwe-logo-pdf.png");
 
 type PdfData = {
   number: string;
@@ -76,42 +100,108 @@ type DocSettings = {
 };
 
 const styles = StyleSheet.create({
-  page: { padding: 42, fontFamily: "Helvetica", color: "#172033", fontSize: 10 },
+  page: {
+    padding: 36,
+    fontFamily: "Onest",
+    color: "#3D372E",
+    fontSize: 10,
+    backgroundColor: "#FFFDF8",
+  },
   row: { flexDirection: "row", justifyContent: "space-between" },
-  brandName: { color: "#E68011", fontSize: 19, fontWeight: 700, letterSpacing: -0.5 },
-  brandSub: { color: "#054386", fontSize: 10, fontWeight: 600, letterSpacing: 1.5 },
-  title: { fontSize: 18, fontWeight: 700, textTransform: "uppercase" },
-  muted: { color: "#667085", marginTop: 5 },
-  section: { marginTop: 24, paddingTop: 16, borderTop: "1px solid #E5E7EB" },
-  tableHeader: { flexDirection: "row", backgroundColor: "#F5F1E8", padding: 9, fontWeight: 700 },
-  tableRow: { flexDirection: "row", padding: 9, borderBottom: "1px solid #E5E7EB" },
+  header: { paddingBottom: 20, borderBottom: "1px solid #E6E0D3" },
+  logo: { width: 112, height: 40 },
+  documentType: { fontSize: 9, color: "#7A6F5E", textTransform: "uppercase", letterSpacing: 1.2 },
+  documentNumber: { marginTop: 3, fontSize: 17, fontWeight: 600, color: "#3D372E" },
+  muted: { color: "#7A6F5E", marginTop: 4 },
+  eyebrow: {
+    fontSize: 8,
+    color: "#7A6F5E",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: 0.9,
+  },
+  section: { marginTop: 20 },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#F5F1E8",
+    paddingVertical: 9,
+    paddingHorizontal: 9,
+    fontWeight: 600,
+    borderTop: "1px solid #E6E0D3",
+    borderBottom: "1px solid #E6E0D3",
+  },
+  tableRow: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    paddingHorizontal: 9,
+    borderBottom: "1px solid #E6E0D3",
+  },
   grow: { width: "42%" },
   cell: { width: "14.5%", textAlign: "right" },
-  totals: { marginTop: 22, marginLeft: "55%" },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 7 },
-  balance: { color: "#0D5CA8", fontWeight: 700, fontSize: 12 },
-  cardsRow: { flexDirection: "row", marginTop: 22, gap: 12 },
-  card: { flex: 1, border: "1px solid #E5E7EB", borderRadius: 4, padding: 12 },
-  cardTitle: { fontSize: 9, fontWeight: 700, color: "#667085", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 },
-  label: { fontSize: 9, color: "#667085", marginBottom: 1 },
+  totals: { marginTop: 20, marginLeft: "52%" },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
+  totalStrong: { borderTop: "1px solid #E6E0D3", paddingTop: 8, fontSize: 11, fontWeight: 600 },
+  balance: { color: "#0D5CA8", fontWeight: 600, fontSize: 11 },
+  cardsRow: { flexDirection: "row", marginTop: 18, gap: 14 },
+  card: {
+    flex: 1,
+    border: "1px solid #E6E0D3",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#FFFDF8",
+  },
+  cardTitle: {
+    fontSize: 8,
+    fontWeight: 600,
+    color: "#7A6F5E",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  label: { fontSize: 9, color: "#7A6F5E", marginBottom: 1 },
   value: { fontSize: 10, marginBottom: 6 },
   mono: { fontSize: 10, fontFamily: "Courier", marginBottom: 6 },
-  contactRow: { flexDirection: "row", marginTop: 20, paddingTop: 16, borderTop: "1px solid #E5E7EB" },
+  contactRow: {
+    flexDirection: "row",
+    marginTop: 18,
+    paddingTop: 16,
+    borderTop: "1px solid #E6E0D3",
+  },
   contactBlock: { flex: 1 },
   ownerBlock: { flex: 1, alignItems: "flex-end" },
-  footer: { marginTop: 20, textAlign: "center", fontSize: 8, color: "#667085", borderTop: "1px solid #E5E7EB", paddingTop: 12 },
+  footer: {
+    marginTop: 24,
+    textAlign: "center",
+    fontSize: 8,
+    color: "#7A6F5E",
+    borderTop: "1px solid #E6E0D3",
+    paddingTop: 12,
+  },
   closing: { marginTop: 16, textAlign: "center", fontSize: 10, color: "#667085" },
-  paymentItem: { flexDirection: "row", gap: 8, marginBottom: 8 },
-  paymentIcon: { width: 14, fontSize: 10, color: "#999" },
-  paymentLabel: { fontSize: 10, fontWeight: 700 },
-  paymentDesc: { fontSize: 9, color: "#667085", marginTop: 1 },
+  paymentItem: { flexDirection: "row", gap: 8, marginBottom: 7 },
+  paymentIconBox: {
+    width: 10,
+    height: 10,
+    marginTop: 2,
+    border: "1px solid #B8AD99",
+    borderRadius: 2,
+  },
+  paymentLabel: { fontSize: 10, fontWeight: 600 },
+  paymentDesc: { fontSize: 9, color: "#7A6F5E", marginTop: 1, lineHeight: 1.25 },
 });
 
 function BrandLogo() {
+  if (fs.existsSync(logoPath)) {
+    // react-pdf's Image is not a DOM image and does not expose alt text.
+    // eslint-disable-next-line jsx-a11y/alt-text
+    return <Image src={logoPath} style={styles.logo} />;
+  }
   return (
     <View>
-      <Text style={styles.brandName}>TANHWE</Text>
-      <Text style={styles.brandSub}>GUEST HOUSE</Text>
+      <Text style={{ color: "#E68011", fontSize: 19, fontWeight: 700 }}>TANHWE</Text>
+      <Text style={{ color: "#054386", fontSize: 10, fontWeight: 600, letterSpacing: 1.5 }}>
+        GUEST HOUSE
+      </Text>
     </View>
   );
 }
@@ -119,8 +209,6 @@ function BrandLogo() {
 export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
   const snapshot = JSON.parse(data.snapshot) as Snapshot;
   const {
-    businessName = "Tanhwe Guest House",
-    location = "Mukwe, Namibia",
     currency = "N$",
     bankingAccountName = "",
     bankingAccountNumber = "",
@@ -136,11 +224,9 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     mobileWalletTitle = "Mobile Wallets",
     mobileWalletDescription = "",
     acceptedPaymentTypes = "Visa,Mastercard,eWallet",
-    managerRoleLabel = "Managing Director",
     signatureImage = "",
     signatoryName = "Thomas Kamushambe",
     signatoryRole = "Managing Director",
-    footerText = "",
     paymentVisible = true,
     bankingVisible = true,
     signatureVisible = true,
@@ -148,13 +234,10 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     secureFooterMessage = "Secure payments. All transactions are safe and encrypted.",
     primaryPhone = "",
     businessEmail = "",
-    physicalAddress = "",
     town = "",
     region = "",
     country = "",
   } = settings ?? {
-    businessName: "Tanhwe Guest House",
-    location: "Mukwe, Namibia",
     currency: "N$",
     bankTransferEnabled: false,
     bankTransferTitle: "Bank Transfer",
@@ -163,10 +246,8 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     mobileWalletTitle: "Mobile Wallets",
     mobileWalletDescription: "",
     acceptedPaymentTypes: "Visa,Mastercard,eWallet",
-    managerRoleLabel: "Managing Director",
     signatoryName: "Thomas Kamushambe",
     signatoryRole: "Managing Director",
-    footerText: "",
     paymentVisible: true,
     bankingVisible: true,
     signatureVisible: true,
@@ -174,7 +255,6 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     secureFooterMessage: "Secure payments. All transactions are safe and encrypted.",
     primaryPhone: "",
     businessEmail: "",
-    physicalAddress: "",
     town: "",
     region: "",
     country: "",
@@ -187,7 +267,11 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     bankingSwiftBic: "",
     signatureImage: "",
   };
-  const fmt = (value: number) => `${currency} ${value.toFixed(2)}`;
+  const fmt = (value: number) =>
+    `${currency}${value.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   const hasMixedRoomDates = snapshot.rooms.some((room) => {
     const roomCheckIn = room.checkIn ?? snapshot.stay.checkIn;
     const roomCheckOut = room.checkOut ?? snapshot.stay.checkOut;
@@ -198,19 +282,21 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
     <Document title={`${data.type} ${data.number}`}>
       <Page size="A4" style={styles.page}>
         {/* ── Header ── */}
-        <View style={styles.row}>
+        <View style={[styles.row, styles.header]}>
           <View>
             <BrandLogo />
-            <Text style={[styles.muted, { textAlign: "right" }]}>
+            <Text style={[styles.muted, { textAlign: "right", fontSize: 8 }]}>
               {[town, region, country].filter(Boolean).join(", ")}
             </Text>
           </View>
-          <View>
-            <Text style={styles.title}>{data.type}</Text>
-            <Text>{data.number}</Text>
-            <Text style={styles.muted}>Issued {data.createdAt.toLocaleDateString("en-NA")}</Text>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.documentType}>{data.type}</Text>
+            <Text style={styles.documentNumber}>{data.number}</Text>
+            <Text style={{ marginTop: 8, fontSize: 10 }}>
+              Issued {data.createdAt.toLocaleDateString("en-NA")}
+            </Text>
             {data.expiresAt && (
-              <Text style={styles.muted}>
+              <Text style={{ fontSize: 10 }}>
                 Valid until {data.expiresAt.toLocaleDateString("en-NA")}
               </Text>
             )}
@@ -220,16 +306,16 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
         {/* ── Guest & Stay ── */}
         <View style={[styles.section, styles.row]}>
           <View>
-            <Text>GUEST</Text>
-            <Text style={{ marginTop: 7, fontWeight: 700 }}>{snapshot.customer.name}</Text>
+            <Text style={styles.eyebrow}>GUEST</Text>
+            <Text style={{ marginTop: 8, fontWeight: 600 }}>{snapshot.customer.name}</Text>
             <Text style={styles.muted}>{snapshot.customer.phone}</Text>
             {snapshot.customer.email && <Text style={styles.muted}>{snapshot.customer.email}</Text>}
           </View>
           <View style={{ alignItems: "flex-end" }}>
-            <Text>STAY</Text>
+            <Text style={styles.eyebrow}>STAY</Text>
             {hasMixedRoomDates ? (
               <>
-                <Text style={{ marginTop: 7 }}>Multiple room stays</Text>
+                <Text style={{ marginTop: 8 }}>Multiple room stays</Text>
                 <Text style={styles.muted}>
                   {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
                   {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")} &middot;{" "}
@@ -238,7 +324,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
               </>
             ) : (
               <>
-                <Text style={{ marginTop: 7 }}>
+                <Text style={{ marginTop: 8 }}>
                   {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
                   {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
                 </Text>
@@ -251,8 +337,8 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
           </View>
         </View>
 
-          {/* ── Room Table ── */}
-        <View style={styles.section}>
+        {/* ── Room Table ── */}
+        <View style={[styles.section, { marginTop: 22 }]}>
           <View style={styles.tableHeader}>
             <Text style={[styles.grow, { width: "28%" }]}>Room</Text>
             <Text style={[styles.cell, { width: "18%" }]}>Dates</Text>
@@ -262,13 +348,16 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             <Text style={[styles.cell, { width: "18%" }]}>Amount</Text>
           </View>
           {snapshot.rooms.map((room, index) => {
-            const dates = room.checkIn && room.checkOut
-              ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
-              : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
+            const dates =
+              room.checkIn && room.checkOut
+                ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
+                : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
             return (
               <View key={`${room.name}-${index}`} style={styles.tableRow}>
                 <Text style={[styles.grow, { width: "28%" }]}>{room.name}</Text>
-                <Text style={[styles.cell, { width: "18%", fontSize: 8 }]}>{dates}</Text>
+                <Text style={[styles.cell, { width: "18%", fontSize: 8, color: "#7A6F5E" }]}>
+                  {dates}
+                </Text>
                 <Text style={[styles.cell, { width: "12%" }]}>{fmt(room.pricePerNight)}</Text>
                 <Text style={[styles.cell, { width: "12%" }]}>{room.roomsCount}</Text>
                 <Text style={[styles.cell, { width: "12%" }]}>{room.nights}</Text>
@@ -292,7 +381,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             <Text>Discount</Text>
             <Text>- {fmt(snapshot.discount)}</Text>
           </View>
-          <View style={styles.totalRow}>
+          <View style={[styles.totalRow, styles.totalStrong]}>
             <Text>Total</Text>
             <Text>{fmt(snapshot.total)}</Text>
           </View>
@@ -308,109 +397,154 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
 
         {/* ── Banking & Payment Cards ── */}
         {(bankingVisible || paymentVisible) && (
-        <View style={styles.cardsRow}>
-          {bankingVisible && bankingAccountName && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Banking Details</Text>
-            <Text style={styles.label}>Account Name</Text>
-            <Text style={styles.value}>{bankingAccountName}</Text>
-            <Text style={styles.label}>Account Number</Text>
-            <Text style={styles.mono}>{bankingAccountNumber}</Text>
-            <Text style={styles.label}>Bank</Text>
-            <Text style={styles.value}>{bankingBankName}</Text>
-            <Text style={styles.label}>Branch</Text>
-            <Text style={styles.value}>{bankingBranchName}</Text>
-            {bankingBranchCode && (
-            <><Text style={styles.label}>Branch Code</Text><Text style={styles.value}>{bankingBranchCode}</Text></>
+          <View style={styles.cardsRow}>
+            {bankingVisible && bankingAccountName && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Banking Details</Text>
+                <View style={{ flexDirection: "row", marginBottom: 7 }}>
+                  <Text style={[styles.label, { width: 78 }]}>Account Name</Text>
+                  <Text style={styles.value}>{bankingAccountName}</Text>
+                </View>
+                <View style={{ flexDirection: "row", marginBottom: 7 }}>
+                  <Text style={[styles.label, { width: 78 }]}>Account Number</Text>
+                  <Text style={styles.mono}>{bankingAccountNumber}</Text>
+                </View>
+                <View style={{ flexDirection: "row", marginBottom: 7 }}>
+                  <Text style={[styles.label, { width: 78 }]}>Bank</Text>
+                  <Text style={styles.value}>{bankingBankName}</Text>
+                </View>
+                <View style={{ flexDirection: "row", marginBottom: 0 }}>
+                  <Text style={[styles.label, { width: 78 }]}>Branch</Text>
+                  <Text style={styles.value}>{bankingBranchName}</Text>
+                </View>
+                {bankingBranchCode && (
+                  <>
+                    <Text style={styles.label}>Branch Code</Text>
+                    <Text style={styles.value}>{bankingBranchCode}</Text>
+                  </>
+                )}
+                {bankingAccountType && (
+                  <>
+                    <Text style={styles.label}>Account Type</Text>
+                    <Text style={styles.value}>{bankingAccountType}</Text>
+                  </>
+                )}
+                {bankingSwiftBic && (
+                  <>
+                    <Text style={styles.label}>SWIFT/BIC</Text>
+                    <Text style={styles.value}>{bankingSwiftBic}</Text>
+                  </>
+                )}
+              </View>
             )}
-            {bankingAccountType && (
-            <><Text style={styles.label}>Account Type</Text><Text style={styles.value}>{bankingAccountType}</Text></>
-            )}
-            {bankingSwiftBic && (
-            <><Text style={styles.label}>SWIFT/BIC</Text><Text style={styles.value}>{bankingSwiftBic}</Text></>
-            )}
-          </View>
-          )}
 
-          {paymentVisible && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Payment Methods</Text>
-            {bankTransferEnabled && (
-            <View style={styles.paymentItem}>
-              <Text style={styles.paymentIcon}>&#x1F3E6;</Text>
-              <View>
-                <Text style={styles.paymentLabel}>{bankTransferTitle}</Text>
-                <Text style={styles.paymentDesc}>{bankTransferInstructions}</Text>
+            {paymentVisible && (
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>Payment Methods</Text>
+                {bankTransferEnabled && (
+                  <View style={styles.paymentItem}>
+                    <View style={styles.paymentIconBox} />
+                    <View>
+                      <Text style={styles.paymentLabel}>{bankTransferTitle}</Text>
+                      <Text style={styles.paymentDesc}>{bankTransferInstructions}</Text>
+                    </View>
+                  </View>
+                )}
+                {mobileWalletsEnabled && (
+                  <View style={styles.paymentItem}>
+                    <View style={styles.paymentIconBox} />
+                    <View>
+                      <Text style={styles.paymentLabel}>{mobileWalletTitle}</Text>
+                      <Text style={styles.paymentDesc}>{mobileWalletDescription}</Text>
+                    </View>
+                  </View>
+                )}
               </View>
-            </View>
-            )}
-            {mobileWalletsEnabled && (
-            <View style={styles.paymentItem}>
-              <Text style={styles.paymentIcon}>&#x1F4B3;</Text>
-              <View>
-                <Text style={styles.paymentLabel}>{mobileWalletTitle}</Text>
-                <Text style={styles.paymentDesc}>{mobileWalletDescription}</Text>
-              </View>
-            </View>
             )}
           </View>
-          )}
-        </View>
         )}
 
         {/* ── Contact & Signature ── */}
         <View style={styles.contactRow}>
           <View style={styles.contactBlock}>
-            <Text style={{ fontSize: 9, fontWeight: 700, color: "#667085", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>
+            <Text
+              style={{
+                fontSize: 8,
+                fontWeight: 600,
+                color: "#7A6F5E",
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                marginBottom: 10,
+              }}
+            >
               Contact Us
             </Text>
             <Text style={{ fontSize: 10, marginBottom: 2 }}>Phone: {primaryPhone}</Text>
             <Text style={{ fontSize: 10, marginBottom: 2 }}>Email: {businessEmail}</Text>
             <Text style={{ fontSize: 10, marginBottom: 2 }}>
-              Location: {town}{town && region ? ", " : ""}{region}{region && country ? ", " : ""}{country}
+              Location: {town}
+              {town && region ? ", " : ""}
+              {region}
+              {region && country ? ", " : ""}
+              {country}
             </Text>
           </View>
           {signatureVisible && (
-          <View style={styles.ownerBlock}>
-            {signatureImage ? (
-              <Text style={{ fontSize: 10, fontWeight: 700, color: "#1C1C1C" }}>{signatoryName}</Text>
-            ) : (
-              <Text
-                style={{
-                  fontFamily: "Allura",
-                  fontSize: 28,
-                  lineHeight: 0.9,
-                  letterSpacing: -0.5,
-                  color: "#2C2C2C",
-                  marginBottom: 4,
-                }}
-              >
+            <View style={styles.ownerBlock}>
+              {signatureImage ? (
+                <Text style={{ fontSize: 10, fontWeight: 600, color: "#3D372E" }}>
+                  {signatoryName}
+                </Text>
+              ) : (
+                <Text
+                  style={{
+                    fontFamily: "Allura",
+                    fontSize: 20,
+                    lineHeight: 1,
+                    color: "#3D372E",
+                    marginBottom: 4,
+                    transform: "rotate(-4deg)",
+                  }}
+                >
+                  {signatoryName}
+                </Text>
+              )}
+              <Text style={{ fontSize: 10, fontWeight: 600, color: "#3D372E" }}>
                 {signatoryName}
               </Text>
-            )}
-            <Text style={{ fontSize: 10, fontWeight: 700, color: "#1C1C1C" }}>{signatoryName}</Text>
-            <Text style={{ fontSize: 9, color: "#667085" }}>{signatoryRole}</Text>
-          </View>
+              <Text style={{ fontSize: 9, color: "#7A6F5E" }}>{signatoryRole}</Text>
+            </View>
           )}
         </View>
 
         {/* ── Secure Payment Footer ── */}
         {secureFooterVisible && (
-        <View>
-          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20, paddingTop: 12, borderTop: "1px solid #E5E7EB", gap: 6 }}>
-            <Text style={{ fontSize: 10, color: "#059669" }}>&#x2714;</Text>
-            <Text style={{ fontSize: 8, color: "#667085" }}>
-              {secureFooterMessage}
-            </Text>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                marginTop: 18,
+                paddingTop: 12,
+                borderTop: "1px solid #E6E0D3",
+                gap: 6,
+              }}
+            >
+              <Text style={{ fontSize: 9, color: "#059669" }}>✓</Text>
+              <Text style={{ fontSize: 8, color: "#7A6F5E" }}>{secureFooterMessage}</Text>
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 6, gap: 16 }}>
+              {acceptedPaymentTypes.split(",").map((type) => (
+                <Text
+                  key={type.trim()}
+                  style={{ fontSize: 8, fontWeight: 700, color: "#9CA3AF", letterSpacing: 1 }}
+                >
+                  {type.trim()}
+                </Text>
+              ))}
+            </View>
           </View>
-          <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 6, gap: 16 }}>
-            {acceptedPaymentTypes.split(",").map((type) => (
-              <Text key={type.trim()} style={{ fontSize: 8, fontWeight: 700, color: "#9CA3AF", letterSpacing: 1 }}>
-                {type.trim()}
-              </Text>
-            ))}
-          </View>
-        </View>
         )}
       </Page>
     </Document>

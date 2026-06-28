@@ -37,10 +37,12 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const selectedRoom = rooms.find((room) => room.slug === roomSlug) ?? rooms[0];
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     if (submitting) return;
+    if (!selectedRoom) return;
     if (!checkIn) {
       toast.error("Missing check-in date — Please select your check-in date.");
       return;
@@ -57,7 +59,7 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
     const ci = checkIn.toISOString().slice(0, 10);
     const co = checkOut.toISOString().slice(0, 10);
     const params = new URLSearchParams({ checkIn: ci, checkOut: co, guests });
-    router.push(`/rooms/${roomSlug}?${params}`);
+    router.push(`/rooms/${selectedRoom.slug}?${params}`);
   }
 
   const triggerClass = cn(
@@ -68,25 +70,31 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
 
   const cardClass =
     context === "home"
-      ? "rounded-xl border bg-card p-5 shadow-[0_18px_55px_-42px_rgba(17,24,39,.45)] sm:p-6"
-      : "rounded-xl border bg-card p-5";
+      ? "rounded-xl border bg-card p-4 shadow-[0_18px_55px_-42px_rgba(17,24,39,.45)] sm:p-6"
+      : "rounded-xl border bg-card p-4 sm:p-5";
 
   return (
     <form id="booking" onSubmit={submit} className={cardClass}>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.55fr_1fr_1fr_auto] lg:gap-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.55fr_1fr_1fr_auto] lg:gap-5">
         {/* Room type */}
         <div className="space-y-1.5">
           <Label htmlFor="search-room" className="flex items-center gap-1.5 text-sm font-medium">
             <BedDouble className="size-4 text-muted-foreground" aria-hidden="true" />
             Room type
           </Label>
-          <Select value={roomSlug} onValueChange={(value) => value && setRoomSlug(value)}>
+          <Select
+            value={selectedRoom?.name ?? ""}
+            onValueChange={(value) => {
+              const nextRoom = rooms.find((room) => room.name === value);
+              if (nextRoom) setRoomSlug(nextRoom.slug);
+            }}
+          >
             <SelectTrigger id="search-room" className="h-11 w-full bg-background">
               <SelectValue placeholder="Select a room type" />
             </SelectTrigger>
             <SelectContent>
               {rooms.map((room) => (
-                <SelectItem key={room.slug} value={room.slug}>
+                <SelectItem key={room.slug} value={room.name}>
                   {room.name}
                 </SelectItem>
               ))}

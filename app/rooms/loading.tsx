@@ -7,7 +7,7 @@ export default function RoomsLoading() {
         <div className="mx-auto max-w-[1180px]">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="mt-3 h-12 w-64 sm:h-14 sm:w-80" />
-          <Skeleton className="mt-4 h-5 w-96" />
+          <Skeleton className="mt-4 h-5 w-full max-w-96" />
         </div>
       </div>
       <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6">
@@ -17,7 +17,7 @@ export default function RoomsLoading() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <Skeleton className="h-6 w-48" />
-            <Skeleton className="mt-2 h-4 w-64" />
+            <Skeleton className="mt-2 h-4 w-full max-w-64" />
           </div>
           <Skeleton className="h-4 w-20" />
         </div>

@@ -68,6 +68,7 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
     "hover:border-neutral-300 hover:bg-neutral-50",
     "focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
   );
+  const calendarPopoverClass = "w-[340px] max-w-[calc(100vw-2rem)] p-3";
 
   const cardClass =
     context === "home"
@@ -143,7 +144,11 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
             >
               {checkIn ? format(checkIn, "d MMM") : "Select date"}
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-3" align="start">
+            <PopoverContent
+              className={calendarPopoverClass}
+              align="start"
+              sideOffset={6}
+            >
               <Calendar
                 mode="single"
                 selected={checkIn}
@@ -187,7 +192,11 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
             >
               {checkOut ? format(checkOut, "d MMM") : "Select date"}
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-3" align="start">
+            <PopoverContent
+              className={calendarPopoverClass}
+              align="start"
+              sideOffset={6}
+            >
               <Calendar
                 mode="single"
                 selected={checkOut}

@@ -1,0 +1,4 @@
+- [x] Fix DatePicker popover width/position by updating PopoverContent classes (keep selection logic unchanged)
+- [x] Fix DateRangePicker popover width/position similarly for both From/To popovers
+- [ ] Verify visually across public + dashboard forms and on desktop/tablet/mobile using browser tools
+- [x] Run lint/test/build if available and ensure no console errors

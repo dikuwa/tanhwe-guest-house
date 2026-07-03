@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
+import { CalendarDays } from "lucide-react";
+import { useState, type ReactNode } from "react";
+
+import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 import { dateOnlyToLocalDate, localDateToDateOnly } from "@/lib/date-only";
+import { cn } from "@/lib/utils";
 
 type DatePickerProps = {
   value: string;
@@ -29,7 +30,7 @@ export function DatePicker({
   icon = <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
-  const today = minDate ? dateOnlyToLocalDate(minDate) ?? new Date() : new Date();
+  const today = minDate ? (dateOnlyToLocalDate(minDate) ?? new Date()) : new Date();
   const selected = dateOnlyToLocalDate(value);
 
   const triggerClass = cn(
@@ -56,7 +57,11 @@ export function DatePicker({
         >
           {selected ? format(selected, "d MMM yyyy") : placeholder}
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-3" align="start">
+        <PopoverContent
+          className="w-[340px] max-w-[calc(100vw-2rem)] p-3"
+          align="start"
+          sideOffset={6}
+        >
           <Calendar
             mode="single"
             selected={selected}

@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { CalendarCheck, CalendarDays } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 import {
   addDaysDateOnly,
   dateOnlyToLocalDate,
   localDateToDateOnly,
   nightsBetweenDateOnly,
 } from "@/lib/date-only";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarCheck, CalendarDays } from "lucide-react";
+import { useCallback, useState } from "react";
 
 type DateRangePickerProps = {
   checkIn: string;
@@ -33,7 +33,7 @@ export function DateRangePicker({
   checkInId = "date-range-check-in",
   checkOutId = "date-range-check-out",
 }: DateRangePickerProps) {
-  const today = minDate ? dateOnlyToLocalDate(minDate) ?? new Date() : new Date();
+  const today = minDate ? (dateOnlyToLocalDate(minDate) ?? new Date()) : new Date();
   const checkInDate = dateOnlyToLocalDate(checkIn);
   const checkOutDate = dateOnlyToLocalDate(checkOut);
 
@@ -68,10 +68,7 @@ export function DateRangePicker({
   return (
     <div className="grid grid-cols-2 gap-3">
       <div className="space-y-1.5">
-        <Label
-          htmlFor={checkInId}
-          className="flex items-center gap-1.5 text-sm font-medium"
-        >
+        <Label htmlFor={checkInId} className="flex items-center gap-1.5 text-sm font-medium">
           <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
           From
         </Label>
@@ -83,11 +80,13 @@ export function DateRangePicker({
               checkIn ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
-            {checkInDate
-              ? format(checkInDate, "d MMM yyyy")
-              : "Select date"}
+            {checkInDate ? format(checkInDate, "d MMM yyyy") : "Select date"}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3" align="start">
+          <PopoverContent
+            className="w-[340px] max-w-[calc(100vw-2rem)] p-3"
+            align="start"
+            sideOffset={6}
+          >
             <Calendar
               mode="single"
               selected={checkInDate}
@@ -101,10 +100,7 @@ export function DateRangePicker({
       </div>
 
       <div className="space-y-1.5">
-        <Label
-          htmlFor={checkOutId}
-          className="flex items-center gap-1.5 text-sm font-medium"
-        >
+        <Label htmlFor={checkOutId} className="flex items-center gap-1.5 text-sm font-medium">
           <CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />
           To
         </Label>
@@ -116,11 +112,13 @@ export function DateRangePicker({
               checkOut ? "text-foreground font-medium" : "text-muted-foreground"
             )}
           >
-            {checkOutDate
-              ? format(checkOutDate, "d MMM yyyy")
-              : "Select date"}
+            {checkOutDate ? format(checkOutDate, "d MMM yyyy") : "Select date"}
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3" align="start">
+          <PopoverContent
+            className="w-[340px] max-w-[calc(100vw-2rem)] p-3"
+            align="start"
+            sideOffset={6}
+          >
             <Calendar
               mode="single"
               selected={checkOutDate}
@@ -166,12 +164,17 @@ export function NightsCounter({
         <strong className="text-neutral-800">{nights}</strong> night
         {nights === 1 ? "" : "s"}
         {roomsCount > 1 && (
-          <> &times; <strong className="text-neutral-800">{roomsCount}</strong> room{roomsCount === 1 ? "" : "s"}</>
+          <>
+            {" "}
+            &times; <strong className="text-neutral-800">{roomsCount}</strong> room
+            {roomsCount === 1 ? "" : "s"}
+          </>
         )}
       </span>
       {pricePerNight && (
         <span className="font-semibold tabular-nums text-neutral-800">
-          {currency}{total.toLocaleString()}
+          {currency}
+          {total.toLocaleString()}
         </span>
       )}
     </div>

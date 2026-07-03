@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateBookingTotal, calculateNights, parseStayDate } from "../lib/booking-calculations";
+import {
+  calculateBookingTotal,
+  calculateBookingTotals,
+  calculateNights,
+  parseStayDate,
+} from "../lib/booking-calculations";
 import { customerIdentity, normalizeEmail, normalizePhone } from "../lib/customer-matching";
 
 test("stay dates calculate nights in UTC", () => {
@@ -25,6 +30,31 @@ test("booking total never becomes negative", () => {
   assert.equal(
     calculateBookingTotal({ pricePerNight: 500, roomsCount: 1, nights: 1, discount: 900 }).total,
     0
+  );
+});
+
+test("central booking totals handle multiple lines, extras, discount, tax, and balance", () => {
+  assert.deepEqual(
+    calculateBookingTotals({
+      lines: [
+        { pricePerNight: 500, roomsCount: 1, nights: 2 },
+        { pricePerNight: 1250, roomsCount: 2, nights: 3 },
+      ],
+      extras: 250,
+      discount: 100,
+      tax: 50,
+      amountPaid: 1000,
+    }),
+    {
+      roomSubtotal: 8500,
+      extrasTotal: 250,
+      discount: 100,
+      tax: 50,
+      subtotal: 8750,
+      total: 8700,
+      amountPaid: 1000,
+      balanceDue: 7700,
+    }
   );
 });
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { and, count, eq, gt, inArray, lt, ne, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { bookingRooms, bookingRoomUnits, bookings, roomBlockedDates, roomTypes, roomUnits, rooms } from "./db/schema";
 import { calculateNights } from "./booking-calculations";
@@ -12,6 +12,7 @@ export async function checkRoomAvailability(input: {
   checkIn: Date;
   checkOut: Date;
   roomsCount: number;
+  excludeBookingId?: string;
 }) {
   const db = getDb();
   const room = await db.query.rooms.findFirst({ where: eq(rooms.id, input.roomId) });
@@ -49,6 +50,7 @@ export async function checkRoomAvailability(input: {
       and(
         eq(bookingRooms.roomId, room.id),
         inArray(bookings.status, ["confirmed", "checked-in"]),
+        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
         lt(bookings.checkIn, input.checkOut),
         gt(bookings.checkOut, input.checkIn)
       )
@@ -64,6 +66,7 @@ export async function checkRoomAvailability(input: {
       and(
         eq(bookingRooms.roomId, room.id),
         inArray(bookings.status, ["confirmed", "checked-in"]),
+        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
         lt(bookings.checkIn, input.checkOut),
         gt(bookings.checkOut, input.checkIn),
         sql`${bookingRoomUnits.id} is null`
@@ -77,6 +80,10 @@ export async function checkRoomAvailability(input: {
 
   return {
     available: remainingUnits >= input.roomsCount,
+    reason:
+      remainingUnits >= input.roomsCount
+        ? undefined
+        : `Only ${remainingUnits} room unit(s) available for the selected dates`,
     remainingUnits,
     nights,
     pricePerNight: room.pricePerNight,
@@ -90,6 +97,7 @@ export async function checkRoomTypeAvailability(input: {
   checkIn: Date;
   checkOut: Date;
   quantity: number;
+  excludeBookingId?: string;
 }) {
   const db = getDb();
 
@@ -140,6 +148,7 @@ export async function checkRoomTypeAvailability(input: {
       and(
         inArray(bookingRooms.roomId, roomIds),
         inArray(bookings.status, ["confirmed", "checked-in"]),
+        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
 
         lt(bookings.checkIn, input.checkOut),
         gt(bookings.checkOut, input.checkIn)
@@ -156,6 +165,7 @@ export async function checkRoomTypeAvailability(input: {
       and(
         inArray(bookingRooms.roomId, roomIds),
         inArray(bookings.status, ["confirmed", "checked-in"]),
+        input.excludeBookingId ? ne(bookings.id, input.excludeBookingId) : undefined,
         lt(bookings.checkIn, input.checkOut),
         gt(bookings.checkOut, input.checkIn),
         sql`${bookingRoomUnits.id} is null`
@@ -166,10 +176,14 @@ export async function checkRoomTypeAvailability(input: {
   const reservedUnits = (assignedCount?.count ?? 0) + (oldReserved?.count ?? 0);
   const remainingUnits = Math.max(0, totalUnits - reservedUnits);
   const nights = calculateNights(input.checkIn, input.checkOut);
-  const pricePerNight = typeRooms[0].pricePerNight;
+  const pricePerNight = roomType.pricePerNight;
 
   return {
     available: remainingUnits >= input.quantity,
+    reason:
+      remainingUnits >= input.quantity
+        ? undefined
+        : `Only ${remainingUnits} room unit(s) available for the selected dates`,
     remainingUnits,
     nights,
     pricePerNight,

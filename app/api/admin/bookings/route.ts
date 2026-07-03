@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomTypeAvailability, assignRoomUnitsForBooking } from "@/lib/availability";
@@ -6,7 +7,7 @@ import { getDb } from "@/lib/db";
 import { activityLogs, bookingRooms, bookings, customers, roomTypes } from "@/lib/db/schema";
 import { notifyOps } from "@/lib/notifications";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
-import { parseStayDate } from "@/lib/booking-calculations";
+import { calculateBookingTotals, parseStayDate } from "@/lib/booking-calculations";
 import { normalizeNamibianPhone } from "@/lib/phone";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform((v) => parseStayDate(v));
@@ -20,10 +21,12 @@ const lineSchema = z.object({
   guestsCount: z.coerce.number().int().min(1).max(100),
   checkIn: date,
   checkOut: date,
+  pricePerNight: z.coerce.number().int().min(0).optional(),
 });
 
 const input = z.object({
   lines: z.array(lineSchema).min(1).max(10),
+  customerId: z.string().uuid().optional(),
   fullName: z.string().trim().min(2).max(100),
   phone,
   whatsapp: z.union([phone, z.literal("")]).optional(),
@@ -83,13 +86,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (line.guestsCount > availability.roomType.maxGuests * line.quantity) {
+      return NextResponse.json(
+        {
+          error: `Line ${i + 1}: ${availability.roomType.name} allows up to ${availability.roomType.maxGuests} guest(s) per room`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const pricePerNight = line.pricePerNight && line.pricePerNight > 0
+      ? line.pricePerNight
+      : availability.pricePerNight;
+    const subtotal = calculateBookingTotals({
+      lines: [{ pricePerNight, roomsCount: line.quantity, nights: availability.nights }],
+    }).roomSubtotal;
+
     lineResults.push({
       roomType: availability.roomType,
       checkIn: line.checkIn,
       checkOut: line.checkOut,
       nights: availability.nights,
-      pricePerNight: availability.pricePerNight,
-      subtotal: availability.subtotal,
+      pricePerNight,
+      subtotal,
       quantity: line.quantity,
       guestsCount: line.guestsCount,
       roomIds: availability.roomIds,
@@ -118,7 +137,13 @@ export async function POST(request: NextRequest) {
   );
   const totalNights = calculateNights(checkIn, checkOut);
   const totalGuests = lineResults.reduce((s, l) => s + l.guestsCount, 0);
-  const subtotal = lineResults.reduce((s, l) => s + l.subtotal, 0);
+  const totals = calculateBookingTotals({
+    lines: lineResults.map((line) => ({
+      pricePerNight: line.pricePerNight,
+      roomsCount: line.quantity,
+      nights: line.nights,
+    })),
+  });
 
   if (totalNights < 1) {
     return NextResponse.json(
@@ -133,8 +158,24 @@ export async function POST(request: NextRequest) {
   try {
     await db.transaction(async (tx) => {
       let customerId: string;
-      if (customer) {
+      if (parsed.data.customerId) {
+        const selected = await tx.query.customers.findFirst({
+          where: eq(customers.id, parsed.data.customerId),
+        });
+        if (!selected) throw new Error("Selected guest was not found");
+        customerId = selected.id;
+      } else if (customer) {
         customerId = customer.id;
+        await tx
+          .update(customers)
+          .set({
+            fullName: parsed.data.fullName,
+            phone: canonicalPhone,
+            whatsapp: canonicalWhatsapp,
+            email: parsed.data.email || null,
+            updatedAt: new Date(),
+          })
+          .where(eq(customers.id, customerId));
       } else {
         customerId = crypto.randomUUID();
         await tx.insert(customers).values({
@@ -156,9 +197,9 @@ export async function POST(request: NextRequest) {
         guestsCount: totalGuests,
         status: parsed.data.status,
         source: "admin",
-        subtotal,
-        total: subtotal,
-        balanceDue: subtotal,
+        subtotal: totals.roomSubtotal,
+        total: totals.total,
+        balanceDue: totals.balanceDue,
         notes: parsed.data.notes || null,
         createdBy: session.user.id,
       });
@@ -208,7 +249,7 @@ export async function POST(request: NextRequest) {
   await notifyOps({
     type: "booking_created",
     title: `New booking: ${bookingNumber}`,
-    description: `${parsed.data.fullName} · ${lineResults.length} room line(s) · N$${subtotal}`,
+    description: `${parsed.data.fullName} · ${lineResults.length} room line(s) · N$${totals.total}`,
     link: `/admin/bookings/${bookingId}`,
   });
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, MessageCircle, Pencil, Phone } from "lucide-react";
 import { eq } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,18 +52,40 @@ export default async function BookingDetailPage({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" render={<Link href="/admin/bookings" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link href="/admin/bookings" />}
+        >
           <ArrowLeft />
           Bookings
         </Button>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" render={<a href={`tel:${phone}`} />}>
+          {session.user.role !== "staff" && (
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href={`/admin/bookings/${id}/edit`} />}
+            >
+              <Pencil />
+              Edit
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<a href={`tel:${phone}`} />}
+          >
             <Phone />
             Call
           </Button>
           <Button
             variant="outline"
             size="sm"
+            nativeButton={false}
             render={
               <a href={whatsappHref(booking.customer.whatsapp)} target="_blank" rel="noreferrer" />
             }

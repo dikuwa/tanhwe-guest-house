@@ -21,7 +21,7 @@ import { nightsBetweenDateOnly } from "@/lib/date-only";
 import { validatePhoneNumber } from "@/lib/phone";
 import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
 type RoomTypeOption = {
@@ -40,6 +40,7 @@ type RoomLine = {
   checkIn: string;
   checkOut: string;
   sameDates: boolean;
+  pricePerNight: number;
 };
 
 type FieldErrors = {
@@ -65,6 +66,7 @@ function createLine(): RoomLine {
     checkIn: "",
     checkOut: "",
     sameDates: true,
+    pricePerNight: 0,
   };
 }
 
@@ -76,6 +78,36 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
   const [status, setStatus] = useState("confirmed");
   const [lines, setLines] = useState<RoomLine[]>([createLine()]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerResults, setCustomerResults] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null }[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null } | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (customerSearch.length < 2) {
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/admin/customers/search?q=${encodeURIComponent(customerSearch)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCustomerResults(data);
+        }
+      } catch {
+        // ignore
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [customerSearch]);
 
   const activeRoomTypes = roomTypes.filter((rt) => rt.status === "active");
 
@@ -172,11 +204,13 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
         guestsCount: line.guestsCount,
         checkIn: line.sameDates ? checkIn : line.checkIn,
         checkOut: line.sameDates ? checkOut : line.checkOut,
+        pricePerNight: line.pricePerNight,
       })),
-      fullName: String(formData.get("fullName") ?? "").trim(),
-      phone: String(formData.get("phone") ?? "").trim(),
-      whatsapp: String(formData.get("whatsapp") ?? "").trim() || undefined,
-      email: String(formData.get("email") ?? "").trim() || undefined,
+      customerId: selectedCustomer?.id,
+      fullName: fullName.trim(),
+      phone: phone.trim(),
+      whatsapp: whatsapp.trim() || undefined,
+      email: email.trim() || undefined,
       notes: String(formData.get("notes") ?? "").trim() || undefined,
       status,
     };
@@ -234,7 +268,8 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
           const lineCheckIn = line.sameDates ? checkIn : line.checkIn;
           const lineCheckOut = line.sameDates ? checkOut : line.checkOut;
           const nights = nightsBetweenDateOnly(lineCheckIn, lineCheckOut);
-          const lineSubtotal = rt && nights > 0 ? rt.pricePerNight * line.quantity * nights : 0;
+          const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
+          const lineSubtotal = rt && nights > 0 ? rate * line.quantity * nights : 0;
           const lineErr = fieldErrors.lineErrors?.[line.id];
 
           return (
@@ -266,7 +301,15 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
                   <Label htmlFor={`room-type-${line.id}`}>Room type</Label>
                   <Select
                     value={line.roomTypeId}
-                    onValueChange={(v) => v && updateLine(line.id, { roomTypeId: v })}
+                    onValueChange={(v) => {
+                      const nextType = roomTypes.find((r) => r.id === v);
+                      if (v) {
+                        updateLine(line.id, {
+                          roomTypeId: v,
+                          pricePerNight: nextType?.pricePerNight ?? 0,
+                        });
+                      }
+                    }}
                   >
                     <SelectTrigger id={`room-type-${line.id}`} className="w-full h-11">
                       <SelectValue placeholder="Select room type" />
@@ -346,11 +389,32 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
                 </div>
               )}
 
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor={`rate-${line.id}`}>
+                    Rate per night{" "}
+                    <span className="text-muted-foreground font-normal">(auto from room type)</span>
+                  </Label>
+                  <Input
+                    id={`rate-${line.id}`}
+                    type="number"
+                    min="0"
+                    value={line.pricePerNight}
+                    onChange={(e) =>
+                      updateLine(line.id, {
+                        pricePerNight: Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                    className="h-11"
+                  />
+                </div>
+              </div>
+
               {/* Line subtotal preview */}
               {rt && nights > 0 && (
                 <div className="mt-3 flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
                   <span>
-                    {rt.name} &times; {line.quantity} room{line.quantity > 1 ? "s" : ""} &times; {nights} night{nights > 1 ? "s" : ""}
+                    {rt.name} &times; {line.quantity} room{line.quantity > 1 ? "s" : ""} &times; {nights} night{nights > 1 ? "s" : ""} @ N${rate}/night
                   </span>
                   <span className="font-semibold tabular-nums text-neutral-800">
                     N${lineSubtotal.toLocaleString()}
@@ -380,7 +444,8 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
           const ci = line.sameDates ? checkIn : line.checkIn;
           const co = line.sameDates ? checkOut : line.checkOut;
           const n = nightsBetweenDateOnly(ci, co);
-          return sum + (rt ? rt.pricePerNight * line.quantity * n : 0);
+          const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
+          return sum + (rt ? rate * line.quantity * n : 0);
         }, 0);
         if (total === 0) return null;
         return (
@@ -394,6 +459,49 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
       {/* ── Customer info ── */}
       <div className="mb-6 border-t border-neutral-100 pt-6">
         <p className="mb-3 text-sm font-medium text-neutral-800">Guest information</p>
+        <div className="mb-4">
+          <Label htmlFor="customer-search">Search existing guest</Label>
+          <Input
+            id="customer-search"
+            value={customerSearch}
+            onChange={(e) => {
+              setCustomerSearch(e.target.value);
+              if (e.target.value.length < 2) setCustomerResults([]);
+              if (selectedCustomer && e.target.value !== selectedCustomer.fullName) {
+                setSelectedCustomer(null);
+              }
+            }}
+            placeholder="Type name or phone to search..."
+            className="mt-1 h-11"
+          />
+          {searching && <p className="mt-1 text-xs text-muted-foreground">Searching...</p>}
+          {customerResults.length > 0 && (
+            <div className="mt-1 max-h-40 overflow-y-auto rounded-lg border bg-white shadow-xs">
+              {customerResults.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={cn(
+                    "flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-neutral-50",
+                    c.id === selectedCustomer?.id && "bg-primary/5 font-medium"
+                  )}
+                  onClick={() => {
+                    setSelectedCustomer(c);
+                    setCustomerSearch(c.fullName);
+                    setFullName(c.fullName);
+                    setPhone(c.phone);
+                    setWhatsapp(c.whatsapp);
+                    setEmail(c.email ?? "");
+                    setCustomerResults([]);
+                  }}
+                >
+                  <span>{c.fullName}</span>
+                  <span className="text-xs text-muted-foreground">{c.phone}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
             <Label htmlFor="fullName">Full name</Label>
@@ -401,6 +509,11 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               id="fullName"
               name="fullName"
               required
+              value={fullName}
+              onChange={(e) => {
+                setFullName(e.target.value);
+                if (selectedCustomer && e.target.value !== selectedCustomer.fullName) setSelectedCustomer(null);
+              }}
               className={cn("mt-2 h-11", fieldErrors.fullName && "border-destructive")}
             />
             <FieldError>{fieldErrors.fullName}</FieldError>
@@ -424,6 +537,11 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               id="phone"
               name="phone"
               required
+              value={phone}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                if (selectedCustomer && e.target.value !== selectedCustomer.phone) setSelectedCustomer(null);
+              }}
               className={cn("mt-2 h-11", fieldErrors.phone && "border-destructive")}
             />
             <FieldError>{fieldErrors.phone}</FieldError>
@@ -434,6 +552,11 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               id="whatsapp"
               name="whatsapp"
               placeholder="Same as phone if left empty"
+              value={whatsapp}
+              onChange={(e) => {
+                setWhatsapp(e.target.value);
+                if (selectedCustomer && e.target.value !== selectedCustomer.whatsapp) setSelectedCustomer(null);
+              }}
               className={cn("mt-2 h-11", fieldErrors.whatsapp && "border-destructive")}
             />
             <FieldError>{fieldErrors.whatsapp}</FieldError>
@@ -444,6 +567,11 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               id="email"
               name="email"
               type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (selectedCustomer && e.target.value !== (selectedCustomer.email ?? "")) setSelectedCustomer(null);
+              }}
               className={cn("mt-2 h-11", fieldErrors.email && "border-destructive")}
             />
             <FieldError>{fieldErrors.email}</FieldError>
@@ -453,6 +581,9 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
             <Textarea id="notes" name="notes" className="mt-2" />
           </div>
         </div>
+        {selectedCustomer && (
+          <input type="hidden" name="customerId" value={selectedCustomer.id} />
+        )}
       </div>
 
       <div className="flex justify-end">

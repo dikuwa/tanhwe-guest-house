@@ -64,7 +64,12 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" render={<Link href="/admin/documents" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link href="/admin/documents" />}
+        >
           <ArrowLeft />
           Documents
         </Button>
@@ -75,6 +80,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           />
           <Button
             variant="outline"
+            nativeButton={false}
             render={
               <a
                 href={whatsappHref(snapshot.customer.phone, shareMessage)}
@@ -86,7 +92,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             <MessageCircle />
             Share
           </Button>
-          <Button render={<a href={`/api/admin/documents/${document.id}/pdf`} />}>
+          <Button nativeButton={false} render={<a href={`/api/admin/documents/${document.id}/pdf`} />}>
             <Download />
             Download PDF
           </Button>

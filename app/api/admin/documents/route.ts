@@ -1,10 +1,9 @@
-import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
-import { activityLogs, bookings, documents } from "@/lib/db/schema";
-import { dateToDateOnly } from "@/lib/date-only";
+import { activityLogs, documents } from "@/lib/db/schema";
+import { getBookingDocumentSnapshot } from "@/lib/document-snapshot";
 
 const input = z.object({
   bookingId: z.string().uuid(),
@@ -21,11 +20,10 @@ export async function POST(request: NextRequest) {
       { error: "Please choose a booking and document type" },
       { status: 400 }
     );
-  const booking = await getDb().query.bookings.findFirst({
-    where: eq(bookings.id, parsed.data.bookingId),
-    with: { customer: true, rooms: true },
-  });
-  if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+  const db = getDb();
+  const data = await getBookingDocumentSnapshot(db, parsed.data.bookingId);
+  if (!data) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+  const { booking, snapshot } = data;
   if (parsed.data.type === "receipt" && booking.amountPaid <= 0)
     return NextResponse.json(
       { error: "Record a payment before issuing a receipt" },
@@ -34,36 +32,7 @@ export async function POST(request: NextRequest) {
   const prefix = { quote: "QUO", invoice: "INV", receipt: "REC" }[parsed.data.type];
   const number = `${prefix}-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const id = crypto.randomUUID();
-  const snapshot = JSON.stringify({
-    bookingNumber: booking.bookingNumber,
-    customer: {
-      name: booking.customer.fullName,
-      phone: booking.customer.phone,
-      email: booking.customer.email,
-    },
-    stay: {
-      checkIn: dateToDateOnly(booking.checkIn),
-      checkOut: dateToDateOnly(booking.checkOut),
-      nights: booking.nights,
-    },
-    rooms: booking.rooms.map((room) => ({
-      name: room.roomNameSnapshot,
-      pricePerNight: room.pricePerNight,
-      roomsCount: room.roomsCount,
-      nights: room.nights,
-      subtotal: room.subtotal,
-      checkIn: dateToDateOnly(room.checkIn ?? booking.checkIn),
-      checkOut: dateToDateOnly(room.checkOut ?? booking.checkOut),
-      guestsCount: room.guestsCount,
-    })),
-    subtotal: booking.subtotal,
-    extras: booking.extrasTotal,
-    discount: booking.discount,
-    total: booking.total,
-    amountPaid: booking.amountPaid,
-    balanceDue: booking.balanceDue,
-  });
-  await getDb().transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     await tx.insert(documents).values({
       id,
       bookingId: booking.id,
@@ -73,7 +42,7 @@ export async function POST(request: NextRequest) {
       total: booking.total,
       amountPaid: booking.amountPaid,
       balanceDue: booking.balanceDue,
-      snapshot,
+      snapshot: JSON.stringify(snapshot),
       status:
         parsed.data.type === "quote"
           ? "issued"

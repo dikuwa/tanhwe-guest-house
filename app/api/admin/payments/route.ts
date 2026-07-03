@@ -5,6 +5,7 @@ import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookings, payments } from "@/lib/db/schema";
 import { notifyOps } from "@/lib/notifications";
+import { refreshMutableBookingDocuments } from "@/lib/document-snapshot";
 
 const input = z.object({
   bookingId: z.string().uuid(),
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         entityId: id,
         details: `${booking.bookingNumber}: ${amount}`,
       });
+    await refreshMutableBookingDocuments(tx, booking.id);
     return { ok: true as const, paymentStatus, balanceDue };
   });
   if (!result.ok)

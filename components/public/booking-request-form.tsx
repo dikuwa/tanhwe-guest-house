@@ -41,6 +41,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { formatDateOnly, nightsBetweenDateOnly, todayDateOnly } from "@/lib/date-only";
+import { validatePhoneNumber } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import type { PublicRoom } from "@/lib/public-data";
 
@@ -84,13 +86,6 @@ type FieldErrors = {
 
 type Step = "rooms" | "details" | "review";
 
-function validatePhone(value: string): string | undefined {
-  const digits = value.replace(/\D/g, "");
-  if (!value.startsWith("+")) return "Please include your country code (e.g. +264...)";
-  if (digits.length < 7 || digits.length > 15) return "Please enter a valid phone number";
-  return undefined;
-}
-
 function validateEmail(value: string): string | undefined {
   if (!value) return undefined;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Please enter a valid email address";
@@ -98,19 +93,12 @@ function validateEmail(value: string): string | undefined {
 }
 
 function nightsBetween(checkIn: string, checkOut: string) {
-  if (!checkIn || !checkOut) return 0;
-  return Math.max(
-    0,
-    Math.round(
-      (new Date(`${checkOut}T00:00:00Z`).getTime() - new Date(`${checkIn}T00:00:00Z`).getTime()) /
-        86_400_000
-    )
-  );
+  return nightsBetweenDateOnly(checkIn, checkOut);
 }
 
 function formatDate(value: string) {
   if (!value) return "Select date";
-  return new Date(`${value}T00:00:00Z`).toLocaleDateString("en-NA", {
+  return formatDateOnly(value, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -122,7 +110,7 @@ function lineKey(roomTypeId: string, checkIn: string, checkOut: string) {
 }
 
 export function BookingRequestForm(props: Props) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayDateOnly();
   const formRef = useRef<HTMLFormElement>(null);
   const firstRoomTypeId = props.roomTypeId ?? props.roomId;
   const roomOptions = useMemo(() => {
@@ -316,8 +304,8 @@ export function BookingRequestForm(props: Props) {
     if (lineError) errors.line = lineError;
     if (!fullName.trim()) errors.fullName = "Full name is required";
     if (!phone.trim()) errors.phone = "Phone number is required";
-    else errors.phone = validatePhone(phone);
-    if (whatsapp.trim()) errors.whatsapp = validatePhone(whatsapp);
+    else errors.phone = validatePhoneNumber(phone);
+    if (whatsapp.trim()) errors.whatsapp = validatePhoneNumber(whatsapp);
     errors.email = validateEmail(email);
     Object.keys(errors).forEach((key) => {
       if (!errors[key as keyof FieldErrors]) delete errors[key as keyof FieldErrors];

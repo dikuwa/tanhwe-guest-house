@@ -15,6 +15,10 @@ const updateInput = z.object({
   notes: z.string().trim().max(1000).nullable().optional(),
 });
 
+function causeMessage(error: unknown): string {
+  return error && typeof error === "object" && "cause" in error ? String(error.cause) : "";
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await authorizeRequest(request.headers, ["owner", "admin"]);
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -62,7 +66,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     await getDb().update(roomUnits).set(updates).where(eq(roomUnits.id, id));
   } catch (error: unknown) {
     const msg = String(error);
-    const causeMsg = error && typeof error === "object" && "cause" in error ? String((error as any).cause) : "";
+    const causeMsg = causeMessage(error);
     if (msg.includes("foreign key constraint") || causeMsg.includes("foreign key constraint"))
       return NextResponse.json({ error: "Referenced record does not exist" }, { status: 400 });
     if (msg.includes("null value in column") || causeMsg.includes("null value in column"))

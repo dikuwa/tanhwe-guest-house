@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { RoomTypesManager } from "@/app/admin/rooms/types/room-types-manager";
@@ -16,12 +17,11 @@ export function RoomsManageClient({
   initialRoomTypes,
   rooms,
   activeRoomTypes,
-  initialBlocks,
 }: {
-  initialRoomTypes: any[];
-  rooms: any[];
-  activeRoomTypes: any[];
-  initialBlocks: any[];
+  initialRoomTypes: ComponentProps<typeof RoomTypesManager>["initial"];
+  rooms: ComponentProps<typeof RoomUnitsManager>["rooms"];
+  activeRoomTypes: ComponentProps<typeof RoomUnitsManager>["roomTypes"];
+  initialBlocks: unknown[];
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();

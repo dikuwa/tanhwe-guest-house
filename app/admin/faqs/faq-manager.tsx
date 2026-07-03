@@ -117,7 +117,7 @@ export function FaqManager({ initial }: { initial: Faq[] }) {
         ))}
         {items.length === 0 && (
           <div className="rounded-xl border border-dashed p-12 text-center text-sm text-neutral-500">
-            No FAQs yet. Click "Add FAQ" to create one.
+            No FAQs yet. Click &ldquo;Add FAQ&rdquo; to create one.
           </div>
         )}
       </div>

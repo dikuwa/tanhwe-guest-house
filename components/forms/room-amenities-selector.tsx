@@ -85,7 +85,10 @@ export function RoomAmenitiesSelector({
   useEffect(() => {
     if (search.trim()) {
       const matched = new Set(filtered.map((a) => a.category));
-      if (matched.size > 0) setOpenCategories(matched);
+      if (matched.size > 0) {
+        const timer = window.setTimeout(() => setOpenCategories(matched), 0);
+        return () => window.clearTimeout(timer);
+      }
     }
   }, [search, filtered]);
 
@@ -236,15 +239,17 @@ export function RoomAmenitiesSelector({
               key={category}
               className="overflow-hidden rounded-lg border border-neutral-200"
             >
-              <h3>
+              <h3 className="flex items-center px-4 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50">
                 <button
                   type="button"
                   onClick={() => toggleCategory(category)}
                   aria-expanded={isOpen}
-                  className="flex w-full items-center gap-2.5 px-4 py-3 text-left text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
+                  className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
                 >
                   <CatIcon className="size-4 shrink-0 text-neutral-400" />
-                  <span className="flex-1">{category}</span>
+                  <span className="flex-1 truncate">{category}</span>
+                </button>
+                <div className="flex shrink-0 items-center gap-2.5">
                   {selectedInCategory.length > 0 && (
                     <span className="text-xs font-medium text-primary">
                       {selectedInCategory.length} selected
@@ -255,10 +260,7 @@ export function RoomAmenitiesSelector({
                   </span>
                   <button
                     type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleCategoryAll(category);
-                    }}
+                    onClick={() => toggleCategoryAll(category)}
                     className="text-xs font-medium text-primary transition-colors hover:text-primary/80"
                   >
                     {allInCategorySelected ? "Clear" : "All"}
@@ -269,7 +271,7 @@ export function RoomAmenitiesSelector({
                       isOpen && "rotate-180",
                     )}
                   />
-                </button>
+                </div>
               </h3>
               {isOpen && (
                 <div className="border-t border-neutral-100 p-3" role="region">

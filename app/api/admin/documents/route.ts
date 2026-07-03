@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs, bookings, documents } from "@/lib/db/schema";
+import { dateToDateOnly } from "@/lib/date-only";
 
 const input = z.object({
   bookingId: z.string().uuid(),
@@ -41,8 +42,8 @@ export async function POST(request: NextRequest) {
       email: booking.customer.email,
     },
     stay: {
-      checkIn: booking.checkIn.toISOString(),
-      checkOut: booking.checkOut.toISOString(),
+      checkIn: dateToDateOnly(booking.checkIn),
+      checkOut: dateToDateOnly(booking.checkOut),
       nights: booking.nights,
     },
     rooms: booking.rooms.map((room) => ({
@@ -51,8 +52,9 @@ export async function POST(request: NextRequest) {
       roomsCount: room.roomsCount,
       nights: room.nights,
       subtotal: room.subtotal,
-      checkIn: room.checkIn?.toISOString?.() ?? room.checkIn ?? booking.checkIn.toISOString(),
-      checkOut: room.checkOut?.toISOString?.() ?? room.checkOut ?? booking.checkOut.toISOString(),
+      checkIn: dateToDateOnly(room.checkIn ?? booking.checkIn),
+      checkOut: dateToDateOnly(room.checkOut ?? booking.checkOut),
+      guestsCount: room.guestsCount,
     })),
     subtotal: booking.subtotal,
     extras: booking.extrasTotal,

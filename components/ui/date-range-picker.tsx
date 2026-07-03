@@ -7,6 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import {
+  addDaysDateOnly,
+  dateOnlyToLocalDate,
+  localDateToDateOnly,
+  nightsBetweenDateOnly,
+} from "@/lib/date-only";
 
 type DateRangePickerProps = {
   checkIn: string;
@@ -18,17 +24,6 @@ type DateRangePickerProps = {
   checkOutId?: string;
 };
 
-function toDate(value: string): Date | undefined {
-  if (!value) return undefined;
-  const d = new Date(`${value}T00:00:00Z`);
-  return isNaN(d.getTime()) ? undefined : d;
-}
-
-function toDateString(date: Date | undefined): string {
-  if (!date) return "";
-  return date.toISOString().slice(0, 10);
-}
-
 export function DateRangePicker({
   checkIn,
   checkOut,
@@ -38,21 +33,19 @@ export function DateRangePicker({
   checkInId = "date-range-check-in",
   checkOutId = "date-range-check-out",
 }: DateRangePickerProps) {
-  const today = minDate ? new Date(`${minDate}T00:00:00Z`) : new Date();
-  const checkInDate = toDate(checkIn);
-  const checkOutDate = toDate(checkOut);
+  const today = minDate ? dateOnlyToLocalDate(minDate) ?? new Date() : new Date();
+  const checkInDate = dateOnlyToLocalDate(checkIn);
+  const checkOutDate = dateOnlyToLocalDate(checkOut);
 
   const [checkInOpen, setCheckInOpen] = useState(false);
   const [checkOutOpen, setCheckOutOpen] = useState(false);
 
   const handleCheckInSelect = useCallback(
     (date: Date | undefined) => {
-      const val = toDateString(date);
+      const val = localDateToDateOnly(date);
       onCheckInChange(val);
       if (date && checkOutDate && date >= checkOutDate) {
-        const next = new Date(date);
-        next.setDate(next.getDate() + 1);
-        onCheckOutChange(toDateString(next));
+        onCheckOutChange(addDaysDateOnly(val, 1));
       }
     },
     [checkOutDate, onCheckInChange, onCheckOutChange]
@@ -60,7 +53,7 @@ export function DateRangePicker({
 
   const handleCheckOutSelect = useCallback(
     (date: Date | undefined) => {
-      onCheckOutChange(toDateString(date));
+      onCheckOutChange(localDateToDateOnly(date));
       setCheckOutOpen(false);
     },
     [onCheckOutChange, setCheckOutOpen]
@@ -160,14 +153,7 @@ export function NightsCounter({
 }: NightsCounterProps) {
   const nights = (() => {
     if (!checkIn || !checkOut) return 0;
-    return Math.max(
-      0,
-      Math.round(
-        (new Date(`${checkOut}T00:00:00Z`).getTime() -
-          new Date(`${checkIn}T00:00:00Z`).getTime()) /
-          86_400_000
-      )
-    );
+    return nightsBetweenDateOnly(checkIn, checkOut);
   })();
 
   if (nights === 0) return null;

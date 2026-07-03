@@ -17,7 +17,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { calculateNights } from "@/lib/booking-calculations";
+import { nightsBetweenDateOnly } from "@/lib/date-only";
+import { validatePhoneNumber } from "@/lib/phone";
 import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
@@ -48,13 +49,6 @@ type FieldErrors = {
   email?: string;
   lineErrors?: Record<string, string>;
 };
-
-function validatePhone(value: string): string | undefined {
-  const digits = value.replace(/\D/g, "");
-  if (!value.startsWith("+")) return "Include country code (e.g. +264)";
-  if (digits.length < 7 || digits.length > 15) return "Invalid phone number";
-  return undefined;
-}
 
 function validateEmail(value: string): string | undefined {
   if (!value) return undefined;
@@ -115,9 +109,9 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
     if (checkIn && checkOut && checkIn >= checkOut) {
       errors.fullName = "Check-out must be after check-in";
     }
-    const phoneErr = validatePhone(phone);
+    const phoneErr = validatePhoneNumber(phone);
     if (phoneErr) errors.phone = phoneErr;
-    const waErr = whatsapp ? validatePhone(whatsapp) : undefined;
+    const waErr = whatsapp ? validatePhoneNumber(whatsapp) : undefined;
     if (waErr) errors.whatsapp = waErr;
     const emailErr = validateEmail(email);
     if (emailErr) errors.email = emailErr;
@@ -239,9 +233,8 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
           const rt = roomTypes.find((r) => r.id === line.roomTypeId);
           const lineCheckIn = line.sameDates ? checkIn : line.checkIn;
           const lineCheckOut = line.sameDates ? checkOut : line.checkOut;
-          const nights = lineCheckIn && lineCheckOut ? calculateNights(new Date(`${lineCheckIn}T00:00:00Z`), new Date(`${lineCheckOut}T00:00:00Z`)) : 0;
+          const nights = nightsBetweenDateOnly(lineCheckIn, lineCheckOut);
           const lineSubtotal = rt && nights > 0 ? rt.pricePerNight * line.quantity * nights : 0;
-          const totalNights = checkIn && checkOut ? calculateNights(new Date(`${checkIn}T00:00:00Z`), new Date(`${checkOut}T00:00:00Z`)) : 0;
           const lineErr = fieldErrors.lineErrors?.[line.id];
 
           return (
@@ -386,7 +379,7 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
           const rt = roomTypes.find((r) => r.id === line.roomTypeId);
           const ci = line.sameDates ? checkIn : line.checkIn;
           const co = line.sameDates ? checkOut : line.checkOut;
-          const n = ci && co ? calculateNights(new Date(`${ci}T00:00:00Z`), new Date(`${co}T00:00:00Z`)) : 0;
+          const n = nightsBetweenDateOnly(ci, co);
           return sum + (rt ? rt.pricePerNight * line.quantity * n : 0);
         }, 0);
         if (total === 0) return null;

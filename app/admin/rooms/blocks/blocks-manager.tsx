@@ -48,7 +48,10 @@ export function BlocksManager() {
     setLoading(false);
   }
 
-  useEffect(() => { loadBlocks(); }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadBlocks(), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,7 +76,7 @@ export function BlocksManager() {
       setShowCreate(false);
       loadBlocks();
       router.refresh();
-    } catch (e) {
+    } catch {
       toast.error("Could not create block");
     } finally {
       setSaving(null);

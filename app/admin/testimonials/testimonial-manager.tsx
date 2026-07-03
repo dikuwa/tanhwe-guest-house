@@ -8,6 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type Testimonial = {
@@ -27,6 +33,8 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createDraft, setCreateDraft] = useState<Testimonial | null>(null);
 
   async function save(t: { id?: string; guestName: string; guestType: string; guestImage?: string; text: string; sortOrder: number; featured: boolean; active: boolean; }) {
     setSaving(t.id ?? "new");
@@ -48,7 +56,21 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
     if (t.id) {
       setItems((prev) => prev.map((item) => item.id === t.id ? { ...item, guestName: t.guestName, guestType: t.guestType, guestImage: t.guestImage ?? null, text: t.text, sortOrder: t.sortOrder, featured: t.featured, active: t.active } : item));
     } else {
-      setItems((prev) => prev.map((item) => item.id.startsWith("new-") ? { ...item, id: data.id, guestName: t.guestName, guestType: t.guestType, guestImage: t.guestImage ?? null, text: t.text, sortOrder: t.sortOrder, featured: t.featured, active: t.active } : item));
+      setCreateOpen(false);
+      setCreateDraft(null);
+      setItems((prev) => [
+        ...prev,
+        {
+          id: data.id,
+          guestName: t.guestName,
+          guestType: t.guestType,
+          guestImage: t.guestImage ?? null,
+          text: t.text,
+          sortOrder: t.sortOrder,
+          featured: t.featured,
+          active: t.active,
+        },
+      ]);
     }
   }
 
@@ -74,8 +96,8 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
       featured: false,
       active: true,
     };
-    setItems((prev) => [...prev, newItem]);
-    setEditing(newItem.id);
+    setCreateDraft(newItem);
+    setCreateOpen(true);
   }
 
   return (
@@ -100,6 +122,38 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
         </div>
       )}
 
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) setCreateDraft(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add testimonial</DialogTitle>
+          </DialogHeader>
+          {createDraft && (
+            <TestimonialRow
+              testimonial={createDraft}
+              isEditing
+              saving={saving === "new"}
+              onEdit={() => {}}
+              onSave={(data) => save(data)}
+              onDelete={() => {}}
+              onCancel={() => {
+                setCreateOpen(false);
+                setCreateDraft(null);
+              }}
+              deleteConfirmOpen={false}
+              onDeleteConfirmClose={() => {}}
+              onDeleteConfirmed={async () => {}}
+              framed={false}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-3">
         {items.map((t) => (
           <TestimonialRow
@@ -122,11 +176,12 @@ export function TestimonialManager({ initial }: { initial: Testimonial[] }) {
               await remove(t.id);
               setDeleteId(null);
             }}
+            framed
           />
         ))}
         {items.length === 0 && (
           <div className="rounded-xl border border-dashed p-12 text-center text-sm text-neutral-500">
-            No testimonials yet. Click "Add testimonial" to create one.
+            No testimonials yet. Click &ldquo;Add testimonial&rdquo; to create one.
           </div>
         )}
       </div>
@@ -145,6 +200,7 @@ function TestimonialRow({
   deleteConfirmOpen,
   onDeleteConfirmClose,
   onDeleteConfirmed,
+  framed = true,
 }: {
   testimonial: Testimonial;
   isEditing: boolean;
@@ -156,6 +212,7 @@ function TestimonialRow({
   deleteConfirmOpen: boolean;
   onDeleteConfirmClose: (v: boolean) => void;
   onDeleteConfirmed: () => Promise<void>;
+  framed?: boolean;
 }) {
   const [guestName, setGuestName] = useState(t.guestName);
   const [guestType, setGuestType] = useState(t.guestType);
@@ -200,7 +257,7 @@ function TestimonialRow({
 
   if (isEditing) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+      <div className={framed ? "rounded-xl border border-neutral-200 bg-white p-5 shadow-xs" : ""}>
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
 import { buttonVariants } from "@/components/ui/button";
 import { getPublicSettings } from "@/lib/public-data";
+import { whatsappHref } from "@/lib/phone";
 import { formatTime } from "@/lib/time-format";
 
 export const metadata: Metadata = {
@@ -15,8 +16,8 @@ export const dynamic = "force-dynamic";
 
 export default async function ContactPage() {
   const settings = await getPublicSettings();
-  const whatsappDigits = settings.whatsapp.replace(/\D/g, "");
   const phoneDigits = settings.phone.replace(/[^+\d]/g, "");
+  const locationWhatsApp = whatsappHref(settings.whatsapp, settings.locationRequestMessage);
 
   return (
     <div className="min-h-screen">
@@ -94,7 +95,7 @@ export default async function ContactPage() {
               {/* Open location link (if configured) */}
               <a
                 className={buttonVariants({ variant: "outline", size: "sm" })}
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.location)}`}
+                href={settings.locationPinUrl}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -104,9 +105,7 @@ export default async function ContactPage() {
               {/* Request location pin on WhatsApp */}
               <a
                 className={buttonVariants({ variant: "secondary", size: "sm" })}
-                href={`https://wa.me/${whatsappDigits}?text=${encodeURIComponent(
-                  "Hello Tanhwe Guest House — LOCATION REQUEST. I am planning to visit and would appreciate your exact map pin and directions to the guest house. Thank you."
-                )}`}
+                href={locationWhatsApp}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -143,7 +142,7 @@ export default async function ContactPage() {
                     <Phone className="size-4" /> Call us
                   </a>
                   <a
-                    href={`https://wa.me/${whatsappDigits}`}
+                    href={whatsappHref(settings.whatsapp)}
                     target="_blank"
                     rel="noreferrer"
                     className={buttonVariants({ variant: "secondary", size: "sm" })}

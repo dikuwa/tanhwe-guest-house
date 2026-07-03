@@ -13,6 +13,10 @@ const blockInput = z.object({
   isActive: z.boolean().default(true),
 });
 
+function causeMessage(error: unknown): string {
+  return error && typeof error === "object" && "cause" in error ? String(error.cause) : "";
+}
+
 export async function GET() {
   const rows = await getDb()
     .select({
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id, name: parsed.data.name, shortCode: parsed.data.shortCode }, { status: 201 });
   } catch (error) {
     const msg = String(error);
-    const causeMsg = (error as any).cause ? String((error as any).cause) : "";
+    const causeMsg = causeMessage(error);
     if (msg.includes("blocks_name_unique") || causeMsg.includes("blocks_name_unique"))
       return NextResponse.json({ error: "That block name is already in use" }, { status: 409 });
     if (msg.includes("blocks_short_code_unique") || causeMsg.includes("blocks_short_code_unique"))

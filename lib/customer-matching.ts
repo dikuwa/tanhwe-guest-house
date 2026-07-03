@@ -1,5 +1,7 @@
+import { normalizeNamibianPhone, phoneDigits } from "./phone";
+
 export function normalizePhone(value: string): string {
-  return value.replace(/\D/g, "").replace(/^00/, "");
+  return normalizeNamibianPhone(value) ?? phoneDigits(value);
 }
 
 export function normalizeEmail(value?: string | null): string {

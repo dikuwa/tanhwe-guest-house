@@ -45,10 +45,13 @@ export function NotificationBell() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    const initialFetch = window.setTimeout(() => void fetchNotifications(), 0);
     // Poll every 30 seconds
     const interval = setInterval(fetchNotifications, 30_000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(initialFetch);
+      clearInterval(interval);
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
+import { whatsappHref } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { MessageCircle, Phone } from "lucide-react";
 
@@ -14,11 +15,14 @@ export function ContactActions({
   className?: string;
 }) {
   const phoneHref = `tel:${phone.replace(/[^+\d]/g, "")}`;
-  const whatsappHref = `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message ?? "Hello Tanhwe Guest House, I would like to enquire about a stay.")}`;
+  const whatsappLink = whatsappHref(
+    whatsapp,
+    message ?? "Hello Tanhwe Guest House, I would like to enquire about a stay."
+  );
   return (
     <div className={cn("flex flex-wrap gap-3", className)}>
       <a
-        href={whatsappHref}
+        href={whatsappLink}
         target="_blank"
         rel="noreferrer"
         className={buttonVariants({ variant: "secondary", size: "default" })}

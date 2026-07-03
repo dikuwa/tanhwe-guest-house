@@ -13,6 +13,10 @@ const updateInput = z.object({
   isActive: z.boolean(),
 });
 
+function causeMessage(error: unknown): string {
+  return error && typeof error === "object" && "cause" in error ? String(error.cause) : "";
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await authorizeRequest(request.headers, ["owner", "admin"]);
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -64,7 +68,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ success: true });
   } catch (error) {
     const msg = String(error);
-    const causeMsg = (error as any).cause ? String((error as any).cause) : "";
+    const causeMsg = causeMessage(error);
     if (msg.includes("blocks_name_unique") || causeMsg.includes("blocks_name_unique"))
       return NextResponse.json({ error: "That block name is already in use" }, { status: 409 });
     if (msg.includes("blocks_short_code_unique") || causeMsg.includes("blocks_short_code_unique"))

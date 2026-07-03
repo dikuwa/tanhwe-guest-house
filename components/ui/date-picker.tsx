@@ -7,17 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-
-function toDate(value: string): Date | undefined {
-  if (!value) return undefined;
-  const d = new Date(`${value}T00:00:00Z`);
-  return isNaN(d.getTime()) ? undefined : d;
-}
-
-function toDateString(date: Date | undefined): string {
-  if (!date) return "";
-  return date.toISOString().slice(0, 10);
-}
+import { dateOnlyToLocalDate, localDateToDateOnly } from "@/lib/date-only";
 
 type DatePickerProps = {
   value: string;
@@ -39,8 +29,8 @@ export function DatePicker({
   icon = <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
-  const today = minDate ? toDate(minDate) ?? new Date() : new Date();
-  const selected = toDate(value);
+  const today = minDate ? dateOnlyToLocalDate(minDate) ?? new Date() : new Date();
+  const selected = dateOnlyToLocalDate(value);
 
   const triggerClass = cn(
     "flex h-11 w-full items-center rounded-lg border border-neutral-200 bg-white px-3.5 text-sm shadow-sm transition-colors",
@@ -71,7 +61,7 @@ export function DatePicker({
             mode="single"
             selected={selected}
             onSelect={(date) => {
-              onChange(toDateString(date));
+              onChange(localDateToDateOnly(date));
               setOpen(false);
             }}
             fromDate={today}

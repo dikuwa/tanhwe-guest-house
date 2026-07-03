@@ -8,6 +8,7 @@ import { BookingStatus } from "@/components/admin/booking-status";
 import { getDb } from "@/lib/db";
 import { bookingRoomUnits, bookings, roomUnits } from "@/lib/db/schema";
 import { requireRole } from "@/lib/auth-middleware";
+import { whatsappHref } from "@/lib/phone";
 
 const money = new Intl.NumberFormat("en-NA", {
   style: "currency",
@@ -26,6 +27,7 @@ export default async function BookingDetailPage({
     where: eq(bookings.id, id),
     with: { customer: true, rooms: true },
   });
+  if (!booking) notFound();
 
   // Fetch assigned room units for this booking
   const bookingUnitRows = await getDb()
@@ -45,19 +47,7 @@ export default async function BookingDetailPage({
     existing.push(row);
     unitMap.set(row.bookingRoomId, existing);
   }
-  if (!booking) notFound();
-
   const phone = booking.customer.phone.replace(/[^+\d]/g, "");
-  const whatsapp = booking.customer.whatsapp.replace(/\D/g, "");
-
-  const statusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-    pending: "default",
-    confirmed: "secondary",
-    "checked-in": "default",
-    "checked-out": "default",
-    cancelled: "outline",
-    "no-show": "destructive",
-  };
 
   return (
     <div className="space-y-6">
@@ -75,7 +65,7 @@ export default async function BookingDetailPage({
             variant="outline"
             size="sm"
             render={
-              <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noreferrer" />
+              <a href={whatsappHref(booking.customer.whatsapp)} target="_blank" rel="noreferrer" />
             }
           >
             <MessageCircle />

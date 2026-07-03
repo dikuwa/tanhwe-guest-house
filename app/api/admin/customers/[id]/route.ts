@@ -4,11 +4,16 @@ import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs, customers } from "@/lib/db/schema";
+import { normalizeNamibianPhone } from "@/lib/phone";
+
+const phone = z.string().trim().min(7).max(30).refine((value) => Boolean(normalizeNamibianPhone(value)), {
+  message: "Please enter a valid phone number",
+});
 
 const input = z.object({
   fullName: z.string().trim().min(2).max(100),
-  phone: z.string().trim().min(7).max(30),
-  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
+  phone,
+  whatsapp: z.union([phone, z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   address: z.string().trim().max(300).optional(),
   idOrPassport: z.string().trim().max(80).optional(),
@@ -23,11 +28,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Please check the customer details" }, { status: 400 });
   const { id } = await params;
   const waNumber = parsed.data.whatsapp || parsed.data.phone;
+  const canonicalPhone = normalizeNamibianPhone(parsed.data.phone) ?? parsed.data.phone;
+  const canonicalWhatsapp = normalizeNamibianPhone(waNumber) ?? waNumber;
   const [updated] = await getDb()
     .update(customers)
     .set({
       ...parsed.data,
-      whatsapp: waNumber,
+      phone: canonicalPhone,
+      whatsapp: canonicalWhatsapp,
       email: parsed.data.email || null,
       address: parsed.data.address || null,
       idOrPassport: parsed.data.idOrPassport || null,

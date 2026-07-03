@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
-import { GripVertical, Loader2, Star, Trash2, Upload, Save } from "lucide-react";
+import { GripVertical, Loader2, Star, Trash2, Upload } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type ConferenceImage = {
@@ -28,7 +27,10 @@ export function ConferenceImagesManager({ initialImages }: Props) {
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imagesRef = useRef(images);
-  imagesRef.current = images;
+
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
   // Upload
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

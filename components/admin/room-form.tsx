@@ -74,7 +74,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export function RoomForm({
   room,
-  roomTypes,
+  roomTypes: initialRoomTypes,
 }: {
   room?: RoomValue;
   roomTypes: RoomTypeOption[];
@@ -97,7 +97,13 @@ export function RoomForm({
   const [showNewTypeDialog, setShowNewTypeDialog] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [newTypeSlug, setNewTypeSlug] = useState("");
+  const [newTypePrice, setNewTypePrice] = useState(0);
+  const [newTypeGuests, setNewTypeGuests] = useState(2);
+  const [newTypeBedConfig, setNewTypeBedConfig] = useState("");
+  const [newTypeDescription, setNewTypeDescription] = useState("");
+  const [newTypeBreakfast, setNewTypeBreakfast] = useState(false);
   const [creatingType, setCreatingType] = useState(false);
+  const [roomTypes, setRoomTypes] = useState(initialRoomTypes);
 
   // New-room image state
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -141,20 +147,18 @@ export function RoomForm({
     }
   }
 
-  async function handleCreateType(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleCreateType() {
     const name = newTypeName.trim();
     if (!name) return toast.error("Room type name is required");
     const slug = newTypeSlug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const formData = new FormData(event.currentTarget);
     const payload = {
       name,
       slug,
-      description: String(formData.get("newTypeDescription") ?? "").trim(),
-      bedConfiguration: String(formData.get("newTypeBedConfig") ?? "").trim(),
-      pricePerNight: Number(formData.get("newTypePrice")),
-      maxGuests: Number(formData.get("newTypeGuests")),
-      breakfastIncluded: formData.get("newTypeBreakfast") === "on",
+      description: newTypeDescription.trim(),
+      bedConfiguration: newTypeBedConfig.trim(),
+      pricePerNight: newTypePrice,
+      maxGuests: newTypeGuests,
+      breakfastIncluded: newTypeBreakfast,
       sortOrder: roomTypes.length + 1,
       status: "active",
     };
@@ -168,16 +172,33 @@ export function RoomForm({
     setCreatingType(false);
     if (!response.ok) return toast.error(data.error ?? "Could not create room type");
     toast.success(`${name} created`);
+    setRoomTypes((current) => [
+      ...current,
+      {
+        id: data.id,
+        name,
+        slug,
+        description: payload.description || null,
+        bedConfiguration: payload.bedConfiguration || null,
+        pricePerNight: payload.pricePerNight,
+        maxGuests: payload.maxGuests,
+        breakfastIncluded: payload.breakfastIncluded,
+      },
+    ]);
     setShowNewTypeDialog(false);
     setNewTypeName("");
     setNewTypeSlug("");
+    setNewTypePrice(0);
+    setNewTypeGuests(2);
+    setNewTypeBedConfig("");
+    setNewTypeDescription("");
+    setNewTypeBreakfast(false);
     setRoomTypeId(data.id);
     setPricePerNight(payload.pricePerNight);
     setMaxGuests(payload.maxGuests);
     setBreakfastIncluded(payload.breakfastIncluded);
-    setDescription(payload.description);
+    setDescription((current) => (current.trim() ? current : payload.description));
     setFieldsCustomized(true);
-    router.refresh();
   }
 
   // ── Image handling for new rooms ──
@@ -396,7 +417,7 @@ export function RoomForm({
               {showNewTypeDialog ? (
                 <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/[0.02] p-4">
                   <p className="text-sm font-medium">Create new room type</p>
-                  <form onSubmit={handleCreateType} className="space-y-3">
+                  <div className="space-y-3">
                     <div>
                       <Label htmlFor="newTypeName">Type name</Label>
                       <Input
@@ -414,29 +435,65 @@ export function RoomForm({
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="newTypePrice">Default price (N$)</Label>
-                        <Input id="newTypePrice" name="newTypePrice" type="number" min="0" defaultValue="0" className="mt-1 h-11" required />
+                        <Input
+                          id="newTypePrice"
+                          type="number"
+                          min="0"
+                          value={newTypePrice}
+                          onChange={(e) => setNewTypePrice(Number(e.target.value))}
+                          className="mt-1 h-11"
+                          required
+                        />
                       </div>
                       <div>
                         <Label htmlFor="newTypeGuests">Max guests</Label>
-                        <Input id="newTypeGuests" name="newTypeGuests" type="number" min="1" defaultValue="2" className="mt-1 h-11" required />
+                        <Input
+                          id="newTypeGuests"
+                          type="number"
+                          min="1"
+                          value={newTypeGuests}
+                          onChange={(e) => setNewTypeGuests(Number(e.target.value))}
+                          className="mt-1 h-11"
+                          required
+                        />
                       </div>
                       <div>
                         <Label htmlFor="newTypeBedConfig">Bed configuration</Label>
-                        <Input id="newTypeBedConfig" name="newTypeBedConfig" className="mt-1 h-11" placeholder="e.g. 1 double bed" />
+                        <Input
+                          id="newTypeBedConfig"
+                          value={newTypeBedConfig}
+                          onChange={(e) => setNewTypeBedConfig(e.target.value)}
+                          className="mt-1 h-11"
+                          placeholder="e.g. 1 double bed"
+                        />
                       </div>
                       <div className="flex items-end pb-2">
                         <label className="flex cursor-pointer items-center gap-2 text-sm">
-                          <Checkbox name="newTypeBreakfast" />
+                          <Checkbox
+                            checked={newTypeBreakfast}
+                            onCheckedChange={(checked) => setNewTypeBreakfast(checked === true)}
+                          />
                           Breakfast included
                         </label>
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="newTypeDescription">Description</Label>
-                      <Textarea id="newTypeDescription" name="newTypeDescription" className="mt-1" rows={2} />
+                      <Textarea
+                        id="newTypeDescription"
+                        value={newTypeDescription}
+                        onChange={(e) => setNewTypeDescription(e.target.value)}
+                        className="mt-1"
+                        rows={2}
+                      />
                     </div>
                     <div className="flex gap-2">
-                      <Button type="submit" size="sm" disabled={creatingType}>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={creatingType}
+                        onClick={handleCreateType}
+                      >
                         {creatingType ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
                         Create &amp; select
                       </Button>
@@ -444,17 +501,13 @@ export function RoomForm({
                         Cancel
                       </Button>
                     </div>
-                  </form>
+                  </div>
                 </div>
               ) : (
                 <Select
                   value={roomTypeId}
                   onValueChange={(value) => {
-                    if (value === "__add_new__") {
-                      setShowNewTypeDialog(true);
-                    } else {
-                      if (value) handleRoomTypeChange(value);
-                    }
+                    if (value) handleRoomTypeChange(value);
                   }}
                 >
                   <SelectTrigger id="roomType" className="h-11 w-full">
@@ -478,12 +531,20 @@ export function RoomForm({
                         )}
                       </SelectItem>
                     ))}
-                    <SelectItem value="__add_new__" className="text-primary font-medium border-t border-neutral-200 mt-1 pt-2">
-                      <Plus className="mr-1 inline size-3.5" />
-                      Add new room type
-                    </SelectItem>
                   </SelectContent>
                 </Select>
+              )}
+              {!showNewTypeDialog && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 px-0 text-primary hover:bg-transparent hover:text-primary/80"
+                  onClick={() => setShowNewTypeDialog(true)}
+                >
+                  <Plus className="size-3.5" />
+                  Add new room type
+                </Button>
               )}
             </div>
           </div>
@@ -506,7 +567,10 @@ export function RoomForm({
               name="description"
               className="mt-2 min-h-28"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setFieldsCustomized(true);
+              }}
             />
           </div>
         </div>

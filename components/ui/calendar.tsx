@@ -33,7 +33,7 @@ export function Calendar({
           "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
         button_next:
           "inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-        month_grid: "w-full border-collapse",
+        month_grid: "w-full table-fixed border-collapse",
         weekdays: "",
         weekday: "h-7 w-9 text-xs font-medium text-muted-foreground text-center",
         week: "",

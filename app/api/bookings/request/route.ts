@@ -13,8 +13,12 @@ import { getDb } from "@/lib/db";
 import { bookingRooms, bookings, customers, rooms as roomTable, roomTypes } from "@/lib/db/schema";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
 import { notifyOps } from "@/lib/notifications";
+import { normalizeNamibianPhone } from "@/lib/phone";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const phone = z.string().trim().min(7).max(30).refine((value) => Boolean(normalizeNamibianPhone(value)), {
+  message: "Please enter a valid phone number",
+});
 
 const legacySchema = z.object({
   roomId: z.string().min(1).max(128),
@@ -23,8 +27,8 @@ const legacySchema = z.object({
   roomsCount: z.coerce.number().int().min(1).max(10),
   guestsCount: z.coerce.number().int().min(1).max(30),
   fullName: z.string().trim().min(2).max(100),
-  phone: z.string().trim().min(7).max(30),
-  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
+  phone,
+  whatsapp: z.union([phone, z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(1000).optional(),
   preferredContact: z.enum(["whatsapp", "phone", "email"]).default("whatsapp"),
@@ -42,8 +46,8 @@ const lineSchema = z.object({
 const multiRoomSchema = z.object({
   lines: z.array(lineSchema).min(1).max(10),
   fullName: z.string().trim().min(2).max(100),
-  phone: z.string().trim().min(7).max(30),
-  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
+  phone,
+  whatsapp: z.union([phone, z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(1000).optional(),
   preferredContact: z.enum(["whatsapp", "phone", "email"]).default("whatsapp"),
@@ -229,8 +233,14 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const canonicalPhone = normalizeNamibianPhone(body.data.phone) ?? body.data.phone;
   const waNumber = body.data.whatsapp || body.data.phone;
-  const matchedCustomer = await findConfidentCustomerMatch({ ...body.data, whatsapp: waNumber });
+  const canonicalWhatsapp = normalizeNamibianPhone(waNumber) ?? waNumber;
+  const matchedCustomer = await findConfidentCustomerMatch({
+    ...body.data,
+    phone: canonicalPhone,
+    whatsapp: canonicalWhatsapp,
+  });
   const customerId = matchedCustomer?.id ?? crypto.randomUUID();
   const bookingId = crypto.randomUUID();
   const bookingNumber = `TG-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
@@ -255,8 +265,8 @@ export async function POST(request: NextRequest) {
         await tx.insert(customers).values({
           id: customerId,
           fullName: body.data.fullName,
-          phone: body.data.phone,
-          whatsapp: waNumber,
+          phone: canonicalPhone,
+          whatsapp: canonicalWhatsapp,
           email: body.data.email || null,
         });
       await tx.insert(bookings).values({

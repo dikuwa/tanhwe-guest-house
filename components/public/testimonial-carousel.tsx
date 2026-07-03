@@ -50,8 +50,11 @@ export function TestimonialCarousel({ testimonials }: { testimonials: Testimonia
   useEffect(() => {
     if (!total) return;
     const target = total;
-    setSlideIndex(target);
-    setTransition(true);
+    const timer = window.setTimeout(() => {
+      setSlideIndex(target);
+      setTransition(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [total]);
 
   const goToSlide = useCallback(

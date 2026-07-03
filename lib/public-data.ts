@@ -163,10 +163,19 @@ export async function getPublicTestimonials() {
 export async function getPublicSettings() {
   const values = await getDb().select().from(settings);
   const map = new Map(values.map((item) => [item.key, item.value]));
+  const locationPinFallback =
+    "https://www.google.com/maps/place/18%C2%B002'20.6%22S+21%C2%B025'22.5%22E/@-18.0390503,21.4203293,991m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-18.0390503!4d21.4229042?hl=en&entry=ttu";
+  const configuredLocationPin = map.get("location_pin_url")?.trim();
   return {
     phone: map.get("phone") ?? "+264 81 380 8097",
     whatsapp: map.get("whatsapp") ?? "+264 81 380 8097",
     location: map.get("location") ?? "Mukwe, Namibia",
+    locationPinUrl: configuredLocationPin?.startsWith("https://")
+      ? configuredLocationPin
+      : locationPinFallback,
+    locationRequestMessage:
+      map.get("whatsapp_location_message") ??
+      "Hello Tanhwe Guest House. Please send me your location pin and directions.",
     checkInTime: map.get("check_in_time") ?? "14:00",
     checkOutTime: map.get("check_out_time") ?? "10:00",
     currency: map.get("currency") ?? "N$",

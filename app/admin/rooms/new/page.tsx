@@ -9,7 +9,12 @@ export default async function NewRoomPage() {
   const roomTypes = await getActiveRoomTypes();
   return (
     <div className="mx-auto max-w-4xl">
-      <Button variant="ghost" size="sm" render={<Link href="/admin/rooms" />}>
+      <Button
+        variant="ghost"
+        size="sm"
+        nativeButton={false}
+        render={<Link href="/admin/rooms" />}
+      >
         <ArrowLeft className="size-4" />
         All rooms
       </Button>

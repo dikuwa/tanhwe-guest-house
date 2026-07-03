@@ -29,7 +29,26 @@ type Options = {
   staffOptions: OptionBase[];
 };
 
-export function FollowUpForm({ options, onCreated }: { options: Options; onCreated?: (item: any) => void }) {
+type CreatedFollowUp = {
+  id: string;
+  title: string;
+  status: string;
+  priority: string;
+  dueDate: Date;
+  customerName?: string | null;
+  assigneeName?: string | null;
+  customerPhone?: string | null;
+  customerWhatsapp?: string | null;
+  notes?: string | null;
+};
+
+export function FollowUpForm({
+  options,
+  onCreated,
+}: {
+  options: Options;
+  onCreated?: (item: CreatedFollowUp) => void;
+}) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [bookingId, setBookingId] = useState("");

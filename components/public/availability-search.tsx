@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { localDateToDateOnly } from "@/lib/date-only";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { BedDouble, CalendarCheck, CalendarDays, Loader2, Search, Users } from "lucide-react";
@@ -56,8 +57,8 @@ export function AvailabilityForm({ rooms, context = "home" }: AvailabilityFormPr
       return;
     }
     setSubmitting(true);
-    const ci = checkIn.toISOString().slice(0, 10);
-    const co = checkOut.toISOString().slice(0, 10);
+    const ci = localDateToDateOnly(checkIn);
+    const co = localDateToDateOnly(checkOut);
     const params = new URLSearchParams({ checkIn: ci, checkOut: co, guests });
     router.push(`/rooms/${selectedRoom.slug}?${params}`);
   }

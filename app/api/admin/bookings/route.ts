@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomTypeAvailability, assignRoomUnitsForBooking } from "@/lib/availability";
@@ -7,8 +6,13 @@ import { getDb } from "@/lib/db";
 import { activityLogs, bookingRooms, bookings, customers, roomTypes } from "@/lib/db/schema";
 import { notifyOps } from "@/lib/notifications";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
+import { parseStayDate } from "@/lib/booking-calculations";
+import { normalizeNamibianPhone } from "@/lib/phone";
 
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform((v) => new Date(`${v}T00:00:00.000Z`));
+const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform((v) => parseStayDate(v));
+const phone = z.string().trim().min(7).max(30).refine((value) => Boolean(normalizeNamibianPhone(value)), {
+  message: "Please enter a valid phone number",
+});
 
 const lineSchema = z.object({
   roomTypeId: z.string().uuid(),
@@ -21,8 +25,8 @@ const lineSchema = z.object({
 const input = z.object({
   lines: z.array(lineSchema).min(1).max(10),
   fullName: z.string().trim().min(2).max(100),
-  phone: z.string().trim().min(7).max(30),
-  whatsapp: z.union([z.string().trim().min(7).max(30), z.literal("")]).optional(),
+  phone,
+  whatsapp: z.union([phone, z.literal("")]).optional(),
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(2000).optional(),
   status: z.enum(["pending", "confirmed"]).default("confirmed"),
@@ -93,9 +97,14 @@ export async function POST(request: NextRequest) {
   }
 
   // Find or create customer
+  const canonicalPhone = normalizeNamibianPhone(parsed.data.phone) ?? parsed.data.phone;
+  const canonicalWhatsapp =
+    normalizeNamibianPhone(parsed.data.whatsapp || parsed.data.phone) ??
+    (parsed.data.whatsapp || parsed.data.phone);
+
   const customer = await findConfidentCustomerMatch({
-    phone: parsed.data.phone,
-    whatsapp: parsed.data.whatsapp || parsed.data.phone,
+    phone: canonicalPhone,
+    whatsapp: canonicalWhatsapp,
     email: parsed.data.email || null,
   });
 
@@ -131,8 +140,8 @@ export async function POST(request: NextRequest) {
         await tx.insert(customers).values({
           id: customerId,
           fullName: parsed.data.fullName,
-          phone: parsed.data.phone,
-          whatsapp: parsed.data.whatsapp || parsed.data.phone,
+          phone: canonicalPhone,
+          whatsapp: canonicalWhatsapp,
           email: parsed.data.email || null,
         });
       }

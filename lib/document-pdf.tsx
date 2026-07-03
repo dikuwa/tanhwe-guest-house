@@ -10,6 +10,7 @@ import {
 } from "@react-pdf/renderer";
 import path from "path";
 import fs from "fs";
+import { dateToDateOnly, formatDateOnly } from "./date-only";
 
 const alluraFontPath = path.join(process.cwd(), "public", "fonts", "Allura-Regular.ttf");
 if (fs.existsSync(alluraFontPath)) {
@@ -317,16 +318,16 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
               <>
                 <Text style={{ marginTop: 8 }}>Multiple room stays</Text>
                 <Text style={styles.muted}>
-                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")} &middot;{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))} &middot;{" "}
                   {snapshot.bookingNumber}
                 </Text>
               </>
             ) : (
               <>
                 <Text style={{ marginTop: 8 }}>
-                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </Text>
                 <Text style={styles.muted}>
                   {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
@@ -348,10 +349,9 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             <Text style={[styles.cell, { width: "18%" }]}>Amount</Text>
           </View>
           {snapshot.rooms.map((room, index) => {
-            const dates =
-              room.checkIn && room.checkOut
-                ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
-                : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
+            const roomCheckIn = dateToDateOnly(room.checkIn ?? snapshot.stay.checkIn);
+            const roomCheckOut = dateToDateOnly(room.checkOut ?? snapshot.stay.checkOut);
+            const dates = `${formatDateOnly(roomCheckIn, { day: "numeric", month: "short" })} - ${formatDateOnly(roomCheckOut, { day: "numeric", month: "short" })}`;
             return (
               <View key={`${room.name}-${index}`} style={styles.tableRow}>
                 <Text style={[styles.grow, { width: "28%" }]}>{room.name}</Text>

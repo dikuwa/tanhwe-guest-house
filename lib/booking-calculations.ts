@@ -1,5 +1,9 @@
+import { dateOnlyToLocalDate } from "./date-only";
+
 export function parseStayDate(value: string): Date {
-  return new Date(`${value}T00:00:00.000Z`);
+  const date = dateOnlyToLocalDate(value);
+  if (!date) throw new Error("Invalid stay date");
+  return date;
 }
 
 export function calculateNights(checkIn: Date, checkOut: Date): number {

@@ -8,13 +8,12 @@ import { Button } from "@/components/ui/button";
 import {
   getDocument,
   getDocumentSettings,
-  getOwnerProfile,
   generateShareCode,
   getPublicShareCode,
 } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
-import { createDocumentShareToken } from "@/lib/document-share";
-import { getDb } from "@/lib/db";
+import { dateToDateOnly, formatDateOnly } from "@/lib/date-only";
+import { whatsappHref } from "@/lib/phone";
 import { buildLocation } from "@/lib/utils";
 
 type Snapshot = {
@@ -29,6 +28,7 @@ type Snapshot = {
     subtotal: number;
     checkIn?: string;
     checkOut?: string;
+    guestsCount?: number | null;
   }[];
   subtotal: number;
   extras: number;
@@ -44,10 +44,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
   const document = await getDocument((await params).id);
   if (!document) notFound();
 
-  const [settings, owner] = await Promise.all([
-    getDocumentSettings(),
-    getOwnerProfile(),
-  ]);
+  const settings = await getDocumentSettings();
   const snapshot = JSON.parse(document.snapshot) as Snapshot;
   const hasMixedRoomDates = snapshot.rooms.some((room) => {
     const roomCheckIn = room.checkIn ?? snapshot.stay.checkIn;
@@ -61,13 +58,8 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
   }
   const cleanLink = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/d/${existingShare.publicCode}`;
 
-  const shareToken = createDocumentShareToken(document.id);
-  const oldDownloadUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/api/admin/documents/${document.id}/pdf?token=${encodeURIComponent(shareToken)}`;
-
   const typeLabel = document.type.charAt(0).toUpperCase() + document.type.slice(1);
-  const shareText = encodeURIComponent(
-    `Your ${document.type} from ${settings.businessName} is ready.\n\n${typeLabel}: ${document.number}\nTotal: ${settings.currency}${document.total.toFixed(2)}\n\nView or download:\n${cleanLink}`
-  );
+  const shareMessage = `Your ${document.type} from ${settings.businessName} is ready.\n\n${typeLabel}: ${document.number}\nTotal: ${settings.currency}${document.total.toFixed(2)}\n\nView or download:\n${cleanLink}`;
 
   return (
     <div className="space-y-6">
@@ -85,7 +77,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             variant="outline"
             render={
               <a
-                href={`https://wa.me/${snapshot.customer.phone.replace(/\D/g, "")}?text=${shareText}`}
+                href={whatsappHref(snapshot.customer.phone, shareMessage)}
                 target="_blank"
                 rel="noreferrer"
               />
@@ -138,16 +130,16 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
               <>
                 <p className="mt-2">Multiple room stays</p>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")} &middot;{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))} &middot;{" "}
                   {snapshot.bookingNumber}
                 </p>
               </>
             ) : (
               <>
                 <p className="mt-2">
-                  {new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA")} to{" "}
-                  {new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA")}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
@@ -173,9 +165,9 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             </thead>
             <tbody>
               {snapshot.rooms.map((room, index) => {
-                const dates = room.checkIn && room.checkOut
-                  ? `${new Date(room.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(room.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`
-                  : `${new Date(snapshot.stay.checkIn).toLocaleDateString("en-NA", { day: "numeric", month: "short" })} – ${new Date(snapshot.stay.checkOut).toLocaleDateString("en-NA", { day: "numeric", month: "short" })}`;
+                const roomCheckIn = dateToDateOnly(room.checkIn ?? snapshot.stay.checkIn);
+                const roomCheckOut = dateToDateOnly(room.checkOut ?? snapshot.stay.checkOut);
+                const dates = `${formatDateOnly(roomCheckIn, { day: "numeric", month: "short" })} - ${formatDateOnly(roomCheckOut, { day: "numeric", month: "short" })}`;
                 return (
                   <tr key={`${room.name}-${index}`} className="border-b">
                     <td className="px-3 py-4 font-medium">{room.name}</td>

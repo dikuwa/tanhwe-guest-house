@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ExternalLink, MapPin, MessageCircle, Phone } from "lucide-react";
 import { getPublicSettings } from "@/lib/public-data";
+import { whatsappHref } from "@/lib/phone";
 import { TanhweLogo } from "@/components/tanhwe-logo";
 
 export async function SiteFooter() {
   const settings = await getPublicSettings();
   const phone = settings.phone.replace(/[^+\d]/g, "");
-  const whatsapp = settings.whatsapp.replace(/\D/g, "");
 
   return (
     <footer className="bg-secondary-700 text-secondary-foreground">
@@ -32,7 +32,7 @@ export async function SiteFooter() {
           </a>
           <a
             className="flex items-center gap-2 text-secondary-foreground/70 transition-colors hover:text-white"
-            href={`https://wa.me/${whatsapp}`}
+            href={whatsappHref(settings.whatsapp)}
           >
             <MessageCircle className="size-4" />
             WhatsApp

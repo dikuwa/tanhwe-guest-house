@@ -27,8 +27,11 @@ export function Lightbox({ images, currentIndex, onClose, onNavigate, roomName }
   const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setImageLoading(true);
-    setImageError(false);
+    const timer = window.setTimeout(() => {
+      setImageLoading(true);
+      setImageError(false);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [currentIndex]);
 
   useEffect(() => {

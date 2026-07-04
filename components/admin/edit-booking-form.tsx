@@ -60,6 +60,7 @@ type BookingData = {
   notes: string | null;
   customer: { id: string; fullName: string; phone: string; whatsapp: string; email: string | null };
   rooms: BookingRoom[];
+  folioLines?: FolioLine[];
 };
 
 type FolioLine = {
@@ -131,40 +132,29 @@ export function EditBookingForm({
     email: booking.customer.email,
   });
   const [searching, setSearching] = useState(false);
-  const [extras, setExtras] = useState(booking.extrasTotal);
-  const [discount, setDiscount] = useState(booking.discount);
+  // Legacy scalar fallback values (used only when no folio lines exist)
+  const [extras] = useState(booking.extrasTotal);
+  const [discount] = useState(booking.discount);
 
-  const [folioLines, setFolioLines] = useState<FolioLine[]>(() => {
-    const lines: FolioLine[] = [];
+  const hasSavedFolioLines = booking.folioLines && booking.folioLines.length > 0;
 
-    if (booking.extrasTotal > 0) {
-      lines.push({
-        id: crypto.randomUUID(),
-        kind: "service",
-        name: "Extras",
-        qty: 1,
-        unitPrice: booking.extrasTotal,
-        sortOrder: 0,
-        description: "",
-      });
-    }
+  const [folioLines, setFolioLines] = useState<FolioLine[]>(
+    () =>
+      booking.folioLines && booking.folioLines.length > 0
+        ? booking.folioLines.map((l) => ({
+            id: l.id,
+            kind: l.kind as FolioLine["kind"],
+            name: l.name,
+            description: l.description ?? "",
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+            sortOrder: l.sortOrder,
+          }))
+        : []
+  );
 
-    if (booking.discount > 0) {
-      lines.push({
-        id: crypto.randomUUID(),
-        kind: "discount",
-        name: "Discount",
-        qty: 1,
-        unitPrice: booking.discount,
-        sortOrder: booking.extrasTotal > 0 ? 1 : 0,
-        description: "",
-      });
-    }
-
-    return lines;
-  });
-
-  const [useFolioLines, setUseFolioLines] = useState<boolean>(false);
+  // Derive useFolioLines from whether folio lines exist (auto-reactive when user adds/removes lines)
+  const useFolioLines = hasSavedFolioLines || folioLines.length > 0;
   const [notes, setNotes] = useState(booking.notes ?? "");
 
   const [lines, setLines] = useState<EditRoomLine[]>(() =>
@@ -236,7 +226,7 @@ export function EditBookingForm({
     const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
     return sum + rate * line.quantity * n;
   }, 0);
-  const derivedFolio = folioLines.length
+  const derivedFolio = folioLines.length > 0
     ? folioLines.reduce(
         (acc, l) => {
           const lineTotal = Math.max(0, l.qty) * Math.max(0, l.unitPrice);
@@ -620,233 +610,143 @@ export function EditBookingForm({
         </button>
       </div>
 
-      {/* ── Extras & Discount (legacy) + Folio lines ── */}
-      <div className="mb-6 space-y-4">
-        <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1.5">
-              <p className="text-sm font-medium text-neutral-800">Folio line items</p>
-              <p className="text-xs text-muted-foreground">
-                Optionally replace scalar Extras/Discount with detailed line items.
-              </p>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
-              <Checkbox
-                checked={useFolioLines}
-                onCheckedChange={(v) => setUseFolioLines(Boolean(v))}
-              />
-              Use folio lines
-            </label>
-          </div>
-
-          {/* Keep scalar inputs visible for quick entry */}
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="extras">Extras (N$)</Label>
-              <Input
-                id="extras"
-                type="number"
-                min="0"
-                value={extras}
-                onChange={(e) => setExtras(Math.max(0, Number(e.target.value)))}
-                className="h-11"
-                disabled={useFolioLines}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="discount">Discount (N$)</Label>
-              <Input
-                id="discount"
-                type="number"
-                min="0"
-                value={discount}
-                onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
-                className="h-11"
-                disabled={useFolioLines}
-              />
-            </div>
+      {/* ── Additional items (folio lines) ── */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-neutral-800">Additional items</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setFolioLines((prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    kind: "service",
+                    name: "",
+                    description: "",
+                    qty: 1,
+                    unitPrice: 0,
+                    sortOrder: prev.length,
+                  },
+                ])
+              }
+              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <Plus className="size-3" />
+              Add service, extra or discount
+            </button>
           </div>
         </div>
 
-        {useFolioLines && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setFolioLines((prev) => [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      kind: "service",
-                      name: "Service",
-                      description: "",
-                      qty: 1,
-                      unitPrice: 0,
-                      sortOrder: prev.length,
-                    },
-                  ])
-                }
-              >
-                <Plus className="size-4" />
-                Add service/custom
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setFolioLines((prev) => [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      kind: "discount",
-                      name: "Discount",
-                      description: "",
-                      qty: 1,
-                      unitPrice: 0,
-                      sortOrder: prev.length,
-                    },
-                  ])
-                }
-              >
-                <Plus className="size-4" />
-                Add discount
-              </Button>
-            </div>
+        <div className="space-y-3">
+          {folioLines.map((line, idx) => (
+            <div key={line.id} className="rounded-lg border border-neutral-200 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                  Line {idx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFolioLines((prev) =>
+                      prev
+                        .filter((l) => l.id !== line.id)
+                        .map((l, i) => ({ ...l, sortOrder: i }))
+                    );
+                  }}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                >
+                  <Trash2 className="size-3" />
+                  Remove
+                </button>
+              </div>
 
-            <div className="space-y-3">
-              {folioLines.length === 0 && (
-                <p className="text-sm text-muted-foreground">No folio lines yet.</p>
-              )}
-
-              {folioLines.map((line, idx) => (
-                <div key={line.id} className="rounded-lg border border-neutral-200 p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
-                      Line {idx + 1}
-                    </span>
-                    {folioLines.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFolioLines((prev) =>
-                            prev
-                              .filter((l) => l.id !== line.id)
-                              .map((l, i) => ({ ...l, sortOrder: i }))
-                          );
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
-                      >
-                        <Trash2 className="size-3" />
-                        Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="space-y-1.5">
-                      <Label>Kind</Label>
-                      <Select
-                        value={line.kind}
-                        onValueChange={(v) => {
-                          setFolioLines((prev) =>
-                            prev.map((l) =>
-                              l.id === line.id ? { ...l, kind: v as FolioLine["kind"] } : l
-                            )
-                          );
-                        }}
-                      >
-                        <SelectTrigger className="w-full h-11">
-                          <SelectValue placeholder="Select kind" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="service">service</SelectItem>
-                          <SelectItem value="custom">custom</SelectItem>
-                          <SelectItem value="discount">discount</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Label</Label>
-                      <Input
-                        value={line.name}
-                        onChange={(e) =>
-                          setFolioLines((prev) =>
-                            prev.map((l) => (l.id === line.id ? { ...l, name: e.target.value } : l))
-                          )
-                        }
-                        className="h-11"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Qty</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={line.qty}
-                        onChange={(e) =>
-                          setFolioLines((prev) =>
-                            prev.map((l) =>
-                              l.id === line.id
-                                ? { ...l, qty: Math.max(1, Number(e.target.value)) }
-                                : l
-                            )
-                          )
-                        }
-                        className="h-11"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label>Unit price (N$)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={line.unitPrice}
-                        onChange={(e) =>
-                          setFolioLines((prev) =>
-                            prev.map((l) =>
-                              l.id === line.id
-                                ? { ...l, unitPrice: Math.max(0, Number(e.target.value)) }
-                                : l
-                            )
-                          )
-                        }
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <Label>Description (optional)</Label>
-                    <Input
-                      value={line.description ?? ""}
-                      onChange={(e) =>
-                        setFolioLines((prev) =>
-                          prev.map((l) =>
-                            l.id === line.id ? { ...l, description: e.target.value } : l
-                          )
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="space-y-1.5">
+                  <Label>Description</Label>
+                  <Input
+                    value={line.name}
+                    onChange={(e) =>
+                      setFolioLines((prev) =>
+                        prev.map((l) => (l.id === line.id ? { ...l, name: e.target.value } : l))
+                      )
+                    }
+                    placeholder="e.g. Breakfast"
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Type</Label>
+                  <Select
+                    value={line.kind}
+                    onValueChange={(v) => {
+                      setFolioLines((prev) =>
+                        prev.map((l) =>
+                          l.id === line.id ? { ...l, kind: v as FolioLine["kind"] } : l
                         )
-                      }
-                      className="mt-1 h-11"
-                    />
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
-                    <span>{line.kind === "discount" ? "Discount" : "Item"} total</span>
-                    <span className="font-semibold tabular-nums text-neutral-800">
-                      N${(line.qty * line.unitPrice).toLocaleString()}
-                    </span>
+                      );
+                    }}
+                  >
+                    <SelectTrigger className="w-full h-11">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="service">Service</SelectItem>
+                      <SelectItem value="custom">Extra charge</SelectItem>
+                      <SelectItem value="discount">Discount</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Qty</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={line.qty}
+                    onChange={(e) =>
+                      setFolioLines((prev) =>
+                        prev.map((l) =>
+                          l.id === line.id
+                            ? { ...l, qty: Math.max(1, Number(e.target.value)) }
+                            : l
+                        )
+                      )
+                    }
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Unit price (N$)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={line.unitPrice}
+                    onChange={(e) =>
+                      setFolioLines((prev) =>
+                        prev.map((l) =>
+                          l.id === line.id
+                            ? { ...l, unitPrice: Math.max(0, Number(e.target.value)) }
+                            : l
+                        )
+                      )
+                    }
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="invisible">Total</Label>
+                  <div className="flex h-11 items-center rounded-lg border border-transparent px-3 text-sm font-semibold tabular-nums">
+                    {line.kind === "discount" ? "-" : "+"}N${(line.qty * line.unitPrice).toLocaleString()}
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+          {folioLines.length === 0 && (
+            <p className="text-sm text-muted-foreground">No additional items yet. Click the button above to add services, extras, or discounts.</p>
+          )}
+        </div>
       </div>
 
       {/* ── Total preview ── */}
@@ -860,7 +760,7 @@ export function EditBookingForm({
           <>
             {derivedFolio.extras > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-neutral-600">Extras</span>
+                <span className="text-neutral-600">Additional charges</span>
                 <span className="tabular-nums text-neutral-800">
                   + N${derivedFolio.extras.toLocaleString()}
                 </span>
@@ -868,7 +768,7 @@ export function EditBookingForm({
             )}
             {derivedFolio.discount > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-neutral-600">Discount</span>
+                <span className="text-neutral-600">Discounts</span>
                 <span className="tabular-nums text-neutral-800">
                   - N${derivedFolio.discount.toLocaleString()}
                 </span>
@@ -879,13 +779,13 @@ export function EditBookingForm({
           <>
             {extras > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-neutral-600">Extras</span>
+                <span className="text-neutral-600">Additional charges</span>
                 <span className="tabular-nums text-neutral-800">+ N${extras.toLocaleString()}</span>
               </div>
             )}
             {discount > 0 && (
               <div className="flex items-center justify-between">
-                <span className="text-neutral-600">Discount</span>
+                <span className="text-neutral-600">Discounts</span>
                 <span className="tabular-nums text-neutral-800">
                   - N${discount.toLocaleString()}
                 </span>
@@ -895,13 +795,13 @@ export function EditBookingForm({
         )}
 
         <div className="flex items-center justify-between border-t border-neutral-200 pt-2 font-bold text-neutral-900">
-          <span>Grand total</span>
+          <span>Booking total</span>
           <span className="tabular-nums">N${grandTotal.toLocaleString()}</span>
         </div>
-        {booking.amountPaid > 0 && (
+        {(booking.amountPaid > 0 || grandTotal > 0) && (
           <>
             <div className="flex items-center justify-between text-muted-foreground">
-              <span>Already paid</span>
+              <span>Amount paid</span>
               <span className="tabular-nums">N${booking.amountPaid.toLocaleString()}</span>
             </div>
             <div className="flex items-center justify-between font-semibold text-secondary">

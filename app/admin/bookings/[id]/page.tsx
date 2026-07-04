@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookingStatus } from "@/components/admin/booking-status";
 import { getDb } from "@/lib/db";
-import { bookingRoomUnits, bookings, roomUnits } from "@/lib/db/schema";
+import { bookingFolioLines, bookingRoomUnits, bookings, payments, roomUnits } from "@/lib/db/schema";
 import { requireRole } from "@/lib/auth-middleware";
 import { whatsappHref } from "@/lib/phone";
+import { calculateBookingFinancialSummary } from "@/lib/folio";
 
 const money = new Intl.NumberFormat("en-NA", {
   style: "currency",
@@ -25,7 +26,7 @@ export default async function BookingDetailPage({
   const { id } = await params;
   const booking = await getDb().query.bookings.findFirst({
     where: eq(bookings.id, id),
-    with: { customer: true, rooms: true },
+    with: { customer: true, rooms: true, folioLines: true },
   });
   if (!booking) notFound();
 
@@ -47,6 +48,36 @@ export default async function BookingDetailPage({
     existing.push(row);
     unitMap.set(row.bookingRoomId, existing);
   }
+  // Fetch folio lines breakdown
+  const folioLines = await getDb()
+    .select()
+    .from(bookingFolioLines)
+    .where(eq(bookingFolioLines.bookingId, id))
+    .orderBy(bookingFolioLines.sortOrder);
+
+  // Fetch payment history
+  const paymentRecords = await getDb()
+    .select()
+    .from(payments)
+    .where(eq(payments.bookingId, id))
+    .orderBy(payments.createdAt);
+
+  // Use the shared helper for accurate totals
+  const financials = calculateBookingFinancialSummary({
+    roomSubtotal: booking.subtotal,
+    folioLines:
+      folioLines.length > 0
+        ? folioLines.map((l) => ({
+            kind: l.kind,
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+          }))
+        : null,
+    legacyExtrasTotal: booking.extrasTotal,
+    legacyDiscount: booking.discount,
+    amountPaid: booking.amountPaid,
+  });
+
   const phone = booking.customer.phone.replace(/[^+\d]/g, "");
 
   return (
@@ -266,6 +297,115 @@ export default async function BookingDetailPage({
           )}
         </section>
       </div>
+
+      {/* Additional Items (folio lines) */}
+      {folioLines.length > 0 && (
+        <section className="rounded-xl border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Additional Items
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-y bg-muted/40 text-left">
+                <tr>
+                  <th className="px-3 py-2">Description</th>
+                  <th className="px-3 py-2">Type</th>
+                  <th className="px-3 py-2 text-right">Qty</th>
+                  <th className="px-3 py-2 text-right">Unit price</th>
+                  <th className="px-3 py-2 text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {folioLines
+                  .slice()
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map((line) => (
+                    <tr key={line.id} className="border-b">
+                      <td className="px-3 py-3 font-medium">{line.name}</td>
+                      <td className="px-3 py-3 capitalize">
+                        {line.kind === "custom" ? "Extra charge" : line.kind}
+                      </td>
+                      <td className="px-3 py-3 text-right">{line.qty}</td>
+                      <td className="px-3 py-3 text-right">{money.format(line.unitPrice)}</td>
+                      <td className="px-3 py-3 text-right">
+                        {line.kind === "discount"
+                          ? `- ${money.format(line.lineTotal)}`
+                          : money.format(line.lineTotal)}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* Payment History */}
+      {paymentRecords.length > 0 && (
+        <section className="rounded-xl border bg-card p-5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Payment History
+          </p>
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-y bg-muted/40 text-left">
+                <tr>
+                  <th className="px-3 py-2">Date</th>
+                  <th className="px-3 py-2">Method</th>
+                  <th className="px-3 py-2">Reference</th>
+                  <th className="px-3 py-2 text-right">Amount</th>
+                  <th className="px-3 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paymentRecords.map((payment) => (
+                  <tr key={payment.id} className="border-b">
+                    <td className="px-3 py-3">
+                      {payment.paidAt
+                        ? payment.paidAt.toLocaleDateString("en-NA", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : payment.createdAt.toLocaleDateString("en-NA", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                    </td>
+                    <td className="px-3 py-3 capitalize">{payment.paymentMethod.replace("-", " ")}</td>
+                    <td className="px-3 py-3 text-muted-foreground">
+                      {payment.transactionId || "—"}
+                    </td>
+                    <td className="px-3 py-3 text-right tabular-nums">
+                      {money.format(payment.amount)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <Badge variant="outline" className="capitalize">
+                        {payment.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 space-y-1 border-t pt-3 text-sm">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Total paid</span>
+              <span className="tabular-nums font-medium text-neutral-800">
+                {money.format(financials.amountPaid)}
+              </span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Remaining balance</span>
+              <span className="tabular-nums font-semibold text-secondary">
+                {money.format(financials.balanceDue)}
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Notes */}
       {booking.notes && (

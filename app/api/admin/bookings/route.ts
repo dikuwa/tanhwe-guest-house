@@ -4,11 +4,12 @@ import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { calculateNights, checkRoomTypeAvailability, assignRoomUnitsForBooking } from "@/lib/availability";
 import { getDb } from "@/lib/db";
-import { activityLogs, bookingRooms, bookings, customers, roomTypes } from "@/lib/db/schema";
+import { activityLogs, bookingFolioLines, bookingRooms, bookings, customers, roomTypes } from "@/lib/db/schema";
 import { notifyOps } from "@/lib/notifications";
 import { findConfidentCustomerMatch } from "@/lib/customer-data";
 import { calculateBookingTotals, parseStayDate } from "@/lib/booking-calculations";
 import { normalizeNamibianPhone } from "@/lib/phone";
+import { calculateBookingFinancialSummary } from "@/lib/folio";
 
 const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform((v) => parseStayDate(v));
 const phone = z.string().trim().min(7).max(30).refine((value) => Boolean(normalizeNamibianPhone(value)), {
@@ -24,6 +25,16 @@ const lineSchema = z.object({
   pricePerNight: z.coerce.number().int().min(0).optional(),
 });
 
+const folioLineSchema = z.object({
+  id: z.string().uuid().optional(),
+  kind: z.enum(["service", "custom", "discount"]),
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(1000).optional(),
+  qty: z.coerce.number().int().min(1).max(100),
+  unitPrice: z.coerce.number().int().min(0).max(100000000),
+  sortOrder: z.coerce.number().int().min(0).max(1000).optional(),
+});
+
 const input = z.object({
   lines: z.array(lineSchema).min(1).max(10),
   customerId: z.string().uuid().optional(),
@@ -33,6 +44,7 @@ const input = z.object({
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(2000).optional(),
   status: z.enum(["pending", "confirmed"]).default("confirmed"),
+  folioLines: z.array(folioLineSchema).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -137,12 +149,17 @@ export async function POST(request: NextRequest) {
   );
   const totalNights = calculateNights(checkIn, checkOut);
   const totalGuests = lineResults.reduce((s, l) => s + l.guestsCount, 0);
-  const totals = calculateBookingTotals({
+  const roomLineTotals = calculateBookingTotals({
     lines: lineResults.map((line) => ({
       pricePerNight: line.pricePerNight,
       roomsCount: line.quantity,
       nights: line.nights,
     })),
+  });
+
+  const financial = calculateBookingFinancialSummary({
+    roomSubtotal: roomLineTotals.roomSubtotal,
+    folioLines: parsed.data.folioLines ?? null,
   });
 
   if (totalNights < 1) {
@@ -197,9 +214,11 @@ export async function POST(request: NextRequest) {
         guestsCount: totalGuests,
         status: parsed.data.status,
         source: "admin",
-        subtotal: totals.roomSubtotal,
-        total: totals.total,
-        balanceDue: totals.balanceDue,
+        subtotal: financial.roomSubtotal,
+        extrasTotal: financial.extrasTotal,
+        discount: financial.discountTotal,
+        total: financial.bookingTotal,
+        balanceDue: financial.balanceDue,
         notes: parsed.data.notes || null,
         createdBy: session.user.id,
       });
@@ -232,6 +251,22 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Persist folio lines if provided
+      if (parsed.data.folioLines && parsed.data.folioLines.length > 0) {
+        const nextLines = parsed.data.folioLines.map((l, index) => ({
+          id: crypto.randomUUID(),
+          bookingId,
+          kind: l.kind,
+          name: l.name,
+          description: l.description ?? null,
+          qty: l.qty,
+          unitPrice: l.unitPrice,
+          lineTotal: l.unitPrice * l.qty,
+          sortOrder: l.sortOrder ?? index,
+        }));
+        await tx.insert(bookingFolioLines).values(nextLines);
+      }
+
       await tx.insert(activityLogs).values({
         id: crypto.randomUUID(),
         userId: session.user.id,
@@ -249,7 +284,7 @@ export async function POST(request: NextRequest) {
   await notifyOps({
     type: "booking_created",
     title: `New booking: ${bookingNumber}`,
-    description: `${parsed.data.fullName} · ${lineResults.length} room line(s) · N$${totals.total}`,
+    description: `${parsed.data.fullName} · ${lineResults.length} room line(s) · N$${financial.bookingTotal}`,
     link: `/admin/bookings/${bookingId}`,
   });
 

@@ -17,7 +17,7 @@ export default async function EditBookingPage({
   const { id } = await params;
   const booking = await getDb().query.bookings.findFirst({
     where: eq(bookings.id, id),
-    with: { customer: true, rooms: true },
+    with: { customer: true, rooms: true, folioLines: true },
   });
   if (!booking) notFound();
   const roomTypeOptions = await getDb()
@@ -45,7 +45,21 @@ export default async function EditBookingPage({
       <h1 className="font-heading text-2xl font-bold text-neutral-800">Edit booking</h1>
       <p className="mt-1 text-sm text-neutral-500">{booking.bookingNumber}</p>
       <div className="mt-6">
-        <EditBookingForm booking={booking} roomTypes={roomTypeOptions} />
+        <EditBookingForm
+          booking={{
+            ...booking,
+            folioLines: (booking.folioLines ?? []).map((l) => ({
+              id: l.id,
+              kind: l.kind as "service" | "custom" | "discount",
+              name: l.name,
+              description: l.description ?? undefined,
+              qty: l.qty,
+              unitPrice: l.unitPrice,
+              sortOrder: l.sortOrder,
+            })),
+          }}
+          roomTypes={roomTypeOptions}
+        />
       </div>
     </div>
   );

@@ -43,6 +43,16 @@ type RoomLine = {
   pricePerNight: number;
 };
 
+type FolioLine = {
+  id: string;
+  kind: "service" | "custom" | "discount";
+  name: string;
+  description: string;
+  qty: number;
+  unitPrice: number;
+  sortOrder: number;
+};
+
 type FieldErrors = {
   fullName?: string;
   phone?: string;
@@ -77,6 +87,7 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
   const [checkOut, setCheckOut] = useState("");
   const [status, setStatus] = useState("confirmed");
   const [lines, setLines] = useState<RoomLine[]>([createLine()]);
+  const [folioLines, setFolioLines] = useState<FolioLine[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const [customerSearch, setCustomerSearch] = useState("");
@@ -84,6 +95,18 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null } | null>(null);
   const [searching, setSearching] = useState(false);
   const [fullName, setFullName] = useState("");
+
+  const derivedFolio = folioLines.length > 0
+    ? folioLines.reduce(
+        (acc, l) => {
+          const lineTotal = Math.max(0, l.qty) * Math.max(0, l.unitPrice);
+          if (l.kind === "discount") acc.discount += lineTotal;
+          else acc.extras += lineTotal;
+          return acc;
+        },
+        { extras: 0, discount: 0 }
+      )
+    : { extras: 0, discount: 0 };
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [email, setEmail] = useState("");
@@ -213,6 +236,16 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
       email: email.trim() || undefined,
       notes: String(formData.get("notes") ?? "").trim() || undefined,
       status,
+      folioLines: folioLines.length > 0
+        ? folioLines.map((l) => ({
+            kind: l.kind,
+            name: l.name,
+            description: l.description,
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+            sortOrder: l.sortOrder,
+          }))
+        : undefined,
     };
 
     // Validate first
@@ -437,6 +470,147 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
         </button>
       </div>
 
+      {/* ── Additional items (folio lines) ── */}
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-neutral-800">Additional items</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setFolioLines((prev) => [
+                  ...prev,
+                  {
+                    id: crypto.randomUUID(),
+                    kind: "service",
+                    name: "",
+                    description: "",
+                    qty: 1,
+                    unitPrice: 0,
+                    sortOrder: prev.length,
+                  },
+                ])
+              }
+              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary/40 hover:text-primary"
+            >
+              <Plus className="size-3" />
+              Add service, extra or discount
+            </button>
+          </div>
+        </div>
+
+        {folioLines.length > 0 && (
+          <div className="space-y-3">
+            {folioLines.map((line, idx) => (
+              <div
+                key={line.id}
+                className="rounded-lg border border-neutral-200 p-4"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                    Line {idx + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFolioLines((prev) =>
+                        prev
+                          .filter((l) => l.id !== line.id)
+                          .map((l, i) => ({ ...l, sortOrder: i }))
+                      );
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                  >
+                    <Trash2 className="size-3" />
+                    Remove
+                  </button>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                  <div className="space-y-1.5">
+                    <Label>Description</Label>
+                    <Input
+                      value={line.name}
+                      onChange={(e) =>
+                        setFolioLines((prev) =>
+                          prev.map((l) => (l.id === line.id ? { ...l, name: e.target.value } : l))
+                        )
+                      }
+                      placeholder="e.g. Breakfast"
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Type</Label>
+                    <Select
+                      value={line.kind}
+                      onValueChange={(v) => {
+                        setFolioLines((prev) =>
+                          prev.map((l) =>
+                            l.id === line.id ? { ...l, kind: v as FolioLine["kind"] } : l
+                          )
+                        );
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-11">
+                        <SelectValue placeholder="Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="service">Service</SelectItem>
+                        <SelectItem value="custom">Extra charge</SelectItem>
+                        <SelectItem value="discount">Discount</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Qty</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={line.qty}
+                      onChange={(e) =>
+                        setFolioLines((prev) =>
+                          prev.map((l) =>
+                            l.id === line.id
+                              ? { ...l, qty: Math.max(1, Number(e.target.value)) }
+                              : l
+                          )
+                        )
+                      }
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Unit price (N$)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={line.unitPrice}
+                      onChange={(e) =>
+                        setFolioLines((prev) =>
+                          prev.map((l) =>
+                            l.id === line.id
+                              ? { ...l, unitPrice: Math.max(0, Number(e.target.value)) }
+                              : l
+                          )
+                        )
+                      }
+                      className="h-11"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="invisible">Total</Label>
+                    <div className="flex h-11 items-center rounded-lg border border-transparent px-3 text-sm font-semibold tabular-nums">
+                      {line.kind === "discount" ? "-" : "+"}N${(line.qty * line.unitPrice).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* ── Total preview ── */}
       {lines.length > 0 && (() => {
         const total = lines.reduce((sum, line) => {
@@ -448,10 +622,33 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
           return sum + (rt ? rate * line.quantity * n : 0);
         }, 0);
         if (total === 0) return null;
+        const grandTotal = Math.max(0, total + derivedFolio.extras - derivedFolio.discount);
         return (
-          <div className="mb-6 flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm">
-            <span className="text-neutral-600">Estimated total</span>
-            <span className="font-bold tabular-nums text-neutral-900">N${total.toLocaleString()}</span>
+          <div className="mb-6 space-y-2 rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-neutral-600">Room subtotal</span>
+              <span className="tabular-nums text-neutral-800">N${total.toLocaleString()}</span>
+            </div>
+            {derivedFolio.extras > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Additional charges</span>
+                <span className="tabular-nums text-neutral-800">
+                  + N${derivedFolio.extras.toLocaleString()}
+                </span>
+              </div>
+            )}
+            {derivedFolio.discount > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Discounts</span>
+                <span className="tabular-nums text-neutral-800">
+                  - N${derivedFolio.discount.toLocaleString()}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center justify-between border-t border-neutral-200 pt-2 font-bold text-neutral-900">
+              <span>Booking total</span>
+              <span className="tabular-nums">N${grandTotal.toLocaleString()}</span>
+            </div>
           </div>
         );
       })()}

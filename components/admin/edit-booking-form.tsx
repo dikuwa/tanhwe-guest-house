@@ -276,50 +276,81 @@ export function EditBookingForm({
     }
 
     setSaving(true);
-    const body: any = {
+
+    type RoomLinePayload = {
+      id: string;
+      roomTypeId: string;
+      quantity: number;
+      guestsCount: number;
+      checkIn: string;
+      checkOut: string;
+      pricePerNight: number;
+    };
+
+    type FolioLinePayload = {
+      kind: FolioLine["kind"];
+      name: string;
+      description?: string;
+      qty: number;
+      unitPrice: number;
+      sortOrder: number;
+    };
+
+    type BookingPutPayload = {
+      customerId: string;
+      fullName: string;
+      phone: string;
+      whatsapp?: string;
+      email?: string;
+      notes?: string;
+      lines: RoomLinePayload[];
+      extras: number;
+      discount: number;
+      folioLines?: FolioLinePayload[];
+    };
+
+    const linesPayload: RoomLinePayload[] = lines.map((line) => {
+      const ci = line.sameDates ? checkIn : line.checkIn;
+      const co = line.sameDates ? checkOut : line.checkOut;
+      const rt = roomTypes.find((r) => r.id === line.roomTypeId);
+      const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
+      return {
+        id: line.id,
+        roomTypeId: line.roomTypeId,
+        quantity: line.quantity,
+        guestsCount: line.guestsCount,
+        checkIn: ci,
+        checkOut: co,
+        pricePerNight: rate,
+      };
+    });
+
+    const payload: BookingPutPayload = {
       customerId: selectedCustomer.id,
       fullName: selectedCustomer.fullName,
       phone: selectedCustomer.phone,
       whatsapp: selectedCustomer.whatsapp || undefined,
       email: selectedCustomer.email || undefined,
       notes: notes || undefined,
-      lines: lines.map((line) => {
-        const ci = line.sameDates ? checkIn : line.checkIn;
-        const co = line.sameDates ? checkOut : line.checkOut;
-        const rt = roomTypes.find((r) => r.id === line.roomTypeId);
-        const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
-        return {
-          id: line.id,
-          roomTypeId: line.roomTypeId,
-          quantity: line.quantity,
-          guestsCount: line.guestsCount,
-          checkIn: ci,
-          checkOut: co,
-          pricePerNight: rate,
-        };
-      }),
+      lines: linesPayload,
+      extras: useFolioLines ? derivedFolio.extras : extras,
+      discount: useFolioLines ? derivedFolio.discount : discount,
+      folioLines: useFolioLines
+        ? folioLines.map((l) => ({
+            kind: l.kind,
+            name: l.name,
+            description: l.description ?? "",
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+            sortOrder: l.sortOrder,
+          }))
+        : undefined,
     };
 
-    if (useFolioLines) {
-      body.folioLines = folioLines.map((l) => ({
-        kind: l.kind,
-        name: l.name,
-        description: l.description ?? "",
-        qty: l.qty,
-        unitPrice: l.unitPrice,
-        sortOrder: l.sortOrder,
-      }));
-      // Keep scalar fields as fallback, but they will be recomputed server-side.
-      body.extras = derivedFolio.extras;
-      body.discount = derivedFolio.discount;
-    } else {
-      body.extras = extras;
-      body.discount = discount;
-    }
     const response = await fetch(`/api/admin/bookings/${booking.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     });
     const data = await response.json();
     setSaving(false);

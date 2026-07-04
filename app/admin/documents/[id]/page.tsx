@@ -218,12 +218,12 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           </table>
         </div>
 
-        {/* ── Folio lines (Extras / Services / Discounts) ── */}
+        {/* ── Folio / Additional items ── */}
         {snapshot.folioLines && snapshot.folioLines.length > 0 && (
           <div className="mt-10 space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Folio items</p>
-              <p className="text-xs text-muted-foreground">Line-item breakdown</p>
+              <p className="text-sm font-medium">Additional items</p>
+              <p className="text-xs text-muted-foreground">Services, extras and discounts</p>
             </div>
 
             <div className="overflow-x-auto">
@@ -231,6 +231,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
                 <thead className="border-y bg-muted/40 text-left">
                   <tr>
                     <th className="px-3 py-3">Item</th>
+                    <th className="px-3 py-3 text-right">Type</th>
                     <th className="px-3 py-3 text-right">Qty</th>
                     <th className="px-3 py-3 text-right">Unit</th>
                     <th className="px-3 py-3 text-right">Total</th>
@@ -240,28 +241,48 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
                   {snapshot.folioLines
                     .slice()
                     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-                    .map((line, idx) => (
-                      <tr key={`${line.kind}-${line.name}-${idx}`} className="border-b">
-                        <td className="px-3 py-4">
-                          <div className="font-medium">
-                            {line.name}
-                            {line.kind === "discount" ? " (Discount)" : ""}
-                          </div>
-                          {line.description && (
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {line.description}
-                            </div>
-                          )}
-                        </td>
-                        <td className="px-3 py-4 text-right">{line.qty}</td>
-                        <td className="px-3 py-4 text-right">{money.format(line.unitPrice)}</td>
-                        <td className="px-3 py-4 text-right">
-                          {line.kind === "discount"
-                            ? `- ${money.format(line.lineTotal)}`
-                            : money.format(line.lineTotal)}
-                        </td>
-                      </tr>
-                    ))}
+                    .map((line, idx) => {
+                      const typeLabel =
+                        line.kind === "service"
+                          ? "Service"
+                          : line.kind === "discount"
+                            ? "Discount"
+                            : "Extra";
+                      const typeColors =
+                        line.kind === "discount"
+                          ? "bg-amber-100 text-amber-800"
+                          : line.kind === "service"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-purple-100 text-purple-800";
+                      return (
+                        <tr key={`${line.kind}-${line.name}-${idx}`} className="border-b">
+                          <td className="px-3 py-4">
+                            <div className="font-medium">{line.name}</div>
+                            {line.description && (
+                              <div className="mt-0.5 text-xs text-muted-foreground">
+                                {line.description}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-3 py-4 text-right">
+                            <span
+                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${typeColors}`}
+                            >
+                              {typeLabel}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 text-right">{line.qty}</td>
+                          <td className="px-3 py-4 text-right">{money.format(line.unitPrice)}</td>
+                          <td
+                            className={`px-3 py-4 text-right font-medium tabular-nums ${line.kind === "discount" ? "text-amber-700" : ""}`}
+                          >
+                            {line.kind === "discount"
+                              ? `\u2212 ${money.format(line.lineTotal)}`
+                              : money.format(line.lineTotal)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>

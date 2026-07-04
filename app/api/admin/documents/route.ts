@@ -3,12 +3,21 @@ import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
 import { getDb } from "@/lib/db";
 import { activityLogs, documents } from "@/lib/db/schema";
-import { getBookingDocumentSnapshot } from "@/lib/document-snapshot";
+import { getBookingDocumentSnapshot, type FolioLineSnapshot } from "@/lib/document-snapshot";
+import { calculateFolioTotals } from "@/lib/folio";
+
+const folioLineSchema = z.object({
+  kind: z.enum(["service", "custom", "discount"]),
+  name: z.string().trim().min(1).max(200),
+  qty: z.coerce.number().int().min(1).max(100),
+  unitPrice: z.coerce.number().int().min(0).max(100000000),
+});
 
 const input = z.object({
   bookingId: z.string().uuid(),
   type: z.enum(["quote", "invoice", "receipt"]),
   expiresAt: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal("")]).optional(),
+  folioLines: z.array(folioLineSchema).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,6 +38,49 @@ export async function POST(request: NextRequest) {
       { error: "Record a payment before issuing a receipt" },
       { status: 409 }
     );
+
+  // Merge document-specific folio lines into the snapshot
+  let documentTotal = booking.total;
+  let documentAmountPaid = booking.amountPaid;
+  let documentBalanceDue = booking.balanceDue;
+  let documentFolioLines = snapshot.folioLines ?? [];
+
+  if (parsed.data.folioLines && parsed.data.folioLines.length > 0) {
+    const docFolioSnapshot: FolioLineSnapshot[] = parsed.data.folioLines.map((l, i) => ({
+      kind: l.kind,
+      name: l.name,
+      qty: l.qty,
+      unitPrice: l.unitPrice,
+      lineTotal: l.qty * l.unitPrice,
+      sortOrder: i,
+    }));
+    const docFolioTotals = calculateFolioTotals(
+      parsed.data.folioLines.map((l) => ({
+        kind: l.kind,
+        qty: l.qty,
+        unitPrice: l.unitPrice,
+      }))
+    );
+
+    // Merge lines: booking folio lines first, then document-specific lines
+    documentFolioLines = [...documentFolioLines, ...docFolioSnapshot];
+
+    // Recalculate totals
+    const bookingExtras = snapshot.extras;
+    const bookingDiscount = snapshot.discount;
+    const mergedExtras = bookingExtras + docFolioTotals.folioChargesTotal;
+    const mergedDiscount = bookingDiscount + docFolioTotals.discountTotal;
+    documentTotal = Math.max(0, snapshot.subtotal + mergedExtras - mergedDiscount);
+    documentBalanceDue = Math.max(0, documentTotal - documentAmountPaid);
+
+    // Update snapshot fields for the merged data
+    snapshot.extras = mergedExtras;
+    snapshot.discount = mergedDiscount;
+    snapshot.total = documentTotal;
+    snapshot.balanceDue = documentBalanceDue;
+    snapshot.folioLines = documentFolioLines;
+  }
+
   const prefix = { quote: "QUO", invoice: "INV", receipt: "REC" }[parsed.data.type];
   const number = `${prefix}-${new Date().getUTCFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const id = crypto.randomUUID();
@@ -39,9 +91,9 @@ export async function POST(request: NextRequest) {
       customerId: booking.customerId,
       type: parsed.data.type,
       number,
-      total: booking.total,
-      amountPaid: booking.amountPaid,
-      balanceDue: booking.balanceDue,
+      total: documentTotal,
+      amountPaid: documentAmountPaid,
+      balanceDue: documentBalanceDue,
       snapshot: JSON.stringify(snapshot),
       status:
         parsed.data.type === "quote"
@@ -64,5 +116,5 @@ export async function POST(request: NextRequest) {
       details: number,
     });
   });
-  return NextResponse.json({ id, number }, { status: 201 });
+  return NextResponse.json({ id, number, total: documentTotal, balanceDue: documentBalanceDue }, { status: 201 });
 }

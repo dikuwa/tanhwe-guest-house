@@ -1,12 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { FieldError } from "@/components/forms/field-error";
 import { Button } from "@/components/ui/button";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,10 +15,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldError } from "@/components/forms/field-error";
-import { cn } from "@/lib/utils";
 import { dateToDateOnly, nightsBetweenDateOnly } from "@/lib/date-only";
+import { cn } from "@/lib/utils";
+import { CalendarCheck, CalendarDays, Loader2, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 type RoomTypeOption = {
   id: string;
@@ -60,6 +60,16 @@ type BookingData = {
   notes: string | null;
   customer: { id: string; fullName: string; phone: string; whatsapp: string; email: string | null };
   rooms: BookingRoom[];
+};
+
+type FolioLine = {
+  id: string;
+  kind: "service" | "custom" | "discount";
+  name: string;
+  description?: string;
+  qty: number;
+  unitPrice: number;
+  sortOrder: number;
 };
 
 type EditRoomLine = {
@@ -104,8 +114,16 @@ export function EditBookingForm({
   const [checkIn, setCheckIn] = useState(parseDateOnly(booking.checkIn));
   const [checkOut, setCheckOut] = useState(parseDateOnly(booking.checkOut));
   const [customerSearch, setCustomerSearch] = useState("");
-  const [customerResults, setCustomerResults] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null }[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null }>({
+  const [customerResults, setCustomerResults] = useState<
+    { id: string; fullName: string; phone: string; whatsapp: string; email: string | null }[]
+  >([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<{
+    id: string;
+    fullName: string;
+    phone: string;
+    whatsapp: string;
+    email: string | null;
+  }>({
     id: booking.customerId,
     fullName: booking.customer.fullName,
     phone: booking.customer.phone,
@@ -115,6 +133,38 @@ export function EditBookingForm({
   const [searching, setSearching] = useState(false);
   const [extras, setExtras] = useState(booking.extrasTotal);
   const [discount, setDiscount] = useState(booking.discount);
+
+  const [folioLines, setFolioLines] = useState<FolioLine[]>(() => {
+    const lines: FolioLine[] = [];
+
+    if (booking.extrasTotal > 0) {
+      lines.push({
+        id: crypto.randomUUID(),
+        kind: "service",
+        name: "Extras",
+        qty: 1,
+        unitPrice: booking.extrasTotal,
+        sortOrder: 0,
+        description: "",
+      });
+    }
+
+    if (booking.discount > 0) {
+      lines.push({
+        id: crypto.randomUUID(),
+        kind: "discount",
+        name: "Discount",
+        qty: 1,
+        unitPrice: booking.discount,
+        sortOrder: booking.extrasTotal > 0 ? 1 : 0,
+        description: "",
+      });
+    }
+
+    return lines;
+  });
+
+  const [useFolioLines, setUseFolioLines] = useState<boolean>(false);
   const [notes, setNotes] = useState(booking.notes ?? "");
 
   const [lines, setLines] = useState<EditRoomLine[]>(() =>
@@ -146,7 +196,9 @@ export function EditBookingForm({
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await fetch(`/api/admin/customers/search?q=${encodeURIComponent(customerSearch)}`);
+        const res = await fetch(
+          `/api/admin/customers/search?q=${encodeURIComponent(customerSearch)}`
+        );
         if (res.ok) {
           const data = await res.json();
           setCustomerResults(data);
@@ -184,7 +236,24 @@ export function EditBookingForm({
     const rate = line.pricePerNight > 0 ? line.pricePerNight : (rt?.pricePerNight ?? 0);
     return sum + rate * line.quantity * n;
   }, 0);
-  const grandTotal = Math.max(0, total + extras - discount);
+  const derivedFolio = folioLines.length
+    ? folioLines.reduce(
+        (acc, l) => {
+          const lineTotal = Math.max(0, l.qty) * Math.max(0, l.unitPrice);
+          if (l.kind === "discount") acc.discount += lineTotal;
+          else acc.extras += lineTotal;
+          return acc;
+        },
+        { extras: 0, discount: 0 }
+      )
+    : { extras: 0, discount: 0 };
+
+  const grandTotal = Math.max(
+    0,
+    total +
+      (useFolioLines ? derivedFolio.extras : extras) -
+      (useFolioLines ? derivedFolio.discount : discount)
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -192,7 +261,8 @@ export function EditBookingForm({
 
     const errors: Record<string, string> = {};
     if (!checkIn || !checkOut) errors.dates = "Select main stay dates";
-    if (checkIn && checkOut && checkIn >= checkOut) errors.dates = "Check-out must be after check-in";
+    if (checkIn && checkOut && checkIn >= checkOut)
+      errors.dates = "Check-out must be after check-in";
 
     for (const line of lines) {
       if (!line.roomTypeId) {
@@ -206,15 +276,13 @@ export function EditBookingForm({
     }
 
     setSaving(true);
-    const body = {
+    const body: any = {
       customerId: selectedCustomer.id,
       fullName: selectedCustomer.fullName,
       phone: selectedCustomer.phone,
       whatsapp: selectedCustomer.whatsapp || undefined,
       email: selectedCustomer.email || undefined,
       notes: notes || undefined,
-      extras,
-      discount,
       lines: lines.map((line) => {
         const ci = line.sameDates ? checkIn : line.checkIn;
         const co = line.sameDates ? checkOut : line.checkOut;
@@ -231,6 +299,23 @@ export function EditBookingForm({
         };
       }),
     };
+
+    if (useFolioLines) {
+      body.folioLines = folioLines.map((l) => ({
+        kind: l.kind,
+        name: l.name,
+        description: l.description ?? "",
+        qty: l.qty,
+        unitPrice: l.unitPrice,
+        sortOrder: l.sortOrder,
+      }));
+      // Keep scalar fields as fallback, but they will be recomputed server-side.
+      body.extras = derivedFolio.extras;
+      body.discount = derivedFolio.discount;
+    } else {
+      body.extras = extras;
+      body.discount = discount;
+    }
     const response = await fetch(`/api/admin/bookings/${booking.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -391,7 +476,9 @@ export function EditBookingForm({
                     min="1"
                     max="20"
                     value={line.quantity}
-                    onChange={(e) => updateLine(line.id, { quantity: Math.max(1, Number(e.target.value)) })}
+                    onChange={(e) =>
+                      updateLine(line.id, { quantity: Math.max(1, Number(e.target.value)) })
+                    }
                     className="h-11"
                   />
                 </div>
@@ -403,7 +490,9 @@ export function EditBookingForm({
                     type="number"
                     min="1"
                     value={line.guestsCount}
-                    onChange={(e) => updateLine(line.id, { guestsCount: Math.max(1, Number(e.target.value)) })}
+                    onChange={(e) =>
+                      updateLine(line.id, { guestsCount: Math.max(1, Number(e.target.value)) })
+                    }
                     className="h-11"
                   />
                 </div>
@@ -435,7 +524,9 @@ export function EditBookingForm({
                     minDate={checkIn || undefined}
                     id={`line-ci-${line.id}`}
                     label="From"
-                    icon={<CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />}
+                    icon={
+                      <CalendarDays className="size-4 text-muted-foreground" aria-hidden="true" />
+                    }
                   />
                   <DatePicker
                     value={line.checkOut}
@@ -443,7 +534,9 @@ export function EditBookingForm({
                     minDate={line.checkIn || checkIn || undefined}
                     id={`line-co-${line.id}`}
                     label="To"
-                    icon={<CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />}
+                    icon={
+                      <CalendarCheck className="size-4 text-muted-foreground" aria-hidden="true" />
+                    }
                   />
                 </div>
               )}
@@ -460,7 +553,9 @@ export function EditBookingForm({
                     type="number"
                     min="0"
                     value={line.pricePerNight}
-                    onChange={(e) => updateLine(line.id, { pricePerNight: Math.max(0, Number(e.target.value)) })}
+                    onChange={(e) =>
+                      updateLine(line.id, { pricePerNight: Math.max(0, Number(e.target.value)) })
+                    }
                     className="h-11"
                   />
                 </div>
@@ -470,7 +565,8 @@ export function EditBookingForm({
               {rt && nights > 0 && (
                 <div className="mt-3 flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
                   <span>
-                    {rt.name} &times; {line.quantity} room{line.quantity > 1 ? "s" : ""} &times; {nights} night{nights > 1 ? "s" : ""} @ N${rate}/night
+                    {rt.name} &times; {line.quantity} room{line.quantity > 1 ? "s" : ""} &times;{" "}
+                    {nights} night{nights > 1 ? "s" : ""} @ N${rate}/night
                   </span>
                   <span className="font-semibold tabular-nums text-neutral-800">
                     N${lineSubtotal.toLocaleString()}
@@ -493,30 +589,233 @@ export function EditBookingForm({
         </button>
       </div>
 
-      {/* ── Extras & Discount ── */}
-      <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="extras">Extras (N$)</Label>
-          <Input
-            id="extras"
-            type="number"
-            min="0"
-            value={extras}
-            onChange={(e) => setExtras(Math.max(0, Number(e.target.value)))}
-            className="h-11"
-          />
+      {/* ── Extras & Discount (legacy) + Folio lines ── */}
+      <div className="mb-6 space-y-4">
+        <div className="rounded-lg border border-neutral-100 bg-neutral-50 p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5">
+              <p className="text-sm font-medium text-neutral-800">Folio line items</p>
+              <p className="text-xs text-muted-foreground">
+                Optionally replace scalar Extras/Discount with detailed line items.
+              </p>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
+              <Checkbox
+                checked={useFolioLines}
+                onCheckedChange={(v) => setUseFolioLines(Boolean(v))}
+              />
+              Use folio lines
+            </label>
+          </div>
+
+          {/* Keep scalar inputs visible for quick entry */}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="extras">Extras (N$)</Label>
+              <Input
+                id="extras"
+                type="number"
+                min="0"
+                value={extras}
+                onChange={(e) => setExtras(Math.max(0, Number(e.target.value)))}
+                className="h-11"
+                disabled={useFolioLines}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="discount">Discount (N$)</Label>
+              <Input
+                id="discount"
+                type="number"
+                min="0"
+                value={discount}
+                onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
+                className="h-11"
+                disabled={useFolioLines}
+              />
+            </div>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="discount">Discount (N$)</Label>
-          <Input
-            id="discount"
-            type="number"
-            min="0"
-            value={discount}
-            onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
-            className="h-11"
-          />
-        </div>
+
+        {useFolioLines && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setFolioLines((prev) => [
+                    ...prev,
+                    {
+                      id: crypto.randomUUID(),
+                      kind: "service",
+                      name: "Service",
+                      description: "",
+                      qty: 1,
+                      unitPrice: 0,
+                      sortOrder: prev.length,
+                    },
+                  ])
+                }
+              >
+                <Plus className="size-4" />
+                Add service/custom
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setFolioLines((prev) => [
+                    ...prev,
+                    {
+                      id: crypto.randomUUID(),
+                      kind: "discount",
+                      name: "Discount",
+                      description: "",
+                      qty: 1,
+                      unitPrice: 0,
+                      sortOrder: prev.length,
+                    },
+                  ])
+                }
+              >
+                <Plus className="size-4" />
+                Add discount
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {folioLines.length === 0 && (
+                <p className="text-sm text-muted-foreground">No folio lines yet.</p>
+              )}
+
+              {folioLines.map((line, idx) => (
+                <div key={line.id} className="rounded-lg border border-neutral-200 p-4">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                      Line {idx + 1}
+                    </span>
+                    {folioLines.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFolioLines((prev) =>
+                            prev
+                              .filter((l) => l.id !== line.id)
+                              .map((l, i) => ({ ...l, sortOrder: i }))
+                          );
+                        }}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
+                      >
+                        <Trash2 className="size-3" />
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="space-y-1.5">
+                      <Label>Kind</Label>
+                      <Select
+                        value={line.kind}
+                        onValueChange={(v) => {
+                          setFolioLines((prev) =>
+                            prev.map((l) =>
+                              l.id === line.id ? { ...l, kind: v as FolioLine["kind"] } : l
+                            )
+                          );
+                        }}
+                      >
+                        <SelectTrigger className="w-full h-11">
+                          <SelectValue placeholder="Select kind" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="service">service</SelectItem>
+                          <SelectItem value="custom">custom</SelectItem>
+                          <SelectItem value="discount">discount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>Label</Label>
+                      <Input
+                        value={line.name}
+                        onChange={(e) =>
+                          setFolioLines((prev) =>
+                            prev.map((l) => (l.id === line.id ? { ...l, name: e.target.value } : l))
+                          )
+                        }
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>Qty</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={line.qty}
+                        onChange={(e) =>
+                          setFolioLines((prev) =>
+                            prev.map((l) =>
+                              l.id === line.id
+                                ? { ...l, qty: Math.max(1, Number(e.target.value)) }
+                                : l
+                            )
+                          )
+                        }
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label>Unit price (N$)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={line.unitPrice}
+                        onChange={(e) =>
+                          setFolioLines((prev) =>
+                            prev.map((l) =>
+                              l.id === line.id
+                                ? { ...l, unitPrice: Math.max(0, Number(e.target.value)) }
+                                : l
+                            )
+                          )
+                        }
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <Label>Description (optional)</Label>
+                    <Input
+                      value={line.description ?? ""}
+                      onChange={(e) =>
+                        setFolioLines((prev) =>
+                          prev.map((l) =>
+                            l.id === line.id ? { ...l, description: e.target.value } : l
+                          )
+                        )
+                      }
+                      className="mt-1 h-11"
+                    />
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between rounded-md bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
+                    <span>{line.kind === "discount" ? "Discount" : "Item"} total</span>
+                    <span className="font-semibold tabular-nums text-neutral-800">
+                      N${(line.qty * line.unitPrice).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Total preview ── */}
@@ -525,18 +824,45 @@ export function EditBookingForm({
           <span className="text-neutral-600">Room subtotal</span>
           <span className="tabular-nums text-neutral-800">N${total.toLocaleString()}</span>
         </div>
-        {extras > 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-neutral-600">Extras</span>
-            <span className="tabular-nums text-neutral-800">+ N${extras.toLocaleString()}</span>
-          </div>
+
+        {useFolioLines ? (
+          <>
+            {derivedFolio.extras > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Extras</span>
+                <span className="tabular-nums text-neutral-800">
+                  + N${derivedFolio.extras.toLocaleString()}
+                </span>
+              </div>
+            )}
+            {derivedFolio.discount > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Discount</span>
+                <span className="tabular-nums text-neutral-800">
+                  - N${derivedFolio.discount.toLocaleString()}
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {extras > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Extras</span>
+                <span className="tabular-nums text-neutral-800">+ N${extras.toLocaleString()}</span>
+              </div>
+            )}
+            {discount > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-600">Discount</span>
+                <span className="tabular-nums text-neutral-800">
+                  - N${discount.toLocaleString()}
+                </span>
+              </div>
+            )}
+          </>
         )}
-        {discount > 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-neutral-600">Discount</span>
-            <span className="tabular-nums text-neutral-800">- N${discount.toLocaleString()}</span>
-          </div>
-        )}
+
         <div className="flex items-center justify-between border-t border-neutral-200 pt-2 font-bold text-neutral-900">
           <span>Grand total</span>
           <span className="tabular-nums">N${grandTotal.toLocaleString()}</span>
@@ -549,7 +875,9 @@ export function EditBookingForm({
             </div>
             <div className="flex items-center justify-between font-semibold text-secondary">
               <span>Balance due</span>
-              <span className="tabular-nums">N${Math.max(0, grandTotal - booking.amountPaid).toLocaleString()}</span>
+              <span className="tabular-nums">
+                N${Math.max(0, grandTotal - booking.amountPaid).toLocaleString()}
+              </span>
             </div>
           </>
         )}

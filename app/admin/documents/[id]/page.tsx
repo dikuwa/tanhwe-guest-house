@@ -1,20 +1,30 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeft, Building2, Download, Landmark, MessageCircle, ShieldCheck, Wallet } from "lucide-react";
-import { TanhweLogo } from "@/components/tanhwe-logo";
 import { DocumentEmailButton } from "@/components/admin/document-email-button";
 import { SignatureBlock } from "@/components/signature-block";
+import { TanhweLogo } from "@/components/tanhwe-logo";
 import { Button } from "@/components/ui/button";
 import {
+  generateShareCode,
   getDocument,
   getDocumentSettings,
-  generateShareCode,
   getPublicShareCode,
 } from "@/lib/admin-data";
 import { requireRole } from "@/lib/auth-middleware";
 import { dateToDateOnly, formatDateOnly } from "@/lib/date-only";
 import { whatsappHref } from "@/lib/phone";
 import { buildLocation } from "@/lib/utils";
+import {
+  ArrowLeft,
+  Building2,
+  Download,
+  Landmark,
+  MessageCircle,
+  ShieldCheck,
+  Wallet,
+} from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+const money = new Intl.NumberFormat("en-NA", { style: "currency", currency: "NAD" });
 
 type Snapshot = {
   bookingNumber: string;
@@ -36,8 +46,18 @@ type Snapshot = {
   total: number;
   amountPaid: number;
   balanceDue: number;
+
+  // Added for booking folio line items (backward compatible)
+  folioLines?: {
+    kind: "service" | "custom" | "discount";
+    name: string;
+    description?: string | null;
+    qty: number;
+    unitPrice: number;
+    lineTotal: number;
+    sortOrder?: number;
+  }[];
 };
-const money = new Intl.NumberFormat("en-NA", { style: "currency", currency: "NAD" });
 
 export default async function DocumentPreviewPage({ params }: { params: Promise<{ id: string }> }) {
   await requireRole(["owner", "admin"]);
@@ -74,10 +94,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           Documents
         </Button>
         <div className="flex flex-wrap gap-2">
-          <DocumentEmailButton
-            id={document.id}
-            disabled={!document.customerEmail}
-          />
+          <DocumentEmailButton id={document.id} disabled={!document.customerEmail} />
           <Button
             variant="outline"
             nativeButton={false}
@@ -92,7 +109,10 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             <MessageCircle />
             Share
           </Button>
-          <Button nativeButton={false} render={<a href={`/api/admin/documents/${document.id}/pdf`} />}>
+          <Button
+            nativeButton={false}
+            render={<a href={`/api/admin/documents/${document.id}/pdf`} />}
+          >
             <Download />
             Download PDF
           </Button>
@@ -115,15 +135,22 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             <h1 className="mt-1 text-2xl font-semibold">{document.number}</h1>
             <p className="mt-2 text-sm">Issued {document.createdAt.toLocaleDateString("en-NA")}</p>
             {document.expiresAt && (
-              <p className="text-sm">Valid until {document.expiresAt.toLocaleDateString("en-NA")}</p>
+              <p className="text-sm">
+                Valid until {document.expiresAt.toLocaleDateString("en-NA")}
+              </p>
             )}
           </div>
         </header>
 
         {/* ── Guest & Stay ── */}
-        <div className="grid gap-8 py-8" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(260px, auto)" }}>
+        <div
+          className="grid gap-8 py-8"
+          style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(260px, auto)" }}
+        >
           <div className="text-left">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guest</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Guest
+            </p>
             <p className="mt-2 font-semibold">{snapshot.customer.name}</p>
             <p className="text-sm text-muted-foreground">{snapshot.customer.phone}</p>
             {snapshot.customer.email && (
@@ -131,7 +158,9 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             )}
           </div>
           <div className="text-right" style={{ justifySelf: "end" }}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stay</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Stay
+            </p>
             {hasMixedRoomDates ? (
               <>
                 <p className="mt-2">Multiple room stays</p>
@@ -189,6 +218,56 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           </table>
         </div>
 
+        {/* ── Folio lines (Extras / Services / Discounts) ── */}
+        {snapshot.folioLines && snapshot.folioLines.length > 0 && (
+          <div className="mt-10 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Folio items</p>
+              <p className="text-xs text-muted-foreground">Line-item breakdown</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-160 text-sm">
+                <thead className="border-y bg-muted/40 text-left">
+                  <tr>
+                    <th className="px-3 py-3">Item</th>
+                    <th className="px-3 py-3 text-right">Qty</th>
+                    <th className="px-3 py-3 text-right">Unit</th>
+                    <th className="px-3 py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {snapshot.folioLines
+                    .slice()
+                    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                    .map((line, idx) => (
+                      <tr key={`${line.kind}-${line.name}-${idx}`} className="border-b">
+                        <td className="px-3 py-4">
+                          <div className="font-medium">
+                            {line.name}
+                            {line.kind === "discount" ? " (Discount)" : ""}
+                          </div>
+                          {line.description && (
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {line.description}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-4 text-right">{line.qty}</td>
+                        <td className="px-3 py-4 text-right">{money.format(line.unitPrice)}</td>
+                        <td className="px-3 py-4 text-right">
+                          {line.kind === "discount"
+                            ? `- ${money.format(line.lineTotal)}`
+                            : money.format(line.lineTotal)}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* ── Totals ── */}
         <div className="ml-auto mt-8 max-w-sm space-y-3 text-sm">
           <div className="flex justify-between">
@@ -219,68 +298,89 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
 
         {/* ── Banking Details & Payment Methods ── */}
         {(settings.bankingVisible || settings.paymentVisible) && (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {settings.bankingVisible && settings.bankingAccountName && (
-          <div className="rounded-lg border bg-muted/20 p-5">
-            <div className="flex items-center gap-2">
-              <Landmark className="size-4 text-muted-foreground" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Banking Details
-              </h3>
-            </div>
-            <div className="mt-4 space-y-2.5 text-sm" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.5rem 1rem", alignItems: "baseline" }}>
-              <span className="text-muted-foreground">Account Name</span>
-              <span>{settings.bankingAccountName}</span>
-              <span className="text-muted-foreground">Account Number</span>
-              <span className="font-mono">{settings.bankingAccountNumber}</span>
-              <span className="text-muted-foreground">Bank</span>
-              <span>{settings.bankingBankName}</span>
-              <span className="text-muted-foreground">Branch</span>
-              <span>{settings.bankingBranchName}</span>
-              {settings.bankingBranchCode && (
-              <><span className="text-muted-foreground">Branch Code</span><span>{settings.bankingBranchCode}</span></>
-              )}
-              {settings.bankingAccountType && (
-              <><span className="text-muted-foreground">Account Type</span><span>{settings.bankingAccountType}</span></>
-              )}
-              {settings.bankingSwiftBic && (
-              <><span className="text-muted-foreground">SWIFT/BIC</span><span>{settings.bankingSwiftBic}</span></>
-              )}
-            </div>
-          </div>
-          )}
+          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            {settings.bankingVisible && settings.bankingAccountName && (
+              <div className="rounded-lg border bg-muted/20 p-5">
+                <div className="flex items-center gap-2">
+                  <Landmark className="size-4 text-muted-foreground" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Banking Details
+                  </h3>
+                </div>
+                <div
+                  className="mt-4 space-y-2.5 text-sm"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "auto 1fr",
+                    gap: "0.5rem 1rem",
+                    alignItems: "baseline",
+                  }}
+                >
+                  <span className="text-muted-foreground">Account Name</span>
+                  <span>{settings.bankingAccountName}</span>
+                  <span className="text-muted-foreground">Account Number</span>
+                  <span className="font-mono">{settings.bankingAccountNumber}</span>
+                  <span className="text-muted-foreground">Bank</span>
+                  <span>{settings.bankingBankName}</span>
+                  <span className="text-muted-foreground">Branch</span>
+                  <span>{settings.bankingBranchName}</span>
+                  {settings.bankingBranchCode && (
+                    <>
+                      <span className="text-muted-foreground">Branch Code</span>
+                      <span>{settings.bankingBranchCode}</span>
+                    </>
+                  )}
+                  {settings.bankingAccountType && (
+                    <>
+                      <span className="text-muted-foreground">Account Type</span>
+                      <span>{settings.bankingAccountType}</span>
+                    </>
+                  )}
+                  {settings.bankingSwiftBic && (
+                    <>
+                      <span className="text-muted-foreground">SWIFT/BIC</span>
+                      <span>{settings.bankingSwiftBic}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
-          {settings.paymentVisible && (
-          <div className="rounded-lg border bg-muted/20 p-5">
-            <div className="flex items-center gap-2">
-              <Wallet className="size-4 text-muted-foreground" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Payment Methods
-              </h3>
-            </div>
-            <div className="mt-4 space-y-4">
-              {settings.bankTransferEnabled && (
-              <div className="flex items-start gap-3">
-                <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
-                <div>
-                  <p className="text-sm font-medium">{settings.bankTransferTitle}</p>
-                  <p className="text-sm text-muted-foreground">{settings.bankTransferInstructions}</p>
+            {settings.paymentVisible && (
+              <div className="rounded-lg border bg-muted/20 p-5">
+                <div className="flex items-center gap-2">
+                  <Wallet className="size-4 text-muted-foreground" />
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Payment Methods
+                  </h3>
+                </div>
+                <div className="mt-4 space-y-4">
+                  {settings.bankTransferEnabled && (
+                    <div className="flex items-start gap-3">
+                      <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                      <div>
+                        <p className="text-sm font-medium">{settings.bankTransferTitle}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {settings.bankTransferInstructions}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {settings.mobileWalletsEnabled && (
+                    <div className="flex items-start gap-3">
+                      <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                      <div>
+                        <p className="text-sm font-medium">{settings.mobileWalletTitle}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {settings.mobileWalletDescription}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-              )}
-              {settings.mobileWalletsEnabled && (
-              <div className="flex items-start gap-3">
-                <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
-                <div>
-                  <p className="text-sm font-medium">{settings.mobileWalletTitle}</p>
-                  <p className="text-sm text-muted-foreground">{settings.mobileWalletDescription}</p>
-                </div>
-              </div>
-              )}
-            </div>
+            )}
           </div>
-          )}
-        </div>
         )}
 
         {/* ── Contact & Signature ── */}
@@ -292,31 +392,40 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             <div className="mt-3 space-y-1.5 text-sm">
               <p>Phone: {settings.primaryPhone}</p>
               <p>Email: {settings.businessEmail}</p>
-              <p>Location: {settings.town}{settings.town && settings.region ? ", " : ""}{settings.region}{settings.region && settings.country ? ", " : ""}{settings.country}</p>
+              <p>
+                Location: {settings.town}
+                {settings.town && settings.region ? ", " : ""}
+                {settings.region}
+                {settings.region && settings.country ? ", " : ""}
+                {settings.country}
+              </p>
             </div>
           </div>
           {settings.signatureVisible && (
-          <div className="sm:text-right">
-            <SignatureBlock ownerName={settings.signatoryName} roleLabel={settings.signatoryRole} />
-          </div>
+            <div className="sm:text-right">
+              <SignatureBlock
+                ownerName={settings.signatoryName}
+                roleLabel={settings.signatoryRole}
+              />
+            </div>
           )}
         </div>
 
         {/* ── Secure Payment Footer ── */}
         {settings.secureFooterVisible && (
-        <div className="mt-8 border-t pt-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
-            <span>{settings.secureFooterMessage}</span>
+          <div className="mt-8 border-t pt-6 text-center">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
+              <span>{settings.secureFooterMessage}</span>
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              {settings.acceptedPaymentTypes.split(",").map((type) => (
+                <span key={type.trim()} className="font-semibold tracking-wide text-neutral-400">
+                  {type.trim()}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            {settings.acceptedPaymentTypes.split(",").map((type) => (
-              <span key={type.trim()} className="font-semibold tracking-wide text-neutral-400">
-                {type.trim()}
-              </span>
-            ))}
-          </div>
-        </div>
         )}
       </article>
     </div>

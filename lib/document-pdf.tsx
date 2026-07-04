@@ -8,8 +8,8 @@ import {
   View,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import path from "path";
 import fs from "fs";
+import path from "path";
 import { dateToDateOnly, formatDateOnly } from "./date-only";
 
 const alluraFontPath = path.join(process.cwd(), "public", "fonts", "Allura-Regular.ttf");
@@ -58,6 +58,17 @@ type Snapshot = {
   total: number;
   amountPaid: number;
   balanceDue: number;
+
+  // Backward compatible folio line-items snapshot
+  folioLines?: {
+    kind: "service" | "custom" | "discount";
+    name: string;
+    description?: string | null;
+    qty: number;
+    unitPrice: number;
+    lineTotal: number;
+    sortOrder?: number;
+  }[];
 };
 
 type DocSettings = {
@@ -366,6 +377,40 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             );
           })}
         </View>
+
+        {/* ── Folio lines ── */}
+        {snapshot.folioLines && snapshot.folioLines.length > 0 && (
+          <View style={[styles.section, { marginTop: 22 }]}>
+            <View style={styles.tableHeader}>
+              <Text style={[styles.grow, { width: "42%" }]}>Item</Text>
+              <Text style={[styles.cell, { width: "12%" }]}>Qty</Text>
+              <Text style={[styles.cell, { width: "18%" }]}>Unit</Text>
+              <Text style={[styles.cell, { width: "18%" }]}>Total</Text>
+            </View>
+
+            {snapshot.folioLines
+              .slice()
+              .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+              .map((line, idx) => (
+                <View key={`${line.kind}-${line.name}-${idx}`} style={styles.tableRow}>
+                  <View style={{ width: "42%" }}>
+                    <Text style={[styles.grow, { width: "100%", fontSize: 10 }]}>{line.name}</Text>
+                    {line.description ? (
+                      <Text style={{ fontSize: 7.5, color: "#7A6F5E", marginTop: 1 }}>
+                        {line.description}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <Text style={[styles.cell, { width: "12%" }]}>{line.qty}</Text>
+                  <Text style={[styles.cell, { width: "18%" }]}>{fmt(line.unitPrice)}</Text>
+                  <Text style={[styles.cell, { width: "18%" }]}>
+                    {line.kind === "discount" ? `- ${fmt(line.lineTotal)}` : fmt(line.lineTotal)}
+                  </Text>
+                </View>
+              ))}
+          </View>
+        )}
 
         {/* ── Totals ── */}
         <View style={styles.totals}>

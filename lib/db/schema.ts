@@ -337,9 +337,7 @@ export const bookingFolioLines = pgTable(
       .notNull()
       .references(() => bookings.id, { onDelete: "cascade" }),
 
-    kind: text("kind")
-      .notNull()
-      .check(sql`kind in ('service', 'custom', 'discount')`),
+    kind: text("kind").notNull(),
 
     name: text("name").notNull(),
     description: text("description"),

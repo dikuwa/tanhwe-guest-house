@@ -1,14 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { eq, inArray } from "drizzle-orm";
-import { z } from "zod";
 import { authorizeRequest } from "@/lib/auth-middleware";
-import { checkRoomAvailability, checkRoomTypeAvailability, assignRoomUnitsForBooking } from "@/lib/availability";
-import { getDb } from "@/lib/db";
-import { activityLogs, bookingRooms, bookingRoomUnits, bookings, customers, roomTypes } from "@/lib/db/schema";
-import { notifyOps } from "@/lib/notifications";
+import {
+  assignRoomUnitsForBooking,
+  checkRoomAvailability,
+  checkRoomTypeAvailability,
+} from "@/lib/availability";
 import { calculateBookingTotals, calculateNights, parseStayDate } from "@/lib/booking-calculations";
-import { normalizeNamibianPhone } from "@/lib/phone";
+import { getDb } from "@/lib/db";
+import {
+  activityLogs,
+  bookingFolioLines,
+  bookingRooms,
+  bookingRoomUnits,
+  bookings,
+  customers,
+  roomTypes,
+} from "@/lib/db/schema";
 import { refreshMutableBookingDocuments } from "@/lib/document-snapshot";
+import { notifyOps } from "@/lib/notifications";
+import { normalizeNamibianPhone } from "@/lib/phone";
+import { eq, inArray } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const statuses = [
   "pending",
@@ -95,10 +107,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json({ success: true });
 }
 
-const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).transform((v) => parseStayDate(v));
-const phone = z.string().trim().min(7).max(30).refine((value) => Boolean(normalizeNamibianPhone(value)), {
-  message: "Please enter a valid phone number",
-});
+const date = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .transform((v) => parseStayDate(v));
+const phone = z
+  .string()
+  .trim()
+  .min(7)
+  .max(30)
+  .refine((value) => Boolean(normalizeNamibianPhone(value)), {
+    message: "Please enter a valid phone number",
+  });
 
 const editLineSchema = z.object({
   id: z.string().uuid().optional(),
@@ -110,6 +130,16 @@ const editLineSchema = z.object({
   pricePerNight: z.coerce.number().int().min(0).optional(),
 });
 
+const folioLineSchema = z.object({
+  id: z.string().uuid().optional(),
+  kind: z.enum(["service", "custom", "discount"]),
+  name: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(1000).optional(),
+  qty: z.coerce.number().int().min(1).max(100),
+  unitPrice: z.coerce.number().int().min(0).max(100000000),
+  sortOrder: z.coerce.number().int().min(0).max(1000).optional(),
+});
+
 const editInputSchema = z.object({
   customerId: z.string().uuid(),
   fullName: z.string().trim().min(2).max(100),
@@ -118,8 +148,13 @@ const editInputSchema = z.object({
   email: z.union([z.string().trim().email(), z.literal("")]).optional(),
   notes: z.string().trim().max(2000).optional(),
   lines: z.array(editLineSchema).min(1).max(10),
+
+  // Backward compatible scalar totals:
   extras: z.coerce.number().int().min(0).optional(),
   discount: z.coerce.number().int().min(0).optional(),
+
+  // New line-item persistence:
+  folioLines: z.array(folioLineSchema).optional(),
 });
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -129,10 +164,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const parsed = editInputSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     const first = parsed.error.issues[0];
-    return NextResponse.json(
-      { error: first?.message ?? "Invalid input" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: first?.message ?? "Invalid input" }, { status: 400 });
   }
 
   const db = getDb();
@@ -174,10 +206,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     if (!availability.available) {
-      return NextResponse.json(
-        { error: `Line ${i + 1}: ${availability.reason}` },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: `Line ${i + 1}: ${availability.reason}` }, { status: 409 });
     }
 
     if (line.guestsCount > availability.roomType.maxGuests * line.quantity) {
@@ -189,9 +218,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const pricePerNight = line.pricePerNight && line.pricePerNight > 0
-      ? line.pricePerNight
-      : availability.pricePerNight;
+    const pricePerNight =
+      line.pricePerNight && line.pricePerNight > 0
+        ? line.pricePerNight
+        : availability.pricePerNight;
     const subtotal = calculateBookingTotals({
       lines: [{ pricePerNight, roomsCount: line.quantity, nights }],
     }).roomSubtotal;
@@ -219,14 +249,32 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   );
   const totalNights = calculateNights(checkIn, checkOut);
   const totalGuests = lineResults.reduce((s, l) => s + l.guestsCount, 0);
-  const extras = parsed.data.extras ?? existing.extrasTotal;
-  const discount = parsed.data.discount ?? existing.discount;
+  const lineSubtotals = lineResults.map((line) => ({
+    pricePerNight: line.pricePerNight,
+    roomsCount: line.quantity,
+    nights: line.nights,
+  }));
+
+  const folioLines = parsed.data.folioLines;
+
+  // If folio lines are provided, recompute extras/discount from them.
+  // Convention: discount lines have kind="discount" but unitPrice is always a non-negative amount.
+  const folioDerived = (folioLines ?? []).reduce(
+    (acc, l) => {
+      const lineTotal = l.unitPrice * l.qty;
+      if (l.kind === "discount") acc.discount += lineTotal;
+      else acc.extras += lineTotal;
+      return acc;
+    },
+    { extras: 0, discount: 0 }
+  );
+
+  const extras = folioLines ? folioDerived.extras : (parsed.data.extras ?? existing.extrasTotal);
+
+  const discount = folioLines ? folioDerived.discount : (parsed.data.discount ?? existing.discount);
+
   const totals = calculateBookingTotals({
-    lines: lineResults.map((line) => ({
-      pricePerNight: line.pricePerNight,
-      roomsCount: line.quantity,
-      nights: line.nights,
-    })),
+    lines: lineSubtotals,
     extras,
     discount,
     amountPaid: existing.amountPaid,
@@ -265,9 +313,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         await tx
           .delete(bookingRoomUnits)
           .where(inArray(bookingRoomUnits.bookingRoomId, existingRoomIds));
-        await tx
-          .delete(bookingRooms)
-          .where(eq(bookingRooms.bookingId, id));
+        await tx.delete(bookingRooms).where(eq(bookingRooms.bookingId, id));
       }
 
       // Insert new booking rooms
@@ -297,6 +343,28 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
           line.checkOut,
           line.quantity
         );
+      }
+
+      // Persist folio line-items (optional).
+      // If folioLines are not provided, keep existing booking_folio_lines as-is.
+      if (parsed.data.folioLines) {
+        await tx.delete(bookingFolioLines).where(eq(bookingFolioLines.bookingId, id));
+
+        const nextLines = parsed.data.folioLines.map((l, index) => ({
+          id: crypto.randomUUID(),
+          bookingId: id,
+          kind: l.kind,
+          name: l.name,
+          description: l.description,
+          qty: l.qty,
+          unitPrice: l.unitPrice,
+          lineTotal: l.unitPrice * l.qty,
+          sortOrder: l.sortOrder ?? index,
+        }));
+
+        if (nextLines.length > 0) {
+          await tx.insert(bookingFolioLines).values(nextLines);
+        }
       }
 
       await tx.insert(activityLogs).values({

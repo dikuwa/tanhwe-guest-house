@@ -78,6 +78,13 @@
       "when": 1782900000000,
       "tag": "0010_breezy_blocks",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783165745224,
+      "tag": "0011_keen_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

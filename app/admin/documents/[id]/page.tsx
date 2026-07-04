@@ -119,83 +119,100 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
         </div>
       </div>
 
-      <article className="mx-auto max-w-4xl border bg-card p-7 shadow-sm sm:p-12">
+      <article className="mx-auto max-w-4xl border bg-card shadow-sm print:max-w-none" style={{ padding: "14mm" }}>
         {/* ── Header ── */}
-        <header className="flex flex-wrap justify-between gap-8 border-b pb-8">
+        <header className="flex flex-wrap justify-between gap-4 border-b pb-3" style={{ marginBottom: "10mm" }}>
           <div>
             <TanhweLogo size="md" showIcon />
-            <p className="mt-1 text-right text-xs text-muted-foreground">
+            <p className="mt-0.5 text-right text-xs text-muted-foreground">
               {buildLocation(settings.town, settings.region, settings.country)}
             </p>
           </div>
           <div className="sm:text-right">
-            <p className="text-sm uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
               {document.type}
             </p>
-            <h1 className="mt-1 text-2xl font-semibold">{document.number}</h1>
-            <p className="mt-2 text-sm">Issued {document.createdAt.toLocaleDateString("en-NA")}</p>
+            <h1 className="mt-0.5 text-xl font-semibold">{document.number}</h1>
+            <p className="mt-1 text-xs">Issued {document.createdAt.toLocaleDateString("en-NA")}</p>
             {document.expiresAt && (
-              <p className="text-sm">
+              <p className="text-xs">
                 Valid until {document.expiresAt.toLocaleDateString("en-NA")}
               </p>
             )}
           </div>
         </header>
 
-        {/* ── Guest & Stay ── */}
+        {/* ── Guest, Stay & Contact in One Compact Row ── */}
         <div
-          className="grid gap-8 py-8"
-          style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(260px, auto)" }}
+          className="grid gap-3 py-4 text-xs border-b"
+          style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: "8mm" }}
         >
+          {/* Guest Column */}
           <div className="text-left">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] mb-1">
               Guest
             </p>
-            <p className="mt-2 font-semibold">{snapshot.customer.name}</p>
-            <p className="text-sm text-muted-foreground">{snapshot.customer.phone}</p>
+            <p className="font-medium text-sm">{snapshot.customer.name}</p>
+            {snapshot.customer.phone && (
+              <p className="text-xs text-muted-foreground">{snapshot.customer.phone}</p>
+            )}
             {snapshot.customer.email && (
-              <p className="text-sm text-muted-foreground">{snapshot.customer.email}</p>
+              <p className="text-xs text-muted-foreground truncate">{snapshot.customer.email}</p>
             )}
           </div>
-          <div className="text-right" style={{ justifySelf: "end" }}>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+
+          {/* Stay Column */}
+          <div className="text-center border-l border-r border-muted-foreground/10 px-3">
+            <p className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] mb-1">
               Stay
             </p>
             {hasMixedRoomDates ? (
               <>
-                <p className="mt-2">Multiple room stays</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium">Multiple room stays</p>
+                <p className="text-xs text-muted-foreground">
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
-                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))} &middot;{" "}
-                  {snapshot.bookingNumber}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </p>
               </>
             ) : (
               <>
-                <p className="mt-2">
+                <p className="text-sm font-medium">
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
-                  {snapshot.bookingNumber}
+                <p className="text-xs text-muted-foreground">
+                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"}
                 </p>
               </>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">{snapshot.bookingNumber}</p>
+          </div>
+
+          {/* Contact Column */}
+          <div className="text-right">
+            <p className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] mb-1">
+              Contact
+            </p>
+            {settings.primaryPhone && (
+              <p className="text-xs text-muted-foreground">{settings.primaryPhone}</p>
+            )}
+            {settings.businessEmail && (
+              <p className="text-xs text-muted-foreground truncate">{settings.businessEmail}</p>
             )}
           </div>
         </div>
 
         {/* ── Room Table ── */}
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-160 text-sm">
+        <div className="overflow-x-auto mb-3">
+          <table className="w-full min-w-160 text-xs">
             <thead className="border-y bg-muted/40 text-left">
               <tr>
-                <th className="px-3 py-3">Room</th>
-                <th className="px-3 py-3 text-right">Dates</th>
-                <th className="px-3 py-3 text-right">Rate</th>
-                <th className="px-3 py-3 text-right">Rooms</th>
-                <th className="px-3 py-3 text-right">Nights</th>
-                <th className="px-3 py-3 text-right">Amount</th>
+                <th className="px-2 py-2">Room</th>
+                <th className="px-2 py-2 text-right">Dates</th>
+                <th className="px-2 py-2 text-right">Rate</th>
+                <th className="px-2 py-2 text-right">Rooms</th>
+                <th className="px-2 py-2 text-right">Nights</th>
+                <th className="px-2 py-2 text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -205,12 +222,12 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
                 const dates = `${formatDateOnly(roomCheckIn, { day: "numeric", month: "short" })} - ${formatDateOnly(roomCheckOut, { day: "numeric", month: "short" })}`;
                 return (
                   <tr key={`${room.name}-${index}`} className="border-b">
-                    <td className="px-3 py-4 font-medium">{room.name}</td>
-                    <td className="px-3 py-4 text-right text-muted-foreground text-xs">{dates}</td>
-                    <td className="px-3 py-4 text-right">{money.format(room.pricePerNight)}</td>
-                    <td className="px-3 py-4 text-right">{room.roomsCount}</td>
-                    <td className="px-3 py-4 text-right">{room.nights}</td>
-                    <td className="px-3 py-4 text-right">{money.format(room.subtotal)}</td>
+                    <td className="px-2 py-2 font-medium">{room.name}</td>
+                    <td className="px-2 py-2 text-right text-muted-foreground text-[11px]">{dates}</td>
+                    <td className="px-2 py-2 text-right">{money.format(room.pricePerNight)}</td>
+                    <td className="px-2 py-2 text-right">{room.roomsCount}</td>
+                    <td className="px-2 py-2 text-right">{room.nights}</td>
+                    <td className="px-2 py-2 text-right">{money.format(room.subtotal)}</td>
                   </tr>
                 );
               })}
@@ -220,21 +237,21 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
 
         {/* ── Folio / Additional items ── */}
         {snapshot.folioLines && snapshot.folioLines.length > 0 && (
-          <div className="mt-10 space-y-4">
+          <div className="mb-3 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Additional items</p>
-              <p className="text-xs text-muted-foreground">Services, extras and discounts</p>
+              <p className="text-xs font-medium">Additional items</p>
+              <p className="text-[10px] text-muted-foreground">Services, extras and discounts</p>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full min-w-160 text-sm">
+              <table className="w-full min-w-160 text-xs">
                 <thead className="border-y bg-muted/40 text-left">
                   <tr>
-                    <th className="px-3 py-3">Item</th>
-                    <th className="px-3 py-3 text-right">Type</th>
-                    <th className="px-3 py-3 text-right">Qty</th>
-                    <th className="px-3 py-3 text-right">Unit</th>
-                    <th className="px-3 py-3 text-right">Total</th>
+                    <th className="px-2 py-2">Item</th>
+                    <th className="px-2 py-2 text-right">Type</th>
+                    <th className="px-2 py-2 text-right">Qty</th>
+                    <th className="px-2 py-2 text-right">Unit</th>
+                    <th className="px-2 py-2 text-right">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -256,25 +273,25 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
                             : "bg-purple-100 text-purple-800";
                       return (
                         <tr key={`${line.kind}-${line.name}-${idx}`} className="border-b">
-                          <td className="px-3 py-4">
+                          <td className="px-2 py-2">
                             <div className="font-medium">{line.name}</div>
                             {line.description && (
-                              <div className="mt-0.5 text-xs text-muted-foreground">
+                              <div className="text-[10px] text-muted-foreground">
                                 {line.description}
                               </div>
                             )}
                           </td>
-                          <td className="px-3 py-4 text-right">
+                          <td className="px-2 py-2 text-right">
                             <span
-                              className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${typeColors}`}
+                              className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium ${typeColors}`}
                             >
                               {typeLabel}
                             </span>
                           </td>
-                          <td className="px-3 py-4 text-right">{line.qty}</td>
-                          <td className="px-3 py-4 text-right">{money.format(line.unitPrice)}</td>
+                          <td className="px-2 py-2 text-right">{line.qty}</td>
+                          <td className="px-2 py-2 text-right">{money.format(line.unitPrice)}</td>
                           <td
-                            className={`px-3 py-4 text-right font-medium tabular-nums ${line.kind === "discount" ? "text-amber-700" : ""}`}
+                            className={`px-2 py-2 text-right font-medium tabular-nums ${line.kind === "discount" ? "text-amber-700" : ""}`}
                           >
                             {line.kind === "discount"
                               ? `\u2212 ${money.format(line.lineTotal)}`
@@ -290,7 +307,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
         )}
 
         {/* ── Totals ── */}
-        <div className="ml-auto mt-8 max-w-sm space-y-3 text-sm">
+        <div className="ml-auto max-w-xs space-y-1 text-xs mb-3 py-2 border-t border-b">
           <div className="flex justify-between">
             <span>Subtotal</span>
             <span>{money.format(snapshot.subtotal)}</span>
@@ -303,15 +320,15 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             <span>Discount</span>
             <span>&minus; {money.format(snapshot.discount)}</span>
           </div>
-          <div className="flex justify-between border-t pt-3 text-base font-semibold">
+          <div className="flex justify-between font-semibold">
             <span>Total</span>
             <span>{money.format(snapshot.total)}</span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between text-[11px]">
             <span>Paid</span>
             <span>{money.format(snapshot.amountPaid)}</span>
           </div>
-          <div className="flex justify-between text-base font-semibold text-secondary">
+          <div className="flex justify-between font-semibold text-secondary">
             <span>Balance due</span>
             <span>{money.format(snapshot.balanceDue)}</span>
           </div>
@@ -319,21 +336,21 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
 
         {/* ── Banking Details & Payment Methods ── */}
         {(settings.bankingVisible || settings.paymentVisible) && (
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 mb-3">
             {settings.bankingVisible && settings.bankingAccountName && (
-              <div className="rounded-lg border bg-muted/20 p-5">
-                <div className="flex items-center gap-2">
-                  <Landmark className="size-4 text-muted-foreground" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="rounded border bg-muted/20 p-2.5">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Landmark className="size-3 text-muted-foreground" />
+                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Banking Details
                   </h3>
                 </div>
                 <div
-                  className="mt-4 space-y-2.5 text-sm"
+                  className="space-y-1 text-xs"
                   style={{
                     display: "grid",
                     gridTemplateColumns: "auto 1fr",
-                    gap: "0.5rem 1rem",
+                    gap: "0.25rem 0.75rem",
                     alignItems: "baseline",
                   }}
                 >
@@ -368,31 +385,31 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             )}
 
             {settings.paymentVisible && (
-              <div className="rounded-lg border bg-muted/20 p-5">
-                <div className="flex items-center gap-2">
-                  <Wallet className="size-4 text-muted-foreground" />
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="rounded border bg-muted/20 p-2.5">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Wallet className="size-3 text-muted-foreground" />
+                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Payment Methods
                   </h3>
                 </div>
-                <div className="mt-4 space-y-4">
+                <div className="space-y-2">
                   {settings.bankTransferEnabled && (
-                    <div className="flex items-start gap-3">
-                      <Building2 className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                    <div className="flex items-start gap-2">
+                      <Building2 className="mt-0.5 size-3 shrink-0 text-muted-foreground/60" />
                       <div>
-                        <p className="text-sm font-medium">{settings.bankTransferTitle}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs font-medium">{settings.bankTransferTitle}</p>
+                        <p className="text-[10px] text-muted-foreground">
                           {settings.bankTransferInstructions}
                         </p>
                       </div>
                     </div>
                   )}
                   {settings.mobileWalletsEnabled && (
-                    <div className="flex items-start gap-3">
-                      <Wallet className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
+                    <div className="flex items-start gap-2">
+                      <Wallet className="mt-0.5 size-3 shrink-0 text-muted-foreground/60" />
                       <div>
-                        <p className="text-sm font-medium">{settings.mobileWalletTitle}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs font-medium">{settings.mobileWalletTitle}</p>
+                        <p className="text-[10px] text-muted-foreground">
                           {settings.mobileWalletDescription}
                         </p>
                       </div>
@@ -404,13 +421,13 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
           </div>
         )}
 
-        {/* ── Contact & Signature ── */}
-        <div className="mt-8 grid gap-8 border-t pt-8 sm:grid-cols-2">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {/* ── Contact & Signature in One Compact Footer Row ── */}
+        <div className="flex gap-6 border-t py-2 text-xs sm:flex-row flex-col">
+          <div className="flex-1">
+            <p className="font-semibold uppercase tracking-wider text-muted-foreground text-[10px] mb-1">
               Contact Us
             </p>
-            <div className="mt-3 space-y-1.5 text-sm">
+            <div className="space-y-0.5 text-xs">
               <p>Phone: {settings.primaryPhone}</p>
               <p>Email: {settings.businessEmail}</p>
               <p>
@@ -423,7 +440,7 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
             </div>
           </div>
           {settings.signatureVisible && (
-            <div className="sm:text-right">
+            <div className="sm:text-right flex-1">
               <SignatureBlock
                 ownerName={settings.signatoryName}
                 roleLabel={settings.signatoryRole}
@@ -434,12 +451,12 @@ export default async function DocumentPreviewPage({ params }: { params: Promise<
 
         {/* ── Secure Payment Footer ── */}
         {settings.secureFooterVisible && (
-          <div className="mt-8 border-t pt-6 text-center">
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
-              <span>{settings.secureFooterMessage}</span>
+          <div className="mt-2 border-t pt-2 text-center text-xs">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground mb-1">
+              <ShieldCheck className="size-3 shrink-0 text-emerald-600" />
+              <span className="text-[10px]">{settings.secureFooterMessage}</span>
             </div>
-            <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center justify-center gap-3 text-[9px]">
               {settings.acceptedPaymentTypes.split(",").map((type) => (
                 <span key={type.trim()} className="font-semibold tracking-wide text-neutral-400">
                   {type.trim()}

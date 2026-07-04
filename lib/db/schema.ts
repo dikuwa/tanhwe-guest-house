@@ -1,5 +1,4 @@
-import { sql } from "drizzle-orm";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   check,
@@ -9,7 +8,6 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 const timestamps = {
@@ -50,14 +48,21 @@ export const users = pgTable(
     lockedReason: text("locked_reason"),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
-    permissionGrants: text("permission_grants").array().default(sql`'{}'::text[]`),
-    permissionRestrictions: text("permission_restrictions").array().default(sql`'{}'::text[]`),
+    permissionGrants: text("permission_grants")
+      .array()
+      .default(sql`'{}'::text[]`),
+    permissionRestrictions: text("permission_restrictions")
+      .array()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
   },
   (table) => [
     uniqueIndex("users_email_unique").on(sql`lower(${table.email})`),
     check("users_role_check", sql`${table.role} in ('owner', 'admin', 'staff')`),
-    check("users_status_check", sql`${table.status} in ('invited', 'active', 'disabled', 'revoked', 'locked')`),
+    check(
+      "users_status_check",
+      sql`${table.status} in ('invited', 'active', 'disabled', 'revoked', 'locked')`
+    ),
   ]
 );
 
@@ -157,7 +162,10 @@ export const rooms = pgTable(
     check("rooms_price_positive", sql`${table.pricePerNight} >= 0`),
     check("rooms_units_positive", sql`${table.availableUnits} >= 1`),
     check("rooms_guests_positive", sql`${table.maxGuests} >= 1`),
-    check("rooms_status_check", sql`${table.status} in ('active', 'maintenance', 'blocked', 'archived')`),
+    check(
+      "rooms_status_check",
+      sql`${table.status} in ('active', 'maintenance', 'blocked', 'archived')`
+    ),
     index("rooms_room_type_id_idx").on(table.roomTypeId),
   ]
 );
@@ -173,9 +181,7 @@ export const blocks = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     ...timestamps,
   },
-  (table) => [
-    index("blocks_display_order_idx").on(table.displayOrder),
-  ]
+  (table) => [index("blocks_display_order_idx").on(table.displayOrder)]
 );
 
 export const blockRelations = relations(blocks, ({ many }) => ({
@@ -320,6 +326,40 @@ export const bookingRooms = pgTable(
     index("booking_rooms_room_type_id_idx").on(table.roomTypeId),
     check("booking_rooms_count_positive", sql`${table.roomsCount} >= 1`),
     check("booking_rooms_nights_positive", sql`${table.nights} >= 1`),
+  ]
+);
+
+export const bookingFolioLines = pgTable(
+  "booking_folio_lines",
+  {
+    id: text("id").primaryKey(),
+    bookingId: text("booking_id")
+      .notNull()
+      .references(() => bookings.id, { onDelete: "cascade" }),
+
+    kind: text("kind")
+      .notNull()
+      .check(sql`kind in ('service', 'custom', 'discount')`),
+
+    name: text("name").notNull(),
+    description: text("description"),
+
+    qty: integer("qty").notNull().default(1),
+    unitPrice: integer("unit_price").notNull().default(0),
+
+    lineTotal: integer("line_total").notNull().default(0),
+
+    sortOrder: integer("sort_order").notNull().default(0),
+
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("booking_folio_lines_booking_id_idx").on(table.bookingId),
+    index("booking_folio_lines_kind_idx").on(table.kind),
+    check("booking_folio_lines_qty_positive", sql`${table.qty} >= 1`),
+    check("booking_folio_lines_unit_price_nonnegative", sql`${table.unitPrice} >= 0`),
+    check("booking_folio_lines_line_total_nonnegative", sql`${table.lineTotal} >= 0`),
   ]
 );
 
@@ -603,13 +643,17 @@ export const roomUnitsRelations = relations(roomUnits, ({ one }) => ({
 }));
 export const bookingRoomUnitsRelations = relations(bookingRoomUnits, ({ one }) => ({
   booking: one(bookings, { fields: [bookingRoomUnits.bookingId], references: [bookings.id] }),
-  bookingRoom: one(bookingRooms, { fields: [bookingRoomUnits.bookingRoomId], references: [bookingRooms.id] }),
+  bookingRoom: one(bookingRooms, {
+    fields: [bookingRoomUnits.bookingRoomId],
+    references: [bookingRooms.id],
+  }),
   roomUnit: one(roomUnits, { fields: [bookingRoomUnits.roomUnitId], references: [roomUnits.id] }),
 }));
 export const bookingsRelations = relations(bookings, ({ one, many }) => ({
   customer: one(customers, { fields: [bookings.customerId], references: [customers.id] }),
   rooms: many(bookingRooms),
   roomUnits: many(bookingRoomUnits),
+  folioLines: many(bookingFolioLines),
 }));
 export const bookingRoomsRelations = relations(bookingRooms, ({ one, many }) => ({
   booking: one(bookings, { fields: [bookingRooms.bookingId], references: [bookings.id] }),
@@ -617,6 +661,11 @@ export const bookingRoomsRelations = relations(bookingRooms, ({ one, many }) => 
   roomType: one(roomTypes, { fields: [bookingRooms.roomTypeId], references: [roomTypes.id] }),
   roomUnits: many(bookingRoomUnits),
 }));
+
+export const bookingFolioLinesRelations = relations(bookingFolioLines, ({ one }) => ({
+  booking: one(bookings, { fields: [bookingFolioLines.bookingId], references: [bookings.id] }),
+}));
+
 export const customersRelations = relations(customers, ({ many }) => ({
   bookings: many(bookings),
 }));

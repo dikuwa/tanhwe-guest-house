@@ -113,93 +113,100 @@ type DocSettings = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
+    padding: "10.5mm",
     fontFamily: "Onest",
     color: "#3D372E",
-    fontSize: 10,
+    fontSize: 9,
     backgroundColor: "#FFFDF8",
   },
   row: { flexDirection: "row", justifyContent: "space-between" },
-  header: { paddingBottom: 20, borderBottom: "1px solid #E6E0D3" },
-  logo: { width: 112, height: 40 },
-  documentType: { fontSize: 9, color: "#7A6F5E", textTransform: "uppercase", letterSpacing: 1.2 },
-  documentNumber: { marginTop: 3, fontSize: 17, fontWeight: 600, color: "#3D372E" },
-  muted: { color: "#7A6F5E", marginTop: 4 },
+  header: { paddingBottom: 10, borderBottom: "1px solid #E6E0D3", marginBottom: "8mm" },
+  logo: { width: 100, height: 36 },
+  documentType: { fontSize: 8, color: "#7A6F5E", textTransform: "uppercase", letterSpacing: 1 },
+  documentNumber: { marginTop: 2, fontSize: 15, fontWeight: 600, color: "#3D372E" },
+  muted: { color: "#7A6F5E", marginTop: 2 },
   eyebrow: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#7A6F5E",
     fontWeight: 600,
     textTransform: "uppercase",
-    letterSpacing: 0.9,
+    letterSpacing: 0.8,
   },
-  section: { marginTop: 20 },
+  infRow: { flexDirection: "row", marginBottom: "6mm", borderBottom: "1px solid #E6E0D3", paddingBottom: 8, gap: 12 },
+  infCol: { flex: 1, fontSize: 8 },
+  infColCenter: { flex: 1, borderLeft: "1px solid #E6E0D3", borderRight: "1px solid #E6E0D3", paddingHorizontal: 8, fontSize: 8 },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#F5F1E8",
-    paddingVertical: 9,
-    paddingHorizontal: 9,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     fontWeight: 600,
+    fontSize: 7.5,
     borderTop: "1px solid #E6E0D3",
     borderBottom: "1px solid #E6E0D3",
   },
   tableRow: {
     flexDirection: "row",
-    paddingVertical: 10,
-    paddingHorizontal: 9,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
     borderBottom: "1px solid #E6E0D3",
+    fontSize: 8,
   },
-  grow: { width: "42%" },
-  cell: { width: "14.5%", textAlign: "right" },
-  totals: { marginTop: 20, marginLeft: "52%" },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  totalStrong: { borderTop: "1px solid #E6E0D3", paddingTop: 8, fontSize: 11, fontWeight: 600 },
-  balance: { color: "#0D5CA8", fontWeight: 600, fontSize: 11 },
-  cardsRow: { flexDirection: "row", marginTop: 18, gap: 14 },
+  grow: { width: "28%" },
+  cell: { width: "18%", textAlign: "right" },
+  cellRate: { width: "12%", textAlign: "right" },
+  cellNum: { width: "12%", textAlign: "right" },
+  totals: { marginBottom: "6mm", paddingVertical: 6, borderTop: "1px solid #E6E0D3", borderBottom: "1px solid #E6E0D3", marginLeft: "55%", maxWidth: "45%" },
+  totalRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 2, fontSize: 8 },
+  totalStrong: { fontWeight: 600, fontSize: 9 },
+  balance: { color: "#0D5CA8", fontWeight: 600, fontSize: 9 },
+  cardsRow: { flexDirection: "row", marginBottom: "6mm", gap: 8 },
   card: {
     flex: 1,
     border: "1px solid #E6E0D3",
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 6,
+    padding: 8,
     backgroundColor: "#FFFDF8",
+    fontSize: 7.5,
   },
   cardTitle: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: 600,
     color: "#7A6F5E",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 10,
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
-  label: { fontSize: 9, color: "#7A6F5E", marginBottom: 1 },
-  value: { fontSize: 10, marginBottom: 6 },
-  mono: { fontSize: 10, fontFamily: "Courier", marginBottom: 6 },
-  contactRow: {
+  label: { fontSize: 7.5, color: "#7A6F5E", marginBottom: 1 },
+  value: { fontSize: 8, marginBottom: 3 },
+  mono: { fontSize: 8, fontFamily: "Courier", marginBottom: 3 },
+  contactFooter: {
     flexDirection: "row",
-    marginTop: 18,
-    paddingTop: 16,
+    marginTop: "4mm",
+    paddingTop: 8,
     borderTop: "1px solid #E6E0D3",
+    gap: 12,
   },
-  contactBlock: { flex: 1 },
-  ownerBlock: { flex: 1, alignItems: "flex-end" },
+  contactBlock: { flex: 1, fontSize: 8 },
+  ownerBlock: { flex: 1, alignItems: "flex-end", fontSize: 8 },
   footer: {
-    marginTop: 24,
+    marginTop: "4mm",
     textAlign: "center",
-    fontSize: 8,
+    fontSize: 7,
     color: "#7A6F5E",
     borderTop: "1px solid #E6E0D3",
-    paddingTop: 12,
+    paddingTop: 6,
   },
-  closing: { marginTop: 16, textAlign: "center", fontSize: 10, color: "#667085" },
-  paymentItem: { flexDirection: "row", gap: 8, marginBottom: 7 },
+  paymentItem: { flexDirection: "row", gap: 6, marginBottom: 4 },
   paymentIconBox: {
-    width: 10,
-    height: 10,
-    marginTop: 2,
+    width: 8,
+    height: 8,
+    marginTop: 1,
     border: "1px solid #B8AD99",
-    borderRadius: 2,
+    borderRadius: 1,
   },
-  paymentLabel: { fontSize: 10, fontWeight: 600 },
-  paymentDesc: { fontSize: 9, color: "#7A6F5E", marginTop: 1, lineHeight: 1.25 },
+  paymentLabel: { fontSize: 8, fontWeight: 600 },
+  paymentDesc: { fontSize: 7, color: "#7A6F5E", marginTop: 1, lineHeight: 1.2 },
 });
 
 function BrandLogo() {
@@ -210,8 +217,8 @@ function BrandLogo() {
   }
   return (
     <View>
-      <Text style={{ color: "#E68011", fontSize: 19, fontWeight: 700 }}>TANHWE</Text>
-      <Text style={{ color: "#054386", fontSize: 10, fontWeight: 600, letterSpacing: 1.5 }}>
+      <Text style={{ color: "#E68011", fontSize: 17, fontWeight: 700 }}>TANHWE</Text>
+      <Text style={{ color: "#054386", fontSize: 9, fontWeight: 600, letterSpacing: 1.5 }}>
         GUEST HOUSE
       </Text>
     </View>
@@ -297,66 +304,77 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
         <View style={[styles.row, styles.header]}>
           <View>
             <BrandLogo />
-            <Text style={[styles.muted, { textAlign: "right", fontSize: 8 }]}>
+            <Text style={[styles.muted, { textAlign: "right", fontSize: 7 }]}>
               {[town, region, country].filter(Boolean).join(", ")}
             </Text>
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={styles.documentType}>{data.type}</Text>
             <Text style={styles.documentNumber}>{data.number}</Text>
-            <Text style={{ marginTop: 8, fontSize: 10 }}>
+            <Text style={{ marginTop: 4, fontSize: 8 }}>
               Issued {data.createdAt.toLocaleDateString("en-NA")}
             </Text>
             {data.expiresAt && (
-              <Text style={{ fontSize: 10 }}>
+              <Text style={{ fontSize: 8 }}>
                 Valid until {data.expiresAt.toLocaleDateString("en-NA")}
               </Text>
             )}
           </View>
         </View>
 
-        {/* ── Guest & Stay ── */}
-        <View style={[styles.section, styles.row]}>
-          <View>
+        {/* ── Guest, Stay & Contact in One Compact Row ── */}
+        <View style={styles.infRow}>
+          {/* Guest */}
+          <View style={styles.infCol}>
             <Text style={styles.eyebrow}>GUEST</Text>
-            <Text style={{ marginTop: 8, fontWeight: 600 }}>{snapshot.customer.name}</Text>
-            <Text style={styles.muted}>{snapshot.customer.phone}</Text>
-            {snapshot.customer.email && <Text style={styles.muted}>{snapshot.customer.email}</Text>}
+            <Text style={{ marginTop: 3, fontWeight: 600, fontSize: 8 }}>{snapshot.customer.name}</Text>
+            <Text style={[styles.muted, { fontSize: 7 }]}>{snapshot.customer.phone}</Text>
+            {snapshot.customer.email && (
+              <Text style={[styles.muted, { fontSize: 7 }]}>{snapshot.customer.email}</Text>
+            )}
           </View>
-          <View style={{ alignItems: "flex-end" }}>
+
+          {/* Stay */}
+          <View style={styles.infColCenter}>
             <Text style={styles.eyebrow}>STAY</Text>
             {hasMixedRoomDates ? (
               <>
-                <Text style={{ marginTop: 8 }}>Multiple room stays</Text>
-                <Text style={styles.muted}>
+                <Text style={{ marginTop: 3, fontSize: 8 }}>Multiple room stays</Text>
+                <Text style={[styles.muted, { fontSize: 7 }]}>
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
-                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))} &middot;{" "}
-                  {snapshot.bookingNumber}
+                  {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </Text>
               </>
             ) : (
               <>
-                <Text style={{ marginTop: 8 }}>
+                <Text style={{ marginTop: 3, fontSize: 8 }}>
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkIn))} to{" "}
                   {formatDateOnly(dateToDateOnly(snapshot.stay.checkOut))}
                 </Text>
-                <Text style={styles.muted}>
-                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"} &middot;{" "}
-                  {snapshot.bookingNumber}
+                <Text style={[styles.muted, { fontSize: 7 }]}>
+                  {snapshot.stay.nights} night{snapshot.stay.nights === 1 ? "" : "s"}
                 </Text>
               </>
             )}
+            <Text style={[styles.muted, { fontSize: 7, marginTop: 2 }]}>{snapshot.bookingNumber}</Text>
+          </View>
+
+          {/* Contact */}
+          <View style={[styles.infCol, { textAlign: "right" }]}>
+            <Text style={styles.eyebrow}>CONTACT</Text>
+            {primaryPhone && <Text style={[styles.muted, { fontSize: 7, marginTop: 3 }]}>{primaryPhone}</Text>}
+            {businessEmail && <Text style={[styles.muted, { fontSize: 7 }]}>{businessEmail}</Text>}
           </View>
         </View>
 
         {/* ── Room Table ── */}
-        <View style={[styles.section, { marginTop: 22 }]}>
+        <View style={{ marginBottom: "4mm" }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.grow, { width: "28%" }]}>Room</Text>
             <Text style={[styles.cell, { width: "18%" }]}>Dates</Text>
-            <Text style={[styles.cell, { width: "12%" }]}>Rate</Text>
-            <Text style={[styles.cell, { width: "12%" }]}>Rooms</Text>
-            <Text style={[styles.cell, { width: "12%" }]}>Nights</Text>
+            <Text style={[styles.cellRate, { width: "12%" }]}>Rate</Text>
+            <Text style={[styles.cellNum, { width: "12%" }]}>Rooms</Text>
+            <Text style={[styles.cellNum, { width: "12%" }]}>Nights</Text>
             <Text style={[styles.cell, { width: "18%" }]}>Amount</Text>
           </View>
           {snapshot.rooms.map((room, index) => {
@@ -365,13 +383,13 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             const dates = `${formatDateOnly(roomCheckIn, { day: "numeric", month: "short" })} - ${formatDateOnly(roomCheckOut, { day: "numeric", month: "short" })}`;
             return (
               <View key={`${room.name}-${index}`} style={styles.tableRow}>
-                <Text style={[styles.grow, { width: "28%" }]}>{room.name}</Text>
-                <Text style={[styles.cell, { width: "18%", fontSize: 8, color: "#7A6F5E" }]}>
+                <Text style={[styles.grow, { width: "28%", fontWeight: 500 }]}>{room.name}</Text>
+                <Text style={[styles.cell, { width: "18%", fontSize: 7, color: "#7A6F5E" }]}>
                   {dates}
                 </Text>
-                <Text style={[styles.cell, { width: "12%" }]}>{fmt(room.pricePerNight)}</Text>
-                <Text style={[styles.cell, { width: "12%" }]}>{room.roomsCount}</Text>
-                <Text style={[styles.cell, { width: "12%" }]}>{room.nights}</Text>
+                <Text style={[styles.cellRate, { width: "12%" }]}>{fmt(room.pricePerNight)}</Text>
+                <Text style={[styles.cellNum, { width: "12%" }]}>{room.roomsCount}</Text>
+                <Text style={[styles.cellNum, { width: "12%" }]}>{room.nights}</Text>
                 <Text style={[styles.cell, { width: "18%" }]}>{fmt(room.subtotal)}</Text>
               </View>
             );
@@ -380,7 +398,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
 
         {/* ── Folio lines ── */}
         {snapshot.folioLines && snapshot.folioLines.length > 0 && (
-          <View style={[styles.section, { marginTop: 22 }]}>
+          <View style={{ marginBottom: "4mm" }}>
             <View style={styles.tableHeader}>
               <Text style={[styles.grow, { width: "42%" }]}>Item</Text>
               <Text style={[styles.cell, { width: "12%" }]}>Qty</Text>
@@ -394,9 +412,9 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
               .map((line, idx) => (
                 <View key={`${line.kind}-${line.name}-${idx}`} style={styles.tableRow}>
                   <View style={{ width: "42%" }}>
-                    <Text style={[styles.grow, { width: "100%", fontSize: 10 }]}>{line.name}</Text>
+                    <Text style={{ fontWeight: 500, fontSize: 8 }}>{line.name}</Text>
                     {line.description ? (
-                      <Text style={{ fontSize: 7.5, color: "#7A6F5E", marginTop: 1 }}>
+                      <Text style={{ fontSize: 7, color: "#7A6F5E", marginTop: 1 }}>
                         {line.description}
                       </Text>
                     ) : null}
@@ -404,7 +422,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
 
                   <Text style={[styles.cell, { width: "12%" }]}>{line.qty}</Text>
                   <Text style={[styles.cell, { width: "18%" }]}>{fmt(line.unitPrice)}</Text>
-                  <Text style={[styles.cell, { width: "18%" }]}>
+                  <Text style={[styles.cell, { width: "18%", color: line.kind === "discount" ? "#b45309" : "inherit" }]}>
                     {line.kind === "discount" ? `- ${fmt(line.lineTotal)}` : fmt(line.lineTotal)}
                   </Text>
                 </View>
@@ -434,7 +452,7 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             <Text>Paid</Text>
             <Text>{fmt(snapshot.amountPaid)}</Text>
           </View>
-          <View style={styles.totalRow}>
+          <View style={[styles.totalRow, styles.totalStrong]}>
             <Text style={styles.balance}>Balance due</Text>
             <Text style={styles.balance}>{fmt(snapshot.balanceDue)}</Text>
           </View>
@@ -446,20 +464,20 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
             {bankingVisible && bankingAccountName && (
               <View style={styles.card}>
                 <Text style={styles.cardTitle}>Banking Details</Text>
-                <View style={{ flexDirection: "row", marginBottom: 7 }}>
-                  <Text style={[styles.label, { width: 78 }]}>Account Name</Text>
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.label, { width: 70 }]}>Account Name</Text>
                   <Text style={styles.value}>{bankingAccountName}</Text>
                 </View>
-                <View style={{ flexDirection: "row", marginBottom: 7 }}>
-                  <Text style={[styles.label, { width: 78 }]}>Account Number</Text>
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.label, { width: 70 }]}>Account Number</Text>
                   <Text style={styles.mono}>{bankingAccountNumber}</Text>
                 </View>
-                <View style={{ flexDirection: "row", marginBottom: 7 }}>
-                  <Text style={[styles.label, { width: 78 }]}>Bank</Text>
+                <View style={{ flexDirection: "row", marginBottom: 3 }}>
+                  <Text style={[styles.label, { width: 70 }]}>Bank</Text>
                   <Text style={styles.value}>{bankingBankName}</Text>
                 </View>
                 <View style={{ flexDirection: "row", marginBottom: 0 }}>
-                  <Text style={[styles.label, { width: 78 }]}>Branch</Text>
+                  <Text style={[styles.label, { width: 70 }]}>Branch</Text>
                   <Text style={styles.value}>{bankingBranchName}</Text>
                 </View>
                 {bankingBranchCode && (
@@ -509,24 +527,13 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
           </View>
         )}
 
-        {/* ── Contact & Signature ── */}
-        <View style={styles.contactRow}>
+        {/* ── Contact & Signature in One Compact Footer Row ── */}
+        <View style={styles.contactFooter}>
           <View style={styles.contactBlock}>
-            <Text
-              style={{
-                fontSize: 8,
-                fontWeight: 600,
-                color: "#7A6F5E",
-                textTransform: "uppercase",
-                letterSpacing: 1,
-                marginBottom: 10,
-              }}
-            >
-              Contact Us
-            </Text>
-            <Text style={{ fontSize: 10, marginBottom: 2 }}>Phone: {primaryPhone}</Text>
-            <Text style={{ fontSize: 10, marginBottom: 2 }}>Email: {businessEmail}</Text>
-            <Text style={{ fontSize: 10, marginBottom: 2 }}>
+            <Text style={styles.eyebrow}>Contact Us</Text>
+            <Text style={{ fontSize: 8, marginTop: 3 }}>Phone: {primaryPhone}</Text>
+            <Text style={{ fontSize: 8 }}>Email: {businessEmail}</Text>
+            <Text style={{ fontSize: 8 }}>
               Location: {town}
               {town && region ? ", " : ""}
               {region}
@@ -537,27 +544,27 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
           {signatureVisible && (
             <View style={styles.ownerBlock}>
               {signatureImage ? (
-                <Text style={{ fontSize: 10, fontWeight: 600, color: "#3D372E" }}>
+                <Text style={{ fontSize: 8, fontWeight: 600, color: "#3D372E" }}>
                   {signatoryName}
                 </Text>
               ) : (
                 <Text
                   style={{
                     fontFamily: "Allura",
-                    fontSize: 20,
+                    fontSize: 18,
                     lineHeight: 1,
                     color: "#3D372E",
-                    marginBottom: 4,
+                    marginBottom: 2,
                     transform: "rotate(-4deg)",
                   }}
                 >
                   {signatoryName}
                 </Text>
               )}
-              <Text style={{ fontSize: 10, fontWeight: 600, color: "#3D372E" }}>
+              <Text style={{ fontSize: 8, fontWeight: 600, color: "#3D372E" }}>
                 {signatoryName}
               </Text>
-              <Text style={{ fontSize: 9, color: "#7A6F5E" }}>{signatoryRole}</Text>
+              <Text style={{ fontSize: 7.5, color: "#7A6F5E" }}>{signatoryRole}</Text>
             </View>
           )}
         </View>
@@ -570,20 +577,20 @@ export async function createDocumentPdf(data: PdfData, settings?: DocSettings) {
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                marginTop: 18,
-                paddingTop: 12,
+                marginTop: "4mm",
+                paddingTop: 6,
                 borderTop: "1px solid #E6E0D3",
-                gap: 6,
+                gap: 4,
               }}
             >
-              <Text style={{ fontSize: 9, color: "#059669" }}>✓</Text>
-              <Text style={{ fontSize: 8, color: "#7A6F5E" }}>{secureFooterMessage}</Text>
+              <Text style={{ fontSize: 8, color: "#059669" }}>✓</Text>
+              <Text style={{ fontSize: 7, color: "#7A6F5E" }}>{secureFooterMessage}</Text>
             </View>
-            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 6, gap: 16 }}>
+            <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 4, gap: 12 }}>
               {acceptedPaymentTypes.split(",").map((type) => (
                 <Text
                   key={type.trim()}
-                  style={{ fontSize: 8, fontWeight: 700, color: "#9CA3AF", letterSpacing: 1 }}
+                  style={{ fontSize: 7, fontWeight: 700, color: "#9CA3AF", letterSpacing: 0.8 }}
                 >
                   {type.trim()}
                 </Text>

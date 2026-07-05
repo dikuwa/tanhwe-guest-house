@@ -123,7 +123,15 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
             <SelectContent>
               {bookings.map((booking) => (
                 <SelectItem key={booking.id} value={booking.id}>
-                  {booking.bookingNumber} &middot; {booking.customerName}
+                  <span className="flex flex-col py-0.5 leading-tight">
+                    <span>{booking.bookingNumber} &middot; {booking.customerName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      N${booking.total.toLocaleString()}
+                      {booking.balanceDue > 0
+                        ? ` — N\$${booking.balanceDue.toLocaleString()} due`
+                        : " — paid in full"}
+                    </span>
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>

@@ -199,15 +199,21 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
                     ]);
                   }}
                 >
-                  <SelectTrigger className="h-8 w-44 text-xs">
+                  <SelectTrigger className="h-8 w-auto min-w-[200px] text-xs">
                     <SelectValue placeholder="Select predefined item" />
                   </SelectTrigger>
                   <SelectContent>
-                    {predefinedItems.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name} &mdash; N${item.defaultPrice}
-                      </SelectItem>
-                    ))}
+                  {predefinedItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      <span className="flex flex-col py-0.5 leading-tight">
+                        <span>{item.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.itemType === "discount" ? "− " : ""}N${item.defaultPrice.toLocaleString()}
+                          {item.defaultPrice === 0 ? " — enter amount" : ""}
+                        </span>
+                      </span>
+                    </SelectItem>
+                  ))}
                   </SelectContent>
                 </Select>
               )}

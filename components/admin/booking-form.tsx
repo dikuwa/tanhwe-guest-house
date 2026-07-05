@@ -368,7 +368,10 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
                     <SelectContent>
                       {activeRoomTypes.map((rt) => (
                         <SelectItem key={rt.id} value={rt.id}>
-                          {rt.name} &mdash; N${rt.pricePerNight}/night
+                          <span className="flex flex-col py-0.5 leading-tight">
+                            <span>{rt.name}</span>
+                            <span className="text-xs text-muted-foreground">N${rt.pricePerNight}/night</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -514,13 +517,19 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
                   ]);
                 }}
               >
-                <SelectTrigger className="h-8 w-44 text-xs">
+                <SelectTrigger className="h-8 w-auto min-w-[200px] text-xs">
                   <SelectValue placeholder="Select predefined item" />
                 </SelectTrigger>
                 <SelectContent>
                   {predefinedItems.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
-                      {item.name} &mdash; N${item.defaultPrice}
+                      <span className="flex flex-col py-0.5 leading-tight">
+                        <span>{item.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {item.itemType === "discount" ? "− " : ""}N${item.defaultPrice.toLocaleString()}
+                          {item.defaultPrice === 0 ? " — enter amount" : ""}
+                        </span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

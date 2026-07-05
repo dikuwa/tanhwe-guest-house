@@ -482,7 +482,10 @@ export function EditBookingForm({
                     <SelectContent>
                       {activeRoomTypes.map((rt) => (
                         <SelectItem key={rt.id} value={rt.id}>
-                          {rt.name} &mdash; N${rt.pricePerNight}/night
+                          <span className="flex flex-col py-0.5 leading-tight">
+                            <span>{rt.name}</span>
+                            <span className="text-xs text-muted-foreground">N${rt.pricePerNight}/night</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1,7 +1,7 @@
 import { hashPassword } from "better-auth/crypto";
 import { asc, eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
-import { accounts, customers, faqs, roles, roomAmenities, roomTypes, roomUnits, rooms, settings, testimonials, users } from "./db/schema";
+import { accounts, customers, faqs, folioItems, roles, roomAmenities, roomTypes, roomUnits, rooms, settings, testimonials, users } from "./db/schema";
 
 async function seed() {
   const db = getDb();
@@ -618,6 +618,39 @@ async function seed() {
       );
     console.log(`✓ Seeded ${testimonialData.length} testimonials`);
   }
+
+  // ── Folio Items (idempotent) ────────────────────────────────────
+  const defaultFolioItems = [
+    { name: "Breakfast", itemType: "service", category: "Food & Beverage", defaultPrice: 150, sortOrder: 1 },
+    { name: "Lunch", itemType: "service", category: "Food & Beverage", defaultPrice: 180, sortOrder: 2 },
+    { name: "Dinner", itemType: "service", category: "Food & Beverage", defaultPrice: 220, sortOrder: 3 },
+    { name: "Airport Transfer", itemType: "service", category: "Transport", defaultPrice: 350, sortOrder: 4 },
+    { name: "Laundry Service", itemType: "service", category: "Housekeeping", defaultPrice: 120, sortOrder: 5 },
+    { name: "Extra Bed", itemType: "service", category: "Accommodation", defaultPrice: 200, sortOrder: 6 },
+    { name: "Late Check-out", itemType: "service", category: "Accommodation", defaultPrice: 250, sortOrder: 7 },
+    { name: "Early Check-in", itemType: "service", category: "Accommodation", defaultPrice: 250, sortOrder: 8 },
+    { name: "Cleaning Fee", itemType: "charge", category: "Housekeeping", defaultPrice: 300, sortOrder: 9 },
+    { name: "Damage Charge", itemType: "charge", category: "Miscellaneous", defaultPrice: 0, sortOrder: 10, description: "Variable amount based on damage assessment" },
+    { name: "Incidental Charge", itemType: "charge", category: "Miscellaneous", defaultPrice: 0, sortOrder: 11, description: "Variable incidental charges" },
+    { name: "Loyalty Discount", itemType: "discount", category: "Discounts", defaultPrice: 100, sortOrder: 12 },
+    { name: "Promotional Discount", itemType: "discount", category: "Discounts", defaultPrice: 150, sortOrder: 13 },
+    { name: "Manual Discount", itemType: "discount", category: "Discounts", defaultPrice: 0, sortOrder: 14, description: "Custom discount — enter the amount" },
+    { name: "Other / Custom Item", itemType: "service", category: "Other", defaultPrice: 0, sortOrder: 15, description: "Custom item — enter description and amount" },
+  ];
+
+  for (const item of defaultFolioItems) {
+    const existingItem = await db.query.folioItems.findFirst({
+      where: eq(folioItems.name, item.name),
+    });
+    if (!existingItem) {
+      await db.insert(folioItems).values({
+        id: crypto.randomUUID(),
+        ...item,
+        status: "active",
+      });
+    }
+  }
+  console.log(`✓ Seeded ${defaultFolioItems.length} default folio items`);
 
   console.log("✅ Database seed completed successfully");
 }

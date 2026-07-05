@@ -9,6 +9,7 @@ import {
   customers,
   documents,
   followUps,
+  folioItems,
   roomTypes,
   rooms,
   roomUnits,
@@ -518,6 +519,21 @@ export async function getOwnerProfile() {
     .where(eq(users.role, "owner"))
     .limit(1);
   return owner ?? null;
+}
+
+export async function getAdminFolioItems() {
+  return getDb()
+    .select()
+    .from(folioItems)
+    .orderBy(asc(folioItems.sortOrder), asc(folioItems.name));
+}
+
+export async function getActiveFolioItems() {
+  return getDb()
+    .select()
+    .from(folioItems)
+    .where(eq(folioItems.status, "active"))
+    .orderBy(asc(folioItems.sortOrder), asc(folioItems.name));
 }
 
 export async function getDocumentSettings() {

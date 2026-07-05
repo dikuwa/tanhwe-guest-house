@@ -88,7 +88,25 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
   const [status, setStatus] = useState("confirmed");
   const [lines, setLines] = useState<RoomLine[]>([createLine()]);
   const [folioLines, setFolioLines] = useState<FolioLine[]>([]);
+  const [predefinedItems, setPredefinedItems] = useState<
+    {
+      id: string;
+      name: string;
+      itemType: "service" | "charge" | "discount";
+      defaultPrice: number;
+      category: string;
+      description: string | null;
+    }[]
+  >([]);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  // Fetch active predefined folio items
+  useEffect(() => {
+    fetch("/api/admin/folio-items")
+      .then((r) => r.json())
+      .then((data) => setPredefinedItems(data.filter((i: { status: string }) => i.status === "active")))
+      .catch(() => {});
+  }, []);
 
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerResults, setCustomerResults] = useState<{ id: string; fullName: string; phone: string; whatsapp: string; email: string | null }[]>([]);
@@ -474,7 +492,40 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-medium text-neutral-800">Additional items</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {predefinedItems.length > 0 && (
+              <Select
+                value=""
+                onValueChange={(val) => {
+                  const item = predefinedItems.find((i) => i.id === val);
+                  if (!item) return;
+                  const kind = item.itemType === "charge" ? "custom" : (item.itemType as FolioLine["kind"]);
+                  setFolioLines((prev) => [
+                    ...prev,
+                    {
+                      id: crypto.randomUUID(),
+                      kind,
+                      name: item.name,
+                      description: item.description ?? "",
+                      qty: 1,
+                      unitPrice: item.defaultPrice,
+                      sortOrder: prev.length,
+                    },
+                  ]);
+                }}
+              >
+                <SelectTrigger className="h-8 w-44 text-xs">
+                  <SelectValue placeholder="Select predefined item" />
+                </SelectTrigger>
+                <SelectContent>
+                  {predefinedItems.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name} &mdash; N${item.defaultPrice}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
             <button
               type="button"
               onClick={() =>
@@ -494,7 +545,7 @@ export function BookingForm({ roomTypes }: { roomTypes: RoomTypeOption[] }) {
               className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary/40 hover:text-primary"
             >
               <Plus className="size-3" />
-              Add service, extra or discount
+              Custom item
             </button>
           </div>
         </div>

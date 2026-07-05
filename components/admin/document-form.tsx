@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FilePlus2, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -44,6 +44,23 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
   const [type, setType] = useState("quote");
   const [expiresAt, setExpiresAt] = useState<Date>();
   const [folioLines, setFolioLines] = useState<FolioLine[]>([]);
+  const [predefinedItems, setPredefinedItems] = useState<
+    {
+      id: string;
+      name: string;
+      itemType: "service" | "charge" | "discount";
+      defaultPrice: number;
+      description: string | null;
+    }[]
+  >([]);
+
+  // Fetch active predefined folio items
+  useEffect(() => {
+    fetch("/api/admin/folio-items")
+      .then((r) => r.json())
+      .then((data) => setPredefinedItems(data.filter((i: { status: string }) => i.status === "active")))
+      .catch(() => {});
+  }, []);
 
   const derivedFolio = folioLines.length > 0
     ? folioLines.reduce(
@@ -162,25 +179,58 @@ export function DocumentForm({ bookings }: { bookings: BookingOption[] }) {
         <div className="mt-6">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-medium text-neutral-800">Additional items</p>
-            <button
-              type="button"
-              onClick={() =>
-                setFolioLines((prev) => [
-                  ...prev,
-                  {
-                    id: crypto.randomUUID(),
-                    kind: "service",
-                    name: "",
-                    qty: 1,
-                    unitPrice: 0,
-                  },
-                ])
-              }
-              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary/40 hover:text-primary"
-            >
-              <Plus className="size-3" />
-              Add service, extra or discount
-            </button>
+            <div className="flex flex-wrap gap-2">
+              {predefinedItems.length > 0 && (
+                <Select
+                  value=""
+                  onValueChange={(val) => {
+                    const item = predefinedItems.find((i) => i.id === val);
+                    if (!item) return;
+                    const kind = item.itemType === "charge" ? "custom" : (item.itemType as FolioLine["kind"]);
+                    setFolioLines((prev) => [
+                      ...prev,
+                      {
+                        id: crypto.randomUUID(),
+                        kind,
+                        name: item.name,
+                        qty: 1,
+                        unitPrice: item.defaultPrice,
+                      },
+                    ]);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-44 text-xs">
+                    <SelectValue placeholder="Select predefined item" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {predefinedItems.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} &mdash; N${item.defaultPrice}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <button
+                type="button"
+                onClick={() =>
+                  setFolioLines((prev) => [
+                    ...prev,
+                    {
+                      id: crypto.randomUUID(),
+                      kind: "service",
+                      name: "",
+                      qty: 1,
+                      unitPrice: 0,
+                    },
+                  ])
+                }
+                className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                <Plus className="size-3" />
+                Custom item
+              </button>
+            </div>
           </div>
 
           {folioLines.length > 0 && (

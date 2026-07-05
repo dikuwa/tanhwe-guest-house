@@ -660,6 +660,28 @@ export const bookingRoomsRelations = relations(bookingRooms, ({ one, many }) => 
   roomUnits: many(bookingRoomUnits),
 }));
 
+export const folioItems = pgTable(
+  "folio_items",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    itemType: text("item_type").notNull(),
+    category: text("category").notNull().default("Other"),
+    defaultPrice: integer("default_price").notNull().default(0),
+    description: text("description"),
+    status: text("status").notNull().default("active"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    ...timestamps,
+  },
+  (table) => [
+    check("folio_items_type_check", sql`${table.itemType} in ('service', 'charge', 'discount')`),
+    check("folio_items_status_check", sql`${table.status} in ('active', 'inactive')`),
+    check("folio_items_price_nonnegative", sql`${table.defaultPrice} >= 0`),
+    index("folio_items_status_idx").on(table.status),
+    index("folio_items_type_idx").on(table.itemType),
+  ]
+);
+
 export const bookingFolioLinesRelations = relations(bookingFolioLines, ({ one }) => ({
   booking: one(bookings, { fields: [bookingFolioLines.bookingId], references: [bookings.id] }),
 }));

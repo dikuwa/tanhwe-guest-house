@@ -63,6 +63,10 @@ export const PERMISSIONS = {
   security_view_audit_log: "security:view_audit_log",
   security_manage_authentication: "security:manage_authentication",
 
+  // Folio Items
+  folio_items_manage: "folio_items:manage",
+  folio_items_view: "folio_items:view",
+
   // Testimonials
   testimonials_manage: "testimonials:manage",
 
@@ -108,6 +112,7 @@ const STAFF_ONLY: Permission[] = [
   PERMISSIONS.follow_ups_view,
   PERMISSIONS.follow_ups_manage,
   PERMISSIONS.rooms_view,
+  PERMISSIONS.folio_items_view,
   PERMISSIONS.dashboard_view,
 ];
 

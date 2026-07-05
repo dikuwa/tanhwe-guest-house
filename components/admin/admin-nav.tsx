@@ -32,6 +32,7 @@ export const items = [
     children: [
       { href: "/admin/rooms", label: "All rooms" },
       { href: "/admin/rooms/manage", label: "Inventory" },
+      { href: "/admin/inventory/extra-items", label: "Extra services & charges" },
     ],
   },
   { href: "/admin/bookings", label: "Bookings", icon: BookOpen, roles: ["owner", "admin", "staff"] },

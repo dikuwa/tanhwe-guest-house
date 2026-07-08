@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   // Merge document-specific folio lines into the snapshot
   let documentTotal = booking.total;
-  let documentAmountPaid = booking.amountPaid;
+  const documentAmountPaid = booking.amountPaid;
   let documentBalanceDue = booking.balanceDue;
   let documentFolioLines = snapshot.folioLines ?? [];
 

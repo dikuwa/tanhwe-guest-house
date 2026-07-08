@@ -1,5 +1,5 @@
 import { hashPassword } from "better-auth/crypto";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { closeDb, getDb } from "./db";
 import { accounts, customers, faqs, folioItems, roles, roomAmenities, roomTypes, roomUnits, rooms, settings, testimonials, users } from "./db/schema";
 
@@ -31,6 +31,7 @@ async function seed() {
     .onConflictDoNothing();
 
   const existingUser = await db.query.users.findFirst({ where: eq(users.email, email) });
+  const hashedPassword = await hashPassword(password);
   if (!existingUser) {
     const userId = crypto.randomUUID();
     await db.transaction(async (tx) => {
@@ -46,12 +47,57 @@ async function seed() {
         accountId: userId,
         providerId: "credential",
         userId,
-        password: await hashPassword(password),
+        password: hashedPassword,
       });
     });
     console.log(`✓ Created owner account: ${email}`);
   } else {
-    console.log(`✓ Owner account already exists: ${email}`);
+    await db.transaction(async (tx) => {
+      await tx
+        .update(users)
+        .set({
+          emailVerified: true,
+          role: "owner",
+          status: "active",
+          disabledAt: null,
+          disabledBy: null,
+          disabledReason: null,
+          revokedAt: null,
+          revokedBy: null,
+          revokedReason: null,
+          lockedAt: null,
+          lockedReason: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, existingUser.id));
+
+      const existingCredentialAccount = await tx.query.accounts.findFirst({
+        where: and(
+          eq(accounts.userId, existingUser.id),
+          eq(accounts.providerId, "credential")
+        ),
+      });
+
+      if (existingCredentialAccount) {
+        await tx
+          .update(accounts)
+          .set({
+            accountId: existingUser.id,
+            password: hashedPassword,
+            updatedAt: new Date(),
+          })
+          .where(eq(accounts.id, existingCredentialAccount.id));
+      } else {
+        await tx.insert(accounts).values({
+          id: crypto.randomUUID(),
+          accountId: existingUser.id,
+          providerId: "credential",
+          userId: existingUser.id,
+          password: hashedPassword,
+        });
+      }
+    });
+    console.log(`✓ Repaired owner login credentials: ${email}`);
   }
 
   // ── Room Types ──────────────────────────────────────────────────
